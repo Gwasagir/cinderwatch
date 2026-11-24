@@ -23,6 +23,7 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
 - **Light as the main character.** A flickering beacon, a brazier on every tower, flaming arrows, cannon flashes and chain lightning, with moving shadows.
 - **A miniature look.** The scene is drawn at about half resolution, then given an ordered dither, a depth-aware tilt-shift blur, a vignette and film grain.
 - **No asset files.** Every model, texture and sound is generated in code.
+- **Small comforts.** The first time each monster appears, a line says what it does. Tower menus show what the next level brings. The wave plate shows the gold for calling a wave early. Your best wave and your mute setting are remembered.
 
 ![Frostfall, Mirefen, Emberscar and Duskmesa](media/biomes.jpg)
 
@@ -39,16 +40,44 @@ The game needs no input. Your first command puts you in charge, and the AI comma
 | Click or tap a tower | Upgrade or sell |
 | `1` to `4` | Pick a tower kind |
 | `U` | Upgrade the hovered or selected tower |
-| `X` | Sell the selected tower |
+| `X` | Sell the selected tower (press twice, or click Sell twice, to confirm) |
 | `Space` | Call the next wave early |
 | `C`, or click the commander plate | Hand command back to the AI, or take it |
-| `M` | Mute |
+| `M` | Mute (remembered for next time) |
+| `P` | Pause; you can still look around and build |
+| `Tab` | Game speed: 1x, 2x, 3x |
+| Mouse wheel or trackpad pinch | Zoom toward the pointer |
+| `+` and `-`, or the buttons in the corner | Zoom in and out |
+| Drag the ground, arrow keys or `W` `A` `S` `D` | Move the view |
+| Double-click the ground | Zoom in there; again to zoom back out |
+| `F`, `0`, or the Follow the fight button | Hand the view back to the camera |
 | `Esc` | Close the menu |
 | Gamepad | Stick or D-pad selects a pad, A opens and confirms, B closes, X upgrades, Y calls the next wave |
 
-Browsers keep audio off until a gesture, so the first click or key press turns the sound on.
+Browsers keep audio off until a gesture, so the first click, tap or key press turns the sound on.
 
-Gamepad and touch input are implemented but have not been tested on real hardware.
+### On a phone or tablet
+
+The game plays in portrait and in landscape, and follows the screen when it turns.
+
+| Touch | Action |
+| --- | --- |
+| Tap an empty pad | Open the build menu |
+| Tap a tower in the menu | Show what it does and its range; tap it again to build |
+| Tap a built tower | Upgrade, or sell (sell asks for a second tap) |
+| Tap the wave plate | Call the next wave early |
+| Tap the commander plate | Hand command back to the AI, or take it |
+| Drag | Move the view |
+| Pinch, or the + and - buttons | Zoom, out to the whole battlefield |
+| Double-tap the ground | Zoom in there; again to zoom back out |
+| Follow the fight | Hand the view back to the camera |
+| The buttons along the bottom | Pause, game speed, sound, zoom and, where the browser allows it, full screen |
+
+The layout keeps clear of notches and home indicators, buttons are sized for fingers, the screen is asked to stay awake while the game is open, and sound stops when the page is in the background. Added to the home screen, it opens full screen.
+
+The browser's own double-tap and pinch zoom are turned off on the page, so the view can never get stuck zoomed in; zooming is done by the game, and every way in has a way back out.
+
+Touch was tested with Chrome's phone emulation, not on real phones. Gamepad input has not been tested on real hardware.
 
 ## Run it
 
@@ -88,7 +117,11 @@ Both tools drive headless Chrome and need Node 22 or newer. Set `CHROME` if Chro
 node tools/cdp.js "seed=4&ff=30" wait:2000 shot:battle eval:"__cw.G.lives"
 ```
 
-`cdp.js` runs the game in real time and accepts `wait`, `shot`, `eval`, `click`, `move` and `key` steps. Screenshots go to `tools/shots/`.
+`cdp.js` runs the game in real time and accepts `wait`, `shot`, `eval`, `click`, `move` and `key` steps. Screenshots go to `tools/shots/`. With `MOBILE=1` (and `DPR=3` for a phone's pixel density) it emulates a touch screen of the given size and also accepts `tap`, `drag`, `pinch`, `rotate` and `safe` steps:
+
+```bash
+MOBILE=1 DPR=3 node tools/cdp.js "seed=4" 390,844 wait:2000 tap:195,500 shot:phone rotate:844,390 shot:phone-wide
+```
 
 ```bash
 node tools/record.js scan 4 200

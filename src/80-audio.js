@@ -1,5 +1,5 @@
 const AU = (function () {
-  const api = { ready: false, muted: false, unlock: unlock, setMuted: setMuted, play: play, setAmbience: setAmbience, update: update };
+  const api = { ready: false, muted: false, unlock: unlock, setMuted: setMuted, setPaused: setPaused, play: play, setAmbience: setAmbience, update: update };
 
   let ctx = null, sr = 44100;
   let nMaster = null, nMute = null, nSfx = null, nAmb = null, nMusic = null, nRevIn = null;
@@ -572,6 +572,12 @@ const AU = (function () {
     if (ctx.state !== 'running' && ctx.resume) { const pr = ctx.resume(); if (pr && pr.then) pr.then(sync, () => {}); }
     sync();
     return api.ready;
+  }
+  let pausedByPage = false;
+  function setPaused(b) {
+    if (!ctx) return;
+    if (b && ctx.state === 'running') { pausedByPage = true; if (ctx.suspend) ctx.suspend(); }
+    else if (!b && pausedByPage) { pausedByPage = false; if (ctx.resume) { const pr = ctx.resume(); if (pr && pr.then) pr.then(sync, () => {}); } }
   }
   function setMuted(b) {
     api.muted = !!b;

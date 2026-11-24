@@ -273,7 +273,7 @@ void main(){ float r = length(vUv); float sd = floor(vCol.a) ; float al = fract(
 
 const FX = {
   add: null, alpha: null, segs: null, decals: null,
-  parts: [], smokes: [], flames: [], timed: [], bolts: [], shake: 0, shakeX: 0, shakeY: 0, groundAt: () => 0,
+  parts: [], smokes: [], flames: [], timed: [], bolts: [], shake: 0, shakeK: 1, shakeX: 0, shakeY: 0, groundAt: () => 0,
 };
 function initFX() {
   FX.add = new SpriteBatch(2600, false); FX.alpha = new SpriteBatch(700, true); FX.segs = new SegBatch(600); FX.decals = new DecalBatch(40);
@@ -383,7 +383,7 @@ function updateFX(dt, t) {
   }
   FX.decals.update(dt);
   FX.shake = Math.max(0, FX.shake - dt * 2.6);
-  const sh = FX.shake * FX.shake; FX.shakeX = n1(t * 31, 7) * sh * .22; FX.shakeY = n1(t * 37, 9) * sh * .22;
+  const sh = FX.shake * FX.shake * FX.shakeK; FX.shakeX = n1(t * 31, 7) * sh * .22; FX.shakeY = n1(t * 37, 9) * sh * .22;
 }
 function endFX() { FX.add.end(); FX.alpha.end(); FX.segs.end(); }
 function clearFX() { FX.parts.length = 0; FX.smokes.length = 0; FX.timed.length = 0; FX.bolts.length = 0; FX.decals.clear(); }
