@@ -1,7 +1,7 @@
 
 const LT = {
-  hemi: null, moon: null, fill: null, beacon: null, spots: [], towers: [], flashes: [], torches: [],
-  beaconBase: 1500, beaconLevel: 1, beaconGutter: 0, beaconOn: 1, cold: 0, emitters: [], spotTimer: 0,
+  hemi: null, moon: null, fill: null, beacon: null, spots: [], towers: [], flashes: [], torches: [], env: [], envSrc: [], envK: 0,
+  beaconBase: 1500, beaconMul: 1, beaconLevel: 1, beaconGutter: 0, beaconOn: 1, cold: 0, emitters: [], spotTimer: 0,
 };
 function initLights() {
   const S = R.scene;
@@ -20,9 +20,7 @@ function initLights() {
   for (let i = 0; i < 12; i++) { const l = new THREE.PointLight(0xff9646, 0, 11, 2); S.add(l); LT.towers.push(l); }
   for (let i = 0; i < 4; i++) { const l = new THREE.PointLight(0xffc070, 0, 22, 2); S.add(l); LT.flashes.push({ l, t: 1, dur: 1, i0: 0 }); }
   for (let i = 0; i < 5; i++) { const l = new THREE.PointLight(0xff9a50, 0, 7, 2); S.add(l); LT.torches.push({ l, owner: null, cur: 0 }); }
-}
-function setMoon(B) {
-  const m = B.mirrored; LT.moon.position.set(m ? -34 : 14, 44, m ? 14 : -34); LT.moon.target.position.set(0, 0, 0);
+  for (let i = 0; i < 3; i++) { const l = new THREE.PointLight(0xff5a1e, 0, 9, 2); S.add(l); LT.env.push(l); }
 }
 function lightFlash(x, y, z, color, intensity, dur, range = 24) {
   let best = LT.flashes[0];
@@ -33,7 +31,7 @@ function updateLights(dt, t, focusX, focusZ) {
   LT.beaconGutter = Math.max(0, LT.beaconGutter - dt * 1.6);
   const flick = .86 + .1 * n1(t * 6.3, 1) + .06 * n1(t * 17, 2);
   const lvl = LT.beaconLevel * LT.beaconOn * (1 - .55 * LT.beaconGutter * (0.6 + .4 * Math.sin(t * 40)));
-  LT.beacon.intensity = LT.beaconBase * (.35 + .65 * lvl) * (lvl > 0.001 ? 1 : 0) * flick * LT.beaconOn;
+  LT.beacon.intensity = LT.beaconBase * LT.beaconMul * (.35 + .65 * lvl) * (lvl > 0.001 ? 1 : 0) * flick * LT.beaconOn;
   if (LT.beaconPos) LT.beacon.position.set(LT.beaconPos.x + n1(t * 5, 3) * .1, LT.beaconPos.y + .5 + n1(t * 4, 4) * .08, LT.beaconPos.z + n1(t * 5, 5) * .1);
   for (const f of LT.flashes) { if (f.t < 1) { f.t += dt / f.dur; const k = Math.max(0, 1 - f.t); f.l.intensity = f.i0 * k * k; } else f.l.intensity = 0; }
   LT.spotTimer -= dt;
@@ -57,6 +55,10 @@ function updateLights(dt, t, focusX, focusZ) {
       s.l.position.set(e.x, e.y + .25, e.z); s.l.target.position.set(e.x + (e.dx || 0) * 1.2, e.y - 3, e.z + (e.dz || 0) * 1.2);
       s.l.color.setRGB(e.r, e.g, e.b); s.l.intensity = e.I * e.on * (e.fl || 1) * s.fade * 1.25;
     } else s.l.intensity = 0;
+  }
+  for (let i = 0; i < LT.env.length; i++) {
+    const l = LT.env[i], e = LT.envSrc[i];
+    if (e && LT.envK > .01) { l.position.set(e.x, e.y, e.z); l.color.setHex(e.c); l.distance = e.d; l.intensity = e.I * LT.envK * (e.flick ? .82 + .18 * n1(t * 1.7 + i * 5, i + 11) : 1); } else l.intensity = 0;
   }
   for (let i = 0; i < LT.towers.length; i++) {
     const l = LT.towers[i], e = LT.emitters[i];
@@ -91,6 +93,7 @@ function collectMistLights() {
   for (const f of LT.flashes) put(f.l, .06);
   const tw = LT.towers.filter(l => l.intensity > 0).sort((a, b) => b.intensity - a.intensity);
   for (const l of tw) put(l, .16);
+  for (const l of LT.env) if (l.intensity > 0) put(l, .1);
   for (; k < R.NL; k++) R.lightCol[k].set(0, 0, 0);
 }
 

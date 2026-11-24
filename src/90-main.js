@@ -64,10 +64,16 @@ function step(rdt) {
     for (const f of G.men) if (!f.dead) drawFootman(f);
     if (G.phase === 'play') for (const p of B.pads) if (!p.tower) { _mm.compose(_mv.set(p.x, p.y, p.z), _mq.setFromAxisAngle(_upv, p.face), _ms); KIT.marker.put(_mm, 0, null); }
   }
-  if (live && B.fallAt) {
+  const spray = B.bio.spray;
+  if (live && B.fallAt && spray === 'lava') {
     const f = B.fallAt, ax = Math.abs(f.oz), az = Math.abs(f.ox);
-    if (rnd() < dt * 16) { const tau = rr(.7, 1.25), o = 1.1 * tau, d = 4.5 * tau * tau, sd = rr(-.8, .8) * f.w; fxSmoke(f.x + f.ox * o + ax * sd, f.y - d, f.z + f.oz * o + az * sd, f.ox * rr(.1, .5), rr(-1.6, -.6), f.oz * rr(.1, .5), rr(.9, 1.7), rr(.3, .5), .8, .9, 1.15, 1.5, .14, { drag: .5 }); }
-    if (rnd() < dt * 16) { const tau = rr(.05, .5), o = 1.1 * tau, sd = rr(-.9, .9) * f.w; fxPart(f.x + f.ox * o + ax * sd, f.y - 4.5 * tau * tau, f.z + f.oz * o + az * sd, f.ox * rr(.8, 1.6) + rr(-.3, .3), rr(-1, .6) - 9 * tau, f.oz * rr(.8, 1.6) + rr(-.3, .3), rr(.5, .9), rr(.04, .065), .3, .42, .62, { grav: 9, drag: .2 }); }
+    if (rnd() < dt * 9) { const tau = rr(.1, 1.1), o = f.ext + f.v0 * tau, sd = rr(-.8, .8) * f.w; fxPart(f.x + f.ox * o + ax * sd, f.y - 4.5 * tau * tau, f.z + f.oz * o + az * sd, f.ox * rr(.2, 1.2) + rr(-.4, .4), rr(.2, 1.6), f.oz * rr(.2, 1.2) + rr(-.4, .4), rr(.6, 1.3), rr(.045, .075), rr(1.8, 3), rr(.6, 1.1), .12, { grav: 2.5, drag: .4, wob: 1 }); }
+    if (rnd() < dt * 5) { const tau = rr(.5, 1.2), o = f.ext + f.v0 * tau, sd = rr(-.7, .7) * f.w; fxSmoke(f.x + f.ox * o + ax * sd, f.y - 4.5 * tau * tau, f.z + f.oz * o + az * sd, f.ox * rr(.1, .4), rr(.5, 1.3), f.oz * rr(.1, .4), rr(1.6, 2.8), rr(.4, .7), 1.1, .16, .12, .11, .3, { drag: .5, rise: .2 }); }
+  }
+  if (live && B.fallAt && spray === 'water') {
+    const f = B.fallAt, ax = Math.abs(f.oz), az = Math.abs(f.ox);
+    if (rnd() < dt * 16) { const tau = rr(.7, 1.25), o = f.ext + f.v0 * tau, d = 4.5 * tau * tau, sd = rr(-.8, .8) * f.w; fxSmoke(f.x + f.ox * o + ax * sd, f.y - d, f.z + f.oz * o + az * sd, f.ox * rr(.1, .5), rr(-1.6, -.6), f.oz * rr(.1, .5), rr(.9, 1.7), rr(.3, .5), .8, .9, 1.15, 1.5, .14, { drag: .5 }); }
+    if (rnd() < dt * 16) { const tau = rr(.05, .5), o = f.ext + f.v0 * tau, sd = rr(-.9, .9) * f.w; fxPart(f.x + f.ox * o + ax * sd, f.y - 4.5 * tau * tau, f.z + f.oz * o + az * sd, f.ox * rr(.8, 1.6) + rr(-.3, .3), rr(-1, .6) - 9 * tau, f.oz * rr(.8, 1.6) + rr(-.3, .3), rr(.5, .9), rr(.04, .065), .3, .42, .62, { grav: 9, drag: .2 }); }
   }
   updateDebris(dt, FX.groundAt, d => { UI.coinFrom(d.p.x, d.p.y, d.p.z, d.value || 0); fxTimed(5, d.p.x, d.p.y, d.p.z, .5, .5, 2.4, 1.8, .6, .8, .12); });
   updatePhase(dt);
@@ -81,7 +87,7 @@ function step(rdt) {
   collectMistLights();
   endParts(); endFX();
   UI.update(rdt);
-  if (AU.ready) { let lit = 0; for (const t of G.towers) if (t.alive && t.em.on > .5 && t.kind !== 'spire') lit++; AU.setAmbience(sat((.3 + lit * .06) * LT.beaconOn + .05), G.phase === 'play' ? .5 : .85, G.bossAlive && G.phase === 'play' ? 1 : 0); AU.update(rdt); }
+  if (AU.ready) { let lit = 0; for (const t of G.towers) if (t.alive && t.em.on > .5 && t.kind !== 'spire') lit++; AU.setAmbience(sat((.3 + lit * .06) * LT.beaconOn + .05), sat((G.phase === 'play' ? .5 : .85) * B.bio.wind), G.bossAlive && G.phase === 'play' ? 1 : 0); AU.update(rdt); }
 }
 
 let _last = 0, _acc = 0, _frames = 0, _slow = 0, _fast = 0, _hold = 0, _back = 12;
@@ -107,10 +113,11 @@ function frame(now) {
 }
 
 function boot() {
-  initRenderer(); initMaterials(); resizeRenderer(); initLights(); initFX(); initKits(); UI.init();
+  initRenderer(); initMaterials(); resizeRenderer(); initLights(); initFX(); initWeather(); initKits(); UI.init();
   KIT.marker = new PartBatch(S => { S.box(.07, .75, .07, 0, .37, 0, COL.woodD, { l: L_WOOD, r: [0, 0, .08] }); clothPanel(S, { x0: .03, x1: .36, yTop: .72, len: .26, z: 0, col: COL.clothT, rng: makeRng(9), nx: 2, ny: 2, rag: 0, sway: 0 }); S.rock(.12, -.2, .04, .15, COL.stone, {}); S.rock(.09, .22, .03, -.12, COL.stoneD, {}); }, 14, { rad: .1 });
   G.boardSeed = HASH.seed ? +HASH.seed : 1 + Math.floor(Math.random() * 9000);
   G.boardIndex = +(HASH.board || 0); G.level = +(HASH.level || 0);
+  { const bi = HASH.biome === undefined ? -1 : BIOMES.findIndex(b => b.key === HASH.biome || b.name.toLowerCase() === String(HASH.biome).toLowerCase()); BIOME.start = (bi >= 0 ? bi : HASH.biome !== undefined && isFinite(+HASH.biome) ? +HASH.biome : HASH.seed ? 0 : Math.floor(Math.random() * BIOMES.length)) - G.boardIndex; }
   const B = G.B = buildBoard(G.boardSeed++, G.boardIndex++);
   R.scene.add(B.group); activateBoard(B, true);
   beginBattle(true);

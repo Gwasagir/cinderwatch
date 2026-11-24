@@ -163,14 +163,14 @@ function startRise() {
   R.scene.add(B.group); activateBoard(B, false);
   setBoardCasting(B, true);
   for (const p of B.pieces) { p.t = 0; p.delay = sat((p.cx + p.cz + 36) / 72) * 1.7 + rnd() * .25 + (p.kind === 'chunk' ? 0 : 2.0 + rnd() * .3); p.mesh.visible = false; }
-  sfx('rise', 0, 0, 1.2);
+  sfx('rise', 0, 0, 1.2); UI.banner(B.bio.name, 3.6, false);
 }
 function activateBoard(B, lit) {
   B.flames = [];
   const b = B.beacon;
   B.beaconFlame = addFlame({ x: b.x, y: b.y - .12, z: b.z, size: 2.3, layers: 3, embers: 2.6, glow: 1.1, smoke: 5, on: lit ? 1 : 0 }); B.flames.push(B.beaconFlame);
-  for (const f of B.fires) B.flames.push(addFlame({ x: f.x, y: f.y, z: f.z, size: f.size, embers: .5, glow: .8, on: lit ? 1 : 0 }));
-  LT.beaconPos = b; LT.beaconOn = lit ? 1 : 0; LT.beaconLevel = 1; setMoon(B);
+  for (const f of B.fires) B.flames.push(addFlame(Object.assign({ x: f.x, y: f.y, z: f.z, size: f.size, embers: .5, glow: .8, on: lit ? 1 : 0 }, f.fx)));
+  LT.beaconPos = b; LT.beaconOn = lit ? 1 : 0; LT.beaconLevel = 1; LT.envSrc = B.env.slice(0, LT.env.length); LT.envK = lit ? 1 : 0; setBiomeLook(B, lit);
   FX.groundAt = B.heightAt;
   G.padCov = null;
 }
@@ -183,6 +183,7 @@ function beginBattle(first) {
 }
 function updatePhase(dt) {
   G.phaseT += dt; const B = G.B, t = G.phaseT;
+  updateBiomeLook(dt); LT.envK = damp(LT.envK, G.phase === 'crumble' ? 0 : (G.phase === 'rise' && t < 2.4 ? 0 : 1), 2, dt); LT.beaconMul = damp(LT.beaconMul, B.bio.beacon || 1, 2, dt);
   const want = G.phase === 'defeat' ? 0 : (G.phase === 'rise' ? (t > B.igniteAt ? 1 : 0) : 1);
   LT.beaconOn = damp(LT.beaconOn, want, want ? 3 : 1.6, dt);
   LT.beaconLevel = damp(LT.beaconLevel, G.lives / G.maxLives, 3, dt);

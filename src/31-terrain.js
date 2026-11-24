@@ -9,29 +9,41 @@ function initMaterials() {
   MAT.caster = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false });
   MAT.fall = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, side: THREE.DoubleSide,
-    uniforms: { uTime: SH.uTime },
+    uniforms: { uTime: SH.uTime, uFP: { value: new THREE.Vector4(0, 1, 1, 0) }, uFA: { value: new THREE.Vector3(.022, .034, .054) }, uFB: { value: new THREE.Vector3(.2, .27, .38) } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: `precision highp float; varying vec2 vUv; uniform float uTime;
+    fragmentShader: `precision highp float; varying vec2 vUv; uniform float uTime; uniform vec4 uFP; uniform vec3 uFA; uniform vec3 uFB;
 float h(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
 void main(){
-  float x = vUv.x, y = vUv.y;
-  float s1 = n(vec2(x * 6.0, y * 5.0 - uTime * 2.4)), s2 = n(vec2(x * 13.0 + 3.1, y * 11.0 - uTime * 4.1)), s3 = n(vec2(x * 3.0 - 1.7, y * 2.2 - uTime * 1.3));
-  float strand = smoothstep(0.34, 0.72, s1 * 0.6 + s2 * 0.4);
+  float x = vUv.x, y = vUv.y, t = uTime * uFP.y;
   float edge = smoothstep(0.0, 0.14, x) * smoothstep(1.0, 0.86, x);
+  if (uFP.x > 0.5 && uFP.x < 1.5) {
+    float c1 = n(vec2(x * 7.0, 2.0)), c2 = n(vec2(x * 19.0 + 5.0, 7.0)), c3 = n(vec2(x * 4.0 + 1.0, y * 2.2));
+    float len = 0.34 + 0.46 * c1 + 0.16 * c2, tip = smoothstep(len, len - 0.2, y);
+    float rib = smoothstep(0.2, 0.8, c2 * 0.55 + n(vec2(x * 34.0, y * 1.3)) * 0.45);
+    float ed = smoothstep(0.0, 0.07, x) * smoothstep(1.0, 0.93, x);
+    gl_FragColor = vec4(mix(uFA, uFB, rib * (0.45 + 0.55 * c3)), ed * tip * uFP.z); return;
+  }
+  float s1 = n(vec2(x * 6.0, y * 5.0 - t * 2.4)), s2 = n(vec2(x * 13.0 + 3.1, y * 11.0 - t * 4.1)), s3 = n(vec2(x * 3.0 - 1.7, y * 2.2 - t * 1.3));
+  float strand = smoothstep(0.34, 0.72, s1 * 0.6 + s2 * 0.4);
   float sheet = 1.0 - smoothstep(0.03, 0.3, y);
-  float body = mix(strand * (0.55 + 0.45 * s3), 1.0, sheet);
   float fade = 1.0 - smoothstep(0.4, 1.0, y);
+  if (uFP.x > 1.5) {
+    float body = mix(0.72 + 0.28 * s3, 1.0, sheet), crust = strand * smoothstep(0.05, 0.5, y);
+    gl_FragColor = vec4(mix(uFA * (0.7 + 0.5 * s3), uFB, crust), clamp(edge * body * (1.0 - smoothstep(0.55, 1.0, y)) * uFP.z, 0.0, 1.0)); return;
+  }
+  float body = mix(strand * (0.55 + 0.45 * s3), 1.0, sheet);
   float foam = strand * smoothstep(0.02, 0.22, y);
-  vec3 col = mix(vec3(0.022, 0.034, 0.054), vec3(0.2, 0.27, 0.38), foam * 0.85 + 0.06 * s3);
-  gl_FragColor = vec4(col, edge * body * fade * (0.62 + 0.3 * foam)); }`,
+  vec3 col = mix(uFA, uFB, foam * 0.85 + 0.06 * s3);
+  gl_FragColor = vec4(col, clamp(edge * body * fade * (0.62 + 0.3 * foam) * uFP.z, 0.0, 1.0)); }`,
   });
 }
 
 function buildBoard(seed, index) {
   let lay = null, ls = seed;
   while (!lay) { lay = genLayout(ls); ls += 101; }
+  const bio = biomeFor(index), RL = bio.relief; applyBiomePalette(bio);
   const rng = makeRng(seed * 9176 + 11); soupRng = makeRng(seed * 131 + 5);
   const sd = (seed * 53) % 997;
   const P = lay.pts, n = P.length, L = lay.L, kx = lay.kx, zc = lay.cave.z;
@@ -39,7 +51,11 @@ function buildBoard(seed, index) {
   for (let i = 0; i < n; i++) { px[i] = P[i][0]; pz[i] = P[i][1]; }
   for (let i = 0; i < n; i++) { const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1); const dx = px[b] - px[a], dz = pz[b] - pz[a], l = Math.hypot(dx, dz) || 1; tx[i] = dx / l; tz[i] = dz / l; }
 
-  const hBase = (x, z) => (fbm(x * .055 + sd, z * .055 + 3.1, sd, 3) - .5) * 1.7 + (fbm(x * .17 + 3, z * .17 + 7, sd + 5, 2) - .5) * .5 + .9 * smooth(7, -13, z);
+  const hBase = (x, z) => {
+    let h = (fbm(x * .055 + sd, z * .055 + 3.1, sd, 3) - .5) * RL[0] + (fbm(x * .17 + 3, z * .17 + 7, sd + 5, 2) - .5) * RL[1] + .9 * smooth(7, -13, z);
+    if (RL[3]) { const w = x * .42 + z * .2 + (fbm(x * .09, z * .09, sd + 70, 2) - .5) * 5, r = 1 - Math.abs(Math.sin(w)); h += RL[3] * r * r * (.4 + .9 * fbm(x * .07 + 9, z * .07, sd + 71, 2)); }
+    return h;
+  };
 
   { const raw = new Float32Array(n); for (let i = 0; i < n; i++) raw[i] = hBase(px[i], pz[i]) * .6;
     let a = raw, b = new Float32Array(n);
@@ -71,6 +87,16 @@ function buildBoard(seed, index) {
   const pads = lay.pads.map(p => ({ x: p.x, z: p.z, s: p.s, cov: p.cov, y: 0 }));
   for (const p of pads) p.y0 = py[clamp(Math.round(p.s / PATH_STEP), 0, n - 1)] + .05;
 
+  const ponds = [];
+  for (let t = 0; t < 700 && ponds.length < bio.ponds; t++) {
+    const r = rng.range(1.2, 2.3), x = rng.range(-BH + 3.4 + r, BH - 3.4 - r), z = rng.range(-BH + 3.4 + r, BH - 3.4 - r);
+    if (dfAt(dRoad, x, z) < ROAD_HALF + 2.6 + r || dfAt(dStr, x, z) < 3.9 + r) continue;
+    if (x < -12 + r || z < -12 + r || (Math.abs(x - kx) < 6.5 + r && z < -8.5 + r)) continue;
+    if (pads.some(p => Math.hypot(x - p.x, z - p.z) < 3.1 + r) || ponds.some(q => Math.hypot(x - q.x, z - q.z) < r + q.r + 3.2)) continue;
+    let y = 1e9; for (let k = 0; k < 24; k++) { const a = k / 12 * TAU, d = r + (k < 12 ? 1.3 : 2.1); y = Math.min(y, hBase(x + Math.cos(a) * d, z + Math.sin(a) * d)); }
+    ponds.push({ x, z, r, y: Math.min(y, hBase(x, z)) - .22 });
+  }
+  const pondD = (q, x, z) => Math.hypot(x - q.x, z - q.z) * (.82 + .36 * vnoise(x * .55 + q.x, z * .55 + q.z, sd + 60));
   let _cl = 0;
   const hAt = (x, z) => {
     let h = hBase(x, z);
@@ -84,12 +110,13 @@ function buildBoard(seed, index) {
       h = lerp(h, py[idxAt(iRoad, x, z)], w); if (dr < ROAD_HALF - .15 && ds > 2.3) h -= .07;
     }
     for (const p of pads) { const d = Math.hypot(x - p.x, z - p.z); if (d < 2.7) h = lerp(h, p.y0, smooth(2.7, 1.5, d)); }
+    for (const q of ponds) { const d = pondD(q, x, z); if (d < q.r + 1.5) h = lerp(h, q.y - .45, smooth(q.r + 1.5, q.r * .4, d)); }
     const dkx = Math.max(0, Math.abs(x - kx) - 5.2), dkz = Math.max(0, z + 11.7), dk = Math.hypot(dkx, dkz);
     if (dk < 1.8) h = lerp(h, keepY, smooth(1.8, .2, dk));
     const dcl = x + BH + (fbm(z * .23 + 1.7, x * .11, sd + 9, 2) - .5) * 2.6;
-    let c = smooth(5.0, 1.3, dcl) * (3.4 + 2.6 * fbm(x * .21, z * .21, sd + 11, 2) + 1.4 * smooth(4, -15, z));
+    let c = smooth(5.0, 1.3, dcl) * (3.4 + 2.6 * fbm(x * .21, z * .21, sd + 11, 2) + 1.4 * smooth(4, -15, z)) * RL[2];
     const dbr = z + BH + (fbm(x * .23 + 5.1, z * .11, sd + 13, 2) - .5) * 2.4;
-    const c2 = smooth(4.4, 1.0, dbr) * (1.8 + 2.2 * fbm(x * .2 + 9, z * .2, sd + 15, 2)) * smooth(5.4, 7.6, Math.abs(x - kx));
+    const c2 = smooth(4.4, 1.0, dbr) * (1.8 + 2.2 * fbm(x * .2 + 9, z * .2, sd + 15, 2)) * smooth(5.4, 7.6, Math.abs(x - kx)) * RL[2];
     c = Math.max(c, c2) + 1.5 * smooth(11, 1, Math.hypot(x + BH, z + BH)) * smooth(7, 2.5, Math.min(x + BH, z + BH));
     if (c > .02) { const v = c / 1.2, f = Math.floor(v); c = (f + smooth(.45, .9, v - f)) * 1.2; }
     if (x < -12.2) c *= 1 - smooth(2.6, 1.6, Math.abs(z - zc)) * smooth(-12.2, -13.2, x);
@@ -120,11 +147,12 @@ function buildBoard(seed, index) {
       let c = mixC(COL.stoneD, COL.stone, n1 * .9 + .1); if (ny > .93 && n1 > .5) c = mixC(c, COL.grassD, .4);
       return [mulC(c, .82 + .32 * n2), L_ROCK, .96];
     }
-    const ds = dfAt(dStr, x, z);
-    if (ds < 1.25) return [mulC(mixC(COL.mud, COL.earthD, n1), .6 + .25 * n2), L_DIRT, .5];
+    let ds = dfAt(dStr, x, z); for (const q of ponds) ds = Math.min(ds, Math.max(0, pondD(q, x, z) - q.r) + .55);
+    const glow = bio.bankGlow ? smooth(3.0, 1.1, ds) : 0;
+    if (ds < 1.25) return [mixC(mulC(mixC(COL.mud, COL.earthD, n1), .6 + .25 * n2), [.42, .09, .02], glow * .16), L_DIRT, glow ? .9 : .5, glow * .012];
     let c = mixC(COL.earth, COL.grass, smooth(.4, .62, n1));
     c = mixC(c, COL.earthD, smooth(2.4, .5, dfAt(dRoad, x, z) - ROAD_HALF) * .55);
-    return [mulC(c, .84 + .3 * n2), L_DIRT, .97];
+    return [mixC(mulC(c, .84 + .3 * n2), [.42, .09, .02], glow * .1), L_DIRT, .97, glow * .007];
   };
   const vtx = o => [VX[o], VY[o], VZ[o]];
   for (let j = 0; j < NV - 1; j++) for (let i = 0; i < NV - 1; i++) {
@@ -135,28 +163,31 @@ function buildBoard(seed, index) {
     for (const t of tris) {
       _sa.set(t[1][0] - t[0][0], t[1][1] - t[0][1], t[1][2] - t[0][2]); _sb.set(t[2][0] - t[0][0], t[2][1] - t[0][1], t[2][2] - t[0][2]); _sn.crossVectors(_sa, _sb).normalize();
       const m = tcol((t[0][0] + t[1][0] + t[2][0]) / 3, (t[0][2] + t[1][2] + t[2][2]) / 3, _sn.y, cl);
-      S.tri(t[0], t[1], t[2], m[0], m[1], m[2]);
+      S.tri(t[0], t[1], t[2], m[0], m[1], m[2], m[3] ? { emis: m[3] } : undefined);
     }
   }
   const facing = (S, a, b, c, d, ox, oz, col, layer, rough, o) => {
     _sa.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]); _sb.set(c[0] - a[0], c[1] - a[1], c[2] - a[2]); _sn.crossVectors(_sa, _sb);
     if (_sn.x * ox + _sn.z * oz + _sn.y * 1e-3 >= 0) S.quad(a, b, c, d, col, layer, rough, o); else S.quad(a, d, c, b, col, layer, rough, o);
   };
-  const SC = [C(0x8f8474), C(0x3c3f4c), C(0x66564a), C(0x767a86), C(0x70503f), C(0x4c4f5c), C(0x9a8e7c), C(0x55483e)];
+  const SC = bio.strata.map(h => C(h));
   const strataCol = k => k === 0 ? mulC(COL.earthD, 1.1) : mulC(SC[(k * 3 + Math.floor(h2(k, 7, sd + 40) * 3)) % SC.length], .8 + .35 * h2(k, 3, sd + 41));
   const LV = []; { let y = 13, i = 0; while (y > -11) { LV.push(y); y -= .5 + .95 * h2(i++, 9, sd + 47); } LV.push(-99); }
+  const insetBase = (y, k) => y > -.5 ? -(k & 1) * .1 : -(Math.min(1.0, (-.5 - y) * .2) + (k & 1) * .16) + (y < -4.0 ? (-4.0 - y) * .6 : 0);
+  const inset = (y, k, t) => insetBase(y, k) + (vnoise(t * .8, k * 3.1, sd + 45) - .5) * .14;
+  const wallReach = (top, y) => { const l0 = top - .32; if (y >= l0) return 0; let j = 0; while (LV[j] > l0 - .3) j++; while (LV[j] >= y) j++; return .07 - insetBase(LV[j] + .4, j + 1); };
   const wallColumn = (S, ax, az, ay, bx, bz, by, ox, oz, outer, t0, t1) => {
     if (!outer) { facing(S, [ax, ay, az], [ax, -4.6, az], [bx, -4.6, bz], [bx, by, bz], ox, oz, mulC(COL.stoneD, .7), L_ROCK, 1); return; }
     const bot = t => -5.0 - 2.2 * fbm(t * .45, 1.7, sd + 43, 2) - (h2(Math.floor(t * 2), 5, sd + 44) > .8 ? 1.3 : 0);
     const botA = bot(t0), botB = bot(t1);
-    const inset = (y, k, t) => (y > -.5 ? -(k & 1) * .1 : -(Math.min(1.0, (-.5 - y) * .2) + (k & 1) * .16) + (y < -4.0 ? (-4.0 - y) * .6 : 0)) + (vnoise(t * .8, k * 3.1, sd + 45) - .5) * .14;
     let yA = ay, yB = by, inA = 0, inB = 0, lvl = Math.min(ay, by) - .32, j = 0; while (LV[j] > lvl - .3) j++;
     for (let step = 0; step < 34; step++) {
       const wob = step ? .2 : 0;
       const loA = Math.max(lvl + wob * (vnoise(t0 * 1.3, j, sd + 46) - .5), botA), loB = Math.max(lvl + wob * (vnoise(t1 * 1.3, j, sd + 46) - .5), botB);
-      const col = strataCol(step === 0 ? 0 : j + 3);
+      const vk = bio.vein && step > 0 && (j % 6) === 2 ? smooth(.5, .68, vnoise(t0 * .35, j * 1.7, sd + 48)) : 0, vein = vk > .01;
+      const col = vein ? mixC(strataCol(j + 3), [.5, .11, .02], vk) : strataCol(step === 0 ? 0 : j + 3);
       const a1 = [ax - ox * inA, yA, az - oz * inA], a2 = [ax - ox * inA, loA, az - oz * inA], b2 = [bx - ox * inB, loB, bz - oz * inB], b1 = [bx - ox * inB, yB, bz - oz * inB];
-      const glow = { emis: .03 * smooth(-7.5, -1, (loA + yA) * .5) + .008 };
+      const glow = { emis: vein ? .008 + .075 * vk : .03 * smooth(-7.5, -1, (loA + yA) * .5) + .008 };
       if (yA - loA > .01 || yB - loB > .01) facing(S, a1, a2, b2, b1, ox, oz, col, step === 0 ? L_DIRT : L_ROCK, .97, glow);
       if (lvl <= botA && lvl <= botB) break;
       const nl = LV[j++], nA = inset(nl + .4, j, t0), nB = inset(nl + .4, j, t1);
@@ -216,7 +247,7 @@ function buildBoard(seed, index) {
     }
   }
   const waterV = (S, x, y, z, u, w, flow, rough) => S.v(x, y, z, 0, 1, 0, 1, 1, 1, u, w, 0, rough, flow, 0);
-  for (let q = 0, made = 0; q < 60 && made < 11; q++) {
+  for (let q = 0, made = 0; q < 60 && made < bio.puddles; q++) {
     const i = rng.int(18, n - 14); if (Math.abs(i - ci0) * PATH_STEP < 4.5) continue;
     const off = rng.sign() * rng.range(.25, .78), cx = px[i] - tz[i] * off, cz = pz[i] + tx[i] * off, r = rng.range(.36, .78), y = py[i] + .042, ph = rng() * 9, el = rng.range(.6, 1), ang = Math.atan2(tz[i], tx[i]);
     const ring = []; for (let k = 0; k < 11; k++) { const a = k / 11 * TAU, rr2 = r * (.72 + .5 * vnoise(Math.cos(a) * 1.4 + ph, Math.sin(a) * 1.4, sd)); const lx = Math.cos(a) * rr2, lz = Math.sin(a) * rr2 * el; ring.push([cx + lx * Math.cos(ang) - lz * Math.sin(ang), cz + lx * Math.sin(ang) + lz * Math.cos(ang)]); }
@@ -228,6 +259,28 @@ function buildBoard(seed, index) {
       for (const v of [[cx, y - .006, cz], m2, m1]) ch.soup.v(v[0], v[1], v[2], 0, 1, 0, mudc[0], mudc[1], mudc[2], v[0] * .25, v[2] * .25, L_COBBLE, .28);
     }
     made++;
+  }
+  for (const q of ponds) {
+    const R2 = q.r + .5, x0 = Math.floor(q.x - R2), x1 = Math.ceil(q.x + R2), z0 = Math.floor(q.z - R2), z1 = Math.ceil(q.z + R2);
+    for (let z = z0; z < z1; z++) for (let x = x0; x < x1; x++) {
+      if (Math.hypot(x + .5 - q.x, z + .5 - q.z) > R2 + .8) continue;
+      const S = chunkAt(x + .5, z + .5).water;
+      for (const [dx, dz] of [[0, 0], [0, 1], [1, 1], [0, 0], [1, 1], [1, 0]]) waterV(S, x + dx, q.y, z + dz, (x + dx) * .8, (z + dz) * .8, .02, .14);
+    }
+  }
+  if (bio.key === 'ember') {
+    for (let q = 0; q < 46; q++) {
+      let x = rng.range(-BH + 1.5, BH - 1.5), z = rng.range(-BH + 1.5, BH - 1.5), a = rng.range(0, TAU);
+      if (dfAt(dRoad, x, z) < ROAD_HALF + .6 || dfAt(dStr, x, z) < 1.4 || dfAt(dStr, x, z) > 9 || Math.abs(hAt(x + .6, z) - hAt(x - .6, z)) > .3) continue;
+      for (let sgm = 0, m = rng.int(4, 8); sgm < m; sgm++) {
+        a += rng.range(-.8, .8); const l = rng.range(.25, .6), x2 = x + Math.cos(a) * l, z2 = z + Math.sin(a) * l, wd = rng.range(.02, .05), wx = -Math.sin(a) * wd, wz = Math.cos(a) * wd;
+        if (Math.abs(x2) > BH - .6 || Math.abs(z2) > BH - .6) break;
+        const y1 = heightAt(x, z) + .03, y2 = heightAt(x2, z2) + .03, S = chunkAt(x, z).soup, o = { emis: rng.range(.12, .3) }, col = [.75, .2, .03];
+        S.quad([x - wx, y1, z - wz], [x + wx, y1, z + wz], [x2 + wx, y2, z2 + wz], [x2 - wx, y2, z2 - wz], col, L_PLAIN, 1, o);
+        S.quad([x - wx, y1, z - wz], [x2 - wx, y2, z2 - wz], [x2 + wx, y2, z2 + wz], [x + wx, y1, z + wz], col, L_PLAIN, 1, o);
+        x = x2; z = z2;
+      }
+    }
   }
   let fallAt = null;
   { let last = sn - 1; for (let u = 1; u < sn; u++) if (Math.abs(SP[u][0]) > BH || Math.abs(SP[u][1]) > BH) { last = u; break; }
@@ -245,11 +298,24 @@ function buildBoard(seed, index) {
       for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .24);
     }
     const e = sv[sv.length - 1], ox = Math.abs(e[0]) > BH - .01 ? Math.sign(e[0]) : 0, oz = ox ? 0 : Math.sign(e[2]);
-    fallAt = { x: e[0], y: e[1], z: e[2], ox, oz, w: e[6] };
+    const bed = e[1] - .3, top = bed + .5, ax = Math.abs(oz), az = Math.abs(ox), w = e[6];
+    let ext = .4; for (let d = 0; d <= 1.0; d += .1) ext = Math.max(ext, wallReach(top, bed - d) + .22);
+    ext = Math.min(ext, .95);
+    let v0 = 1.45; for (let r = 1; r <= 28; r++) { const tau = 1.6 * r / 28; v0 = Math.max(v0, (wallReach(top, e[1] - 4.5 * tau * tau) + .38 - ext) / tau); }
+    v0 = Math.min(v0, 3.2);
+    const S = chunkAt(e[0] - ox * .5, e[2] - oz * .5), rc = () => mulC(mixC(COL.stoneD, COL.stone, rng()), .9);
+    const at = (o, a, y) => [e[0] + ox * o + ax * a, y, e[2] + oz * o + az * a];
+    { const c = at((ext - .5) / 2, 0, bed - .26); S.soup.box(ox ? ext + .5 : w * 2 + 1.1, .5, ox ? w * 2 + 1.1 : ext + .5, c[0], c[1], c[2], rc(), { l: L_ROCK, jit: .04 }); }
+    { const c = at(ext * .15, 0, bed - .6); S.soup.rock(w * .6 + .15, c[0], c[1], c[2], rc(), { sq: .55 }); }
+    for (const sd2 of [-1, 1]) for (const [o, r, dy] of [[ext * .1, .44, .1], [ext * .62, .32, .02]]) { const c = at(o, sd2 * (w + .34), e[1] + dy); S.soup.rock(r, c[0], c[1], c[2], rc(), { sq: .72 }); }
+    { const a0 = [e[0] - e[3], e[1], e[2] - e[4]], a1 = [e[0] + e[3], e[1], e[2] + e[4]], sg = (e[3] * ax + e[4] * az) >= 0 ? 1 : -1, b0 = at(ext + .06, -sg * w, e[1]), b1 = at(ext + .06, sg * w, e[1]), u1 = e[5] + (ext + .06);
+      const q = [[a0, -w, e[5]], [a1, w, e[5]], [b1, w, u1], [b0, -w, u1]];
+      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S.water, q[k][0][0], q[k][0][1], q[k][0][2], q[k][1], q[k][2], 1.25, .24); }
+    fallAt = { x: e[0], y: e[1], z: e[2], ox, oz, w, ext, v0 };
   }
 
   const B = {
-    seed, index, lay, L, n, px, pz, py, tx, tz, pads, kx, zc, keepY, heightAt, hAt, chunks, structs, fires, glows, chunkAt, rng, sd,
+    seed, index, lay, L, n, px, pz, py, tx, tz, pads, kx, zc, keepY, heightAt, hAt, chunks, structs, fires, glows, chunkAt, rng, sd, bio, ponds, env: [],
     dRoadAt: (x, z) => dfAt(dRoad, x, z), dStrAt: (x, z) => dfAt(dStr, x, z), cross: lay.cross, ci0, wlc, swl, SP, fallAt, mirrored: (index % 2) === 1,
     put(T, x, z, o = {}) { const y = o.y === undefined ? heightAt(x, z) + (o.dy || 0) : o.y; chunkAt(x, z).soup.merge(T, { p: [x, y, z], ry: o.ry || 0, r: o.r, s: o.s, tint: o.tint, ao: o.ao === undefined ? [0, .55, .6] : o.ao }); },
   };
@@ -305,7 +371,7 @@ function finalizeBoard(B) {
   if (mir) {
     const sa = (a, b) => { for (let i = 0; i < a.length; i++) { const t = a[i]; a[i] = b[i]; b[i] = t; } };
     sa(B.px, B.pz); sa(B.tx, B.tz);
-    for (const p of B.pads) sw(p); for (const f of B.fires) sw(f); for (const g of B.glows) sw(g);
+    for (const p of B.pads) sw(p); for (const f of B.fires) sw(f); for (const g of B.glows) sw(g); for (const q of B.ponds) sw(q); for (const e of B.env) sw(e);
     sw(B.beacon); sw(B.gate); sw(B.cave); if (B.fallAt) { sw(B.fallAt); const t = B.fallAt.ox; B.fallAt.ox = B.fallAt.oz; B.fallAt.oz = t; }
     const h0 = B.heightAt; B.heightAt = (x, z) => h0(z, x);
     const d0 = B.dRoadAt; B.dRoadAt = (x, z) => d0(z, x);
@@ -316,7 +382,7 @@ function finalizeBoard(B) {
     const f = B.fallAt, ex = -f.oz, ez = f.ox, w = f.w * 1.05, pc = B.pieces.reduce((a, b) => b.kind === 'chunk' && dist2(b.cx, b.cz, f.x, f.z) < dist2(a.cx, a.cz, f.x, f.z) ? b : a, B.pieces[0]);
     const NR = 14, pos = [], uv = [], idx = [];
     for (let r = 0; r <= NR; r++) {
-      const v = r / NR, tau = 1.3 * v, out = 1.1 * tau, dy = -4.5 * tau * tau, ww = w * (1 + .35 * v);
+      const v = r / NR, tau = 1.3 * v, out = f.ext + f.v0 * tau, dy = -4.5 * tau * tau, ww = w * (1 + .35 * v);
       for (const sd of [-1, 1]) { pos.push(f.x + f.ox * out + ex * ww * sd - pc.cx, f.y + dy - pc.cy, f.z + f.oz * out + ez * ww * sd - pc.cz); uv.push(sd * .5 + .5, v); }
     }
     for (let i = 0; i < NR; i++) { const a = i * 2; idx.push(a, a + 1, a + 3, a, a + 3, a + 2); }

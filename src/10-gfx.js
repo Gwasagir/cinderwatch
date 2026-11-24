@@ -120,22 +120,28 @@ THREE.ShaderChunk.lights_fragment_begin = THREE.ShaderChunk.lights_fragment_begi
 const SH = {
   uTime: { value: 0 }, uTexA: { value: null }, uTexH: { value: null }, uBump: { value: 0.055 },
   uSky: { value: new THREE.Color(0.012, 0.022, 0.045) }, uWind: { value: 1 },
+  uCover: { value: new THREE.Vector4(0, 0.55, 0.3, 0.5) }, uCoverCol: { value: new THREE.Vector3(1, 1, 1) }, uCoverP: { value: new THREE.Vector4(0.7, 0.6, 0.0, 0.0) },
+  uWat: { value: new THREE.Vector4(0, 1, 1, 0) }, uWatA: { value: new THREE.Vector3(0.012, 0.02, 0.03) }, uWatB: { value: new THREE.Vector3(0.3, 0.4, 0.5) },
 };
 
 function litMaterial(kind, params = {}) {
   const mat = new THREE.MeshStandardMaterial(Object.assign({ vertexColors: kind !== 'water', roughness: 1, metalness: 0 }, params));
-  const inst = kind === 'inst', water = kind === 'water';
+  const inst = kind === 'inst', water = kind === 'water', world = !inst && !water;
   mat.customProgramCacheKey = () => 'cw-' + kind;
   mat.onBeforeCompile = sh => {
     sh.uniforms.uTime = SH.uTime; sh.uniforms.uTexA = SH.uTexA; sh.uniforms.uTexH = SH.uTexH; sh.uniforms.uBump = SH.uBump; sh.uniforms.uSky = SH.uSky; sh.uniforms.uWind = SH.uWind;
+    sh.uniforms.uCover = SH.uCover; sh.uniforms.uCoverCol = SH.uCoverCol; sh.uniforms.uCoverP = SH.uCoverP; sh.uniforms.uWat = SH.uWat; sh.uniforms.uWatA = SH.uWatA; sh.uniforms.uWatB = SH.uWatB;
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', `#include <common>
 attribute vec4 aSurf; varying vec4 vSurf; varying vec2 vTuv; uniform float uTime; uniform float uWind;
+${world ? 'varying vec3 vWpos;' : ''}
 ${inst ? 'attribute float aFlash; varying float vFlash;' : ''}`)
+      .replace('#include <project_vertex>', `#include <project_vertex>
+${world ? 'vWpos = (modelMatrix * vec4(transformed, 1.0)).xyz;' : ''}`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
 vSurf = aSurf; vTuv = uv;
 ${inst ? 'vFlash = aFlash;' : ''}
-${(!water && !inst) ? `if (aSurf.z > 0.0) {
+${world ? `if (aSurf.z > 0.0) {
   float ph = uTime * 1.6 + position.x * 0.9 + position.z * 0.7;
   float g = sin(ph) * 0.6 + sin(ph * 2.3 + 1.7) * 0.4;
   transformed.x += g * 0.07 * aSurf.z * uWind; transformed.z += cos(ph * 0.8) * 0.05 * aSurf.z * uWind; transformed.y += sin(ph * 1.9) * 0.02 * aSurf.z * uWind;
@@ -144,7 +150,9 @@ ${(!water && !inst) ? `if (aSurf.z > 0.0) {
       .replace('#include <common>', `#include <common>
 precision highp sampler2DArray;
 uniform sampler2DArray uTexA; uniform sampler2DArray uTexH; uniform float uBump; uniform float uTime; uniform vec3 uSky;
+uniform vec4 uCover; uniform vec3 uCoverCol; uniform vec4 uCoverP; uniform vec4 uWat; uniform vec3 uWatA; uniform vec3 uWatB;
 varying vec4 vSurf; varying vec2 vTuv;
+${world ? 'varying vec3 vWpos;' : ''}
 ${inst ? 'varying float vFlash;' : ''}
 vec3 cwBump(vec3 P, vec3 N, float dBx, float dBy, float sc) {
   vec3 dPdx = dFdx(P), dPdy = dFdy(P);
@@ -164,24 +172,59 @@ float cwRipple(vec2 p, float t, float flow) {
 }`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 float cwL = floor(vSurf.x + 0.5);
-${water ? 'vec4 cwT = vec4(0.5);' : 'vec4 cwT = texture(uTexA, vec3(vTuv, cwL)); diffuseColor.rgb *= cwT.rgb * 2.0;'}`)
+${water ? `vec4 cwT = vec4(0.5);
+float wMask = 0.0, wHeat = 0.0, wFlow = uTime * uWat.y;
+float wn1 = cwN(vTuv * vec2(1.6, 0.8) + 3.0), wn2 = cwN(vTuv * vec2(5.0, 2.6) + 11.0);
+diffuseColor.rgb = uWatA;
+if (uWat.x > 0.5 && uWat.x < 1.5) {
+  float frost = smoothstep(0.4, 0.74, wn1 * 0.65 + wn2 * 0.35);
+  float ck = smoothstep(0.035, 0.0, abs(cwN(vTuv * vec2(2.3, 1.2) + 40.0) - 0.5)) + smoothstep(0.03, 0.0, abs(cwN(vTuv * vec2(1.2, 2.7) + 71.0) - 0.48));
+  wMask = clamp(frost * 0.85 + ck * 0.7, 0.0, 1.0);
+  diffuseColor.rgb = mix(uWatA * (0.7 + 0.6 * wn2), uWatB, wMask);
+} else if (uWat.x > 1.5 && uWat.x < 2.5) {
+  float t = wFlow * (0.16 + 0.34 * min(vSurf.z, 1.0));
+  float c1 = cwN(vec2(vTuv.x * 2.1, vTuv.y * 1.1 - t)), c2 = cwN(vec2(vTuv.x * 4.6 + 7.0, vTuv.y * 2.4 - t * 1.7)), c3 = cwN(vec2(vTuv.x * 9.0 - 3.0, vTuv.y * 5.0 - t * 2.3));
+  float ra = 1.0 - abs(2.0 * c1 - 1.0), rb = 1.0 - abs(2.0 * c2 - 1.0);
+  float crack = max(pow(ra, 3.2), pow(rb, 4.4) * 0.8), pool = smoothstep(0.56, 0.74, c1 * 0.55 + c3 * 0.45);
+  wHeat = clamp(crack * 0.85 + pool, 0.0, 1.0); wMask = 1.0 - smoothstep(0.38, 0.7, wHeat);
+  diffuseColor.rgb = mix(uWatA, uWatB * (0.6 + 0.8 * c3), wMask);
+} else if (uWat.x > 2.5) {
+  wMask = smoothstep(0.56, 0.68, wn1 * 0.55 + wn2 * 0.45 + 0.12 * (1.0 - min(vSurf.z, 1.0))) * step(0.01, vSurf.z);
+  diffuseColor.rgb = mix(uWatA, uWatB * (0.75 + 0.5 * wn2), wMask);
+}` : 'vec4 cwT = texture(uTexA, vec3(vTuv, cwL)); diffuseColor.rgb *= cwT.rgb * 2.0;'}`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-roughnessFactor = clamp(vSurf.y * (1.15 - 0.3 * cwT.a), 0.045, 1.0);`)
+roughnessFactor = clamp(vSurf.y * (1.15 - 0.3 * cwT.a), 0.045, 1.0);
+${water ? `if (uWat.x > 0.5 && uWat.x < 1.5) roughnessFactor = mix(0.09, 0.62, wMask);
+else if (uWat.x > 1.5 && uWat.x < 2.5) roughnessFactor = mix(0.55, 0.96, wMask);
+else if (uWat.x > 2.5) roughnessFactor = mix(roughnessFactor, 0.9, wMask);` : ''}`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 ${water ? `{
-  float h0 = cwRipple(vTuv, uTime, vSurf.z);
-  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.11 * min(vSurf.z, 1.0));
-}` : `{
+  float h0 = cwRipple(vTuv, wFlow, vSurf.z) + wMask * uWat.w;
+  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), (0.03 + 0.11 * min(vSurf.z, 1.0)) * uWat.z);
+}` : `float cwH0 = texture(uTexH, vec3(vTuv, cwL)).a;
+{
   vec2 cdx = dFdx(vTuv), cdy = dFdy(vTuv);
-  float h0 = texture(uTexH, vec3(vTuv, cwL)).a;
-  float hx = texture(uTexH, vec3(vTuv + cdx, cwL)).a - h0;
-  float hy = texture(uTexH, vec3(vTuv + cdy, cwL)).a - h0;
+  float hx = texture(uTexH, vec3(vTuv + cdx, cwL)).a - cwH0;
+  float hy = texture(uTexH, vec3(vTuv + cdy, cwL)).a - cwH0;
   normal = cwBump(-vViewPosition, normal, hx, hy, uBump);
-}`}`)
+}
+${world ? `if (uCover.x > 0.001) {
+  vec3 wn = inverseTransformDirection(normal, viewMatrix);
+  float n1 = cwN(vWpos.xz * 0.8 + 17.0), n2 = cwN(vWpos.xz * 3.4 + vWpos.y * 1.3), nn = n1 * 0.62 + n2 * 0.38;
+  float cv = smoothstep(uCover.y, uCover.y + 0.2, wn.y + (nn - 0.5) * uCover.z);
+  if (cwL > 3.5 && cwL < 4.5) cv *= uCover.w * smoothstep(0.8, 0.25, cwH0 - (n1 - 0.5) * 0.9);
+  cv *= uCover.x * (1.0 - clamp(vSurf.w * 40.0, 0.0, 1.0));
+  diffuseColor.rgb = mix(diffuseColor.rgb, uCoverCol * (0.9 + 0.2 * n1), cv);
+  roughnessFactor = mix(roughnessFactor, uCoverP.x, cv);
+  normal = normalize(mix(normal, nonPerturbedNormal, cv * uCoverP.y));
+  float ch = nn * uCoverP.z + sin(dot(vWpos.xz, vec2(5.1, 3.3)) + n1 * 7.0) * uCoverP.w;
+  normal = cwBump(-vViewPosition, normal, dFdx(ch), dFdy(ch), cv);
+}` : ''}`}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 totalEmissiveRadiance += diffuseColor.rgb * vSurf.w * 6.0;
+${water ? 'if (uWat.x > 1.5 && uWat.x < 2.5) totalEmissiveRadiance += mix(vec3(0.7, 0.07, 0.008), vec3(1.45, 0.42, 0.05), wHeat * wHeat) * (1.0 - wMask) + vec3(0.1, 0.012, 0.0) * wMask * (0.3 + wn2);' : ''}
 ${inst ? 'totalEmissiveRadiance += vec3(1.0, 0.8, 0.55) * vFlash * 0.55;' : ''}`)
-      .replace('#include <opaque_fragment>', `${water ? 'outgoingLight += uSky * (0.4 + 4.0 * pow(1.0 - clamp(normal.z, 0.0, 1.0), 2.0)) * (1.5 - 0.6 * min(vSurf.z, 1.0));' : ''}
+      .replace('#include <opaque_fragment>', `${water ? 'outgoingLight += uSky * (0.4 + 4.0 * pow(1.0 - clamp(normal.z, 0.0, 1.0), 2.0)) * (1.5 - 0.6 * min(vSurf.z, 1.0)) * (1.0 - wMask * 0.8);' : ''}
 #include <opaque_fragment>`);
   };
   return mat;
@@ -325,5 +368,6 @@ const COL = {
   iron: C(0x3c4049), ironL: C(0x646b78), steel: C(0x8a93a2), brass: C(0x9a7b3a), bronze: C(0x7a5a34), gold: C(0xe2aa3c),
   bone: C(0xe0d7c0), boneD: C(0xa39a84), clothR: C(0x7c2c24), clothB: C(0x2f4c6c), clothD: C(0x2a2622), clothT: C(0x8a8068),
   slate: C(0x424a5a), thatch: C(0x8a7646), black: C(0x08090c), ember: C(0xff7a2a), crystal: C(0x7fc4ff),
+  tuftA: C(0x55583f), tuftB: C(0x8a7646), snow: C(0xdfe8f4), ice: C(0x9fcfee), leaf: C(0x33492c), leafL: C(0x58703a), sand: C(0xb9976a), ash: C(0x4a4648),
   slime: C(0x4a6a44), slimeD: C(0x28402c), rat: C(0x51453c), ratD: C(0x372e28), bat: C(0x2e2a36), ogre: C(0x93a076), ogreD: C(0x63704e), leather: C(0x5a4030), skin: C(0xb98a6a),
 };

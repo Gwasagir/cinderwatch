@@ -34,11 +34,11 @@ const PROP = {
     for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) S.box(s * .12, s * 1.04, s * .12, x + (dx * Math.cos(ry) + dz * Math.sin(ry)) * s * .47, y + s / 2, z + (-dx * Math.sin(ry) + dz * Math.cos(ry)) * s * .47, COL.woodD, o());
     S.box(s * 1.04, s * .1, s * 1.04, x, y + s * .97, z, COL.woodD, o());
   },
-  tree(S, rng, h) {
-    const bark = mulC(COL.bark, .8 + .4 * rng());
+  tree(S, rng, h, o = {}) {
+    const bark = o.bark || mulC(COL.bark, .8 + .4 * rng());
     const branch = (a, d, len, r, depth) => {
-      const b = [a[0] + d[0] * len, a[1] + d[1] * len, a[2] + d[2] * len];
-      S.seg(a, b, r, r * .64, bark, { l: L_WOOD, n: depth > 1 ? 4 : 6, sway: depth >= 2 ? .35 + depth * .15 : 0 });
+      const b = [a[0] + d[0] * len, a[1] + d[1] * len, a[2] + d[2] * len], hot = o.tipEmis && depth >= 3;
+      S.seg(a, b, r, r * .64, hot ? o.tip : bark, { l: L_WOOD, n: depth > 1 ? 4 : 6, sway: depth >= 2 ? .35 + depth * .15 : 0, emis: hot ? o.tipEmis : 0 });
       if (depth >= 4 || len < .3) return;
       const kids = depth === 0 ? rng.int(2, 3) : rng.int(1, 2);
       for (let k = 0; k < kids; k++) {
@@ -188,7 +188,7 @@ const PROP = {
     S.rock(.2, .7, .1, .5, c); S.rock(.16, .5, .08, .75, c);
   },
   tuft(S, rng) {
-    const c = mulC(mixC(COL.grass, COL.thatch, rng() * .6), .8 + .5 * rng());
+    const c = mulC(mixC(COL.tuftA, COL.tuftB, rng() * .6), .8 + .5 * rng());
     for (let k = 0; k < rng.int(3, 5); k++) {
       const a = rng() * TAU, l = rng.range(.22, .42), bx = Math.cos(a) * .06, bz = Math.sin(a) * .06, tx = Math.cos(a) * l * .5, tz = Math.sin(a) * l * .5, w = .035;
       const A = [bx - Math.sin(a) * w, 0, bz + Math.cos(a) * w], Bp = [bx + Math.sin(a) * w, 0, bz - Math.cos(a) * w], T = [tx, l, tz];
@@ -219,6 +219,7 @@ function buildBridge(B) {
     for (let k = 0; k <= 8; k++) { const th = PI * k / 8, u = Math.cos(th) * A; T.box(.42, .22, .38, u, spring + (crown - spring) * Math.sin(th) - .05, side * wHalf, COL.stoneL, { l: L_MASON, r: [0, 0, th - HPI] }); }
     for (const u of [-3.25, 3.25]) { const t = yd(u); T.box(.5, 1.25, .5, u, t + .3, side * wHalf, mc(), { l: L_MASON }); T.box(.62, .13, .62, u, t + .98, side * wHalf, COL.stoneL, { l: L_MASON }); T.cone(.2, .25, u, t + 1.15, side * wHalf, COL.stoneD, { n: 4, l: L_ROCK }); }
   }
+  if (B.bio.key === 'frost') for (const side of [-1, 1]) for (let u = -1.15; u <= 1.16; u += .21) { const h = rng.range(.12, .55); T.cone(.04 + .03 * rng(), h, u, yArch(u) - h / 2 - .04, side * (wHalf + .03), COL.ice, { n: 5, r: [PI, 0, 0], rough: .14, emis: .012 }); }
   B.put(T, x, z, { y: y0, ry: -ang, ao: null });
   B.bridge = { x, z, y: y0 };
 }
@@ -303,6 +304,7 @@ function buildCave(B) {
   rk(1.35, .15, 3.65, 0, { sq: .55 }); rk(1.05, .25, 3.55, -1.05, { sq: .6 }); rk(1.05, .25, 3.55, 1.05, { sq: .6 });
   for (let k = 0; k < 4; k++) rk(2.3, -1.2 - k * .85, 4.3 + k * .3, rng.range(-.6, .6), { sq: .58 });
   for (const zz of [-1.25, -.75, -.2, .35, .9, 1.3]) T.cone(.15 + rng() * .06, .45 + rng() * .5, .3 + rng() * .2, 2.85, zz, mulC(COL.stoneL, .9), { n: 5, l: L_ROCK, r: [PI, 0, 0] });
+  if (B.bio.key === 'frost') for (let zz = -1.4; zz <= 1.41; zz += .2) { const h = rng.range(.2, .75); T.cone(.045 + .03 * rng(), h, .62 + rng() * .1, 2.9 - h / 2, zz, COL.ice, { n: 5, r: [PI, 0, 0], rough: .14, emis: .012 }); }
   T.box(3.8, .2, 3.7, -1.9, 3.05, 0, COL.black, { jit: 0 }); T.box(.2, 3.4, 3.7, -3.45, 1.5, 0, COL.black, { jit: 0 });
   for (const s of [-1, 1]) T.box(3.8, 3.2, .2, -1.9, 1.5, s * 1.82, mulC(COL.stoneD, .25), { l: L_ROCK, jit: 0 });
   for (const s of [-1, 1]) { T.seg([1.7, 0, s * 2.5], [1.78, 1.6, s * 2.55], .055, .035, COL.woodD, { l: L_WOOD }); PROP.skull(T, 1.78, 1.72, s * 2.55, .17, s * .5 + 1.2); }
@@ -321,9 +323,11 @@ function scatterProps(B) {
     for (const p of B.pads) if (dist2(x, z, p.x, p.z) < (2.15 + r) * (2.15 + r)) return false;
     if (Math.abs(x - B.kx) < 5.7 + r && z < -11.2 + r) return false;
     if (x < -12.4 && Math.abs(z - B.zc) < 3.4 + r) return false;
+    for (const q of B.ponds) if (dist2(x, z, q.x, q.z) < (q.r * 1.25 + .9 + r) * (q.r * 1.25 + .9 + r)) return false;
     for (const q of placed) if (dist2(x, z, q[0], q[1]) < (q[2] + r) * (q[2] + r)) return false;
     return true;
   };
+  const waterD = (x, z) => { let d = B.dStrAt(x, z); for (const q of B.ponds) d = Math.min(d, Math.hypot(x - q.x, z - q.z) - q.r); return d; };
   const slope = (x, z) => Math.abs(H(x + .5, z) - H(x - .5, z)) + Math.abs(H(x, z + .5) - H(x, z - .5));
   const find = (r, o = {}) => {
     for (let t = 0; t < 90; t++) {
@@ -331,6 +335,7 @@ function scatterProps(B) {
       if (!free(x, z, r, o.roadMin)) continue;
       if (!o.steep && slope(x, z) > (o.maxSlope || .32)) continue;
       const dr = B.dRoadAt(x, z); if (o.near && dr > o.near) continue; if (o.far && dr < o.far) continue;
+      if (o.water && waterD(x, z) > o.water) continue;
       return [x, z];
     }
     return null;
@@ -344,6 +349,8 @@ function scatterProps(B) {
     }
     return null;
   };
+  const bio = B.bio;
+  const at = (x, z, build, r, T0) => { if (Math.abs(x) > BH - .8 || Math.abs(z) > BH - .8) return; const T = T0 || new Soup(); if (!T0) build(T); B.put(T, x, z, { ry: rng() * TAU }); if (r) placed.push([x, z, r]); };
   drop(T => PROP.towerRuin(T, rng), 2.9, { far: 3.6 });
   drop(T => PROP.well(T, rng), 1.3, { near: 5.5, far: 2.6 });
   drop(T => PROP.statue(T, rng), 1.2, { near: 6, far: 2.4 });
@@ -372,18 +379,19 @@ function scatterProps(B) {
   for (let k = 0; k < 6; k++) { const x = B.lay.cave.x + rng.range(1.8, 7), z = B.zc + rng.sign() * rng.range(1.9, 5); if (free(x, z, .4, .2)) drop(T => PROP.bones(T, rng, rng.int(4, 7)), .5, { at: [x, z], ao: null }); }
   for (let k = 0; k < 5; k++) drop(T => PROP.bones(T, rng, rng.int(3, 5)), .45, { ao: null });
   for (let k = 0; k < 3; k++) drop(T => PROP.cairn(T, rng), .5, {});
+  BIOME_DRESS[bio.key]({ B, rng, drop, find, beside, free, at, H, placed, slope });
   const trees = [];
-  for (let k = 0; k < 13; k++) { const h = rng.range(2.6, 4.6), p = drop(T => PROP.tree(T, rng, h), .55, { far: 1.0 }); if (p) trees.push([p, h]); }
-  for (let k = 0; k < 4 && k < trees.length; k++) {
+  for (const [kind, cnt, h0, h1] of bio.trees) for (let k = 0; k < cnt; k++) { const h = rng.range(h0, h1), p = drop(T => PROP[kind](T, rng, h), kind === 'tree' || kind === 'charred' ? .55 : .8, { far: 1.0, water: kind === 'palm' && k < 6 ? 5.5 : 0 }); if (p && kind === 'tree') trees.push([p, h]); }
+  for (let k = 0; k < bio.webs && k < trees.length; k++) {
     const [p, h] = trees[k], y = H(p[0], p[1]), a = rng() * TAU, T = new Soup();
     PROP.web(T, [0, h * .42, 0], [Math.cos(a) * .9, h * .55, Math.sin(a) * .9], [Math.cos(a) * .7, h * .18, Math.sin(a) * .7]);
     B.put(T, p[0], p[1], { y, ao: null });
   }
-  for (let k = 0; k < 6; k++) drop(T => PROP.stump(T, rng), .4, {});
-  for (let k = 0; k < 70; k++) { const r = rng() < .2 ? rng.range(.6, 1.25) : rng.range(.16, .5); drop(T => T.rock(r, 0, r * .28, 0, mixC(COL.stoneD, COL.stone, rng())), r * .8, { steep: true, roadMin: .25, ao: [0, r * .6, .6] }); }
-  for (let k = 0; k < 320; k++) {
+  for (let k = 0; k < bio.stumps; k++) drop(T => PROP.stump(T, rng), .4, {});
+  for (let k = 0; k < bio.rocks; k++) { const r = rng() < .2 ? rng.range(.6, 1.25) : rng.range(.16, .5); drop(T => T.rock(r, 0, r * .28, 0, mixC(COL.stoneD, COL.stone, rng())), r * .8, { steep: true, roadMin: .25, ao: [0, r * .6, .6] }); }
+  for (let k = 0; k < bio.tufts; k++) {
     const x = rng.range(-BH + .8, BH - .8), z = rng.range(-BH + .8, BH - .8);
-    if (B.dRoadAt(x, z) < ROAD_HALF + .35 || B.dStrAt(x, z) < 1.1 || slope(x, z) > .5) continue;
+    if (B.dRoadAt(x, z) < ROAD_HALF + .35 || waterD(x, z) < 1.1 || slope(x, z) > .5) continue;
     if (Math.abs(x - B.kx) < 5.4 && z < -11.6) continue;
     const T = new Soup(); PROP.tuft(T, rng); B.put(T, x, z, { ao: null, s: rng.range(.8, 1.5) });
   }
