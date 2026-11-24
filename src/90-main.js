@@ -125,6 +125,7 @@ function step(rdt) {
 let _last = 0, _acc = 0, _frames = 0, _slow = 0, _fast = 0, _hold = 0, _back = 12;
 function frame(now) {
   requestAnimationFrame(frame);
+  if (now - _last < 10.5) return;
   const raw = (now - _last) / 1000, rdt = Math.min(.05, Math.max(.001, raw)); _last = now; R.frameDt = rdt;
   if (G.paused) { updateCamera(rdt); UI.update(rdt); } else for (let i = 0; i < G.speed; i++) step(rdt);
   R.fade = Math.min(1, R.fade + rdt * 1.6);

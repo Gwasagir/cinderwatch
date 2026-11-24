@@ -141,6 +141,7 @@ URL flags, for example `index.html#seed=4&fps=1`:
 | `fps=1` | Show frame rate and draw calls |
 | `nodof=1` | Turn off the tilt-shift blur |
 | `noscale=1` | Turn off automatic resolution scaling |
+| `noopt=1` | Refresh every shadow map every frame and blur every pixel, for comparing speed |
 | `manual=1` | Do not start the loop (used by `record.js`) |
 
 ## License

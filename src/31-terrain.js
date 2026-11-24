@@ -363,8 +363,15 @@ function finalizeBoard(B) {
     B.pieces.push(piece); return piece;
   };
   { let n = 0; for (const ch of B.chunks) n += ch.soup.P.length; const P = new Float32Array(n); let o = 0;
-    for (const ch of B.chunks) { const sp = ch.soup.P; if (mir) { for (let i = 0; i < sp.length; i += 9) { for (const k of [0, 2, 1]) { P[o++] = sp[i + k * 3 + 2]; P[o++] = sp[i + k * 3 + 1]; P[o++] = sp[i + k * 3]; } } } else { P.set(sp, o); o += sp.length; } }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.computeBoundingSphere();
+    for (const ch of B.chunks) {
+      const sp = ch.soup.P, ss = ch.soup.S;
+      for (let i = 0; i < sp.length; i += 9) {
+        if (Math.max(sp[i + 1], sp[i + 4], sp[i + 7]) < -1.3) continue;
+        const v = i / 3 * 4; if (ss[v] === L_PLAIN && Math.max(ss[v + 2], ss[v + 6], ss[v + 10]) >= .6) continue;
+        if (mir) { for (const k of [0, 2, 1]) { P[o++] = sp[i + k * 3 + 2]; P[o++] = sp[i + k * 3 + 1]; P[o++] = sp[i + k * 3]; } } else { for (let k = 0; k < 9; k++) P[o++] = sp[i + k]; }
+      }
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P.subarray(0, o), 3)); g.computeBoundingSphere(); B.casterTris = o / 9; B.casterAll = n / 9;
     B.caster = new THREE.Mesh(g, MAT.caster); B.caster.castShadow = true; B.caster.frustumCulled = false; B.group.add(B.caster); }
   for (const ch of B.chunks) mkPiece(ch.soup, ch.cx, 0, ch.cz, 'chunk', ch.water, ch.extras);
   for (const st of B.structs) mkPiece(st.soup, st.cx, st.cy, st.cz, st.kind, null, st.extras);
