@@ -121,7 +121,7 @@ const SKEL_EYE = [.058, .185, .152, .07], OGRE_EYE = [.055, .125, .15, .06], BUG
 const RIGS = {
   skel(m) { m.weapon = KIT.item.sword; m.shamble = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   knight(m) { m.weapon = KIT.item.sword; m.wScale = 1.2; m.shield = KIT.item.shieldR; m.helm = true; m.plate = true; return rigHuman(KIT.skel, SPEC.skel, m); },
-  giant(m) { m.weapon = KIT.item.boneclub; m.wScale = 1.25; m.heavy = true; return rigHuman(KIT.giant, SPEC.skel, m); },
+  giant(m) { m.weapon = KIT.item.greatsword; m.wScale = 1.1; m.heavy = true; return rigHuman(KIT.giant, SPEC.skel, m); },
   ogre(m) { m.weapon = KIT.item.club; m.wScale = 1.2; m.heavy = true; return rigHuman(KIT.ogre, SPEC.ogre, m); },
   rat: rigRat, bat: m => rigBat(m), slime: rigSlime, slimelet: rigSlime,
   ghoul(m) { m.claw = true; return rigHuman(KIT.ogre, SPEC.ogre, m); },
