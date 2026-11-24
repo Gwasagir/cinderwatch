@@ -11,7 +11,13 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
 ## What is in it
 
 - **Four towers, three levels each**, raised piece by piece inside scaffolding: archer tower, bombard, storm spire and guard post.
-- **Six kinds of monster**: skeletons, giant rats, slimes that split, shield-bearing knights, bats, and a boss on every fifth wave.
+- **Twenty kinds of monster**, each with its own model and trick. Skeletons, giant rats, slimes that split, shield-bearing knights and bats are joined by:
+  - ghouls that run faster as they are hurt, dire wolves, and cave spiders and scarabs that slip past the guards
+  - sappers whose powder keg blows up friend and foe, and wraiths that arrows and swords pass through while they fade
+  - war drummers that speed up everything near them, and necromancers that raise more skeletons
+  - bog toads, mummies that burst into scarabs, and brood mothers that burst into spiders
+  - trolls that heal, stone golems that shrug off arrows, and gargoyles and glowing wisps in the air
+- **A boss on every fifth wave, one per land**: the Bone Giant, the Frost Jotun that freezes towers, the Brood Queen, the Magma Colossus and the Buried King, with the Ogre waiting on a second visit to Ashen Pass. Each land also favors its own monsters, and tints some of them to match.
 - **Battlefields that rebuild themselves.** After each boss the slab crumbles away and a new one, with a different road, assembles out of the dark.
 - **Five lands.** Each new battlefield is in the next one: Ashen Pass, Frostfall (snow, a frozen stream and falling snow), Mirefen (bog pools, willows, glowing mushrooms and fireflies), Emberscar (a lava river, charred trees and ash) and Duskmesa (dunes, palms and an oasis). A page opened without a seed starts in a random one.
 - **Light as the main character.** A flickering beacon, a brazier on every tower, flaming arrows, cannon flashes and chain lightning, with moving shadows.
@@ -67,7 +73,7 @@ This joins `src/*.js` into `index.html` and inlines three.js from `vendor/`.
 | `src/29-biome.js` | The five lands: palettes, light, weather and water settings |
 | `src/30-layout.js`, `31-terrain.js`, `32-props.js`, `33-flora.js` | Road, stream and pad layout, terrain, scenery, plants and props of each land |
 | `src/40-fx.js`, `41-weather.js` | Lights, particles, lightning, decals, snow, ash, dust and fireflies |
-| `src/50-rig.js` | Characters built from instanced parts, debris |
+| `src/50-rig.js`, `51-bestiary.js` | Characters built from instanced parts, debris, the models of the later monsters |
 | `src/60-towers.js`, `61-monsters.js`, `62-game.js` | Towers, monsters and the crowd, waves and the AI commander |
 | `src/70-pixelfont.js`, `72-ui.js` | Pixel font, HUD, menus, input |
 | `src/80-audio.js` | Synthesized sound |

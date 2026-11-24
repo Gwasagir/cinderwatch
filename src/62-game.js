@@ -5,24 +5,35 @@ Object.assign(G, {
 });
 
 function waveNumber() { return G.level * 5 + (G.phase === 'rise' ? 1 : Math.max(1, G.k)); }
+const ROSTER = {
+  skel: [4, 3, 6, .5, 1, 5], rat: [1.7, 5, 9, .2, 2, 3], bat: [4.6, 2, 4, .35, 2, 1.0], ghoul: [5.5, 2, 4, .4, 2, 2],
+  slime: [9.5, 1, 3, .9, 3, 2], spider: [3, 3, 6, .25, 3, 2], scarab: [1.9, 5, 8, .18, 2, 0], knight: [12.5, 1, 3, .5, 4, 2], wolf: [5.5, 2, 4, .35, 4, 1.6], bomber: [6, 1, 2, .8, 4, 1.2],
+  wraith: [9, 1, 3, .7, 5, 1.4], toad: [8, 1, 3, .7, 5, .7], wisp: [3.4, 3, 5, .25, 5, .45], drummer: [13, 1, 1, 1, 6, .9], gargoyle: [14, 1, 2, .6, 6, .6],
+  necro: [18, 1, 1, 1.2, 7, .9], mummy: [15, 1, 2, .9, 7, .9], brute: [32, 1, 1, 2, 8, .7], golem: [40, 1, 1, 2, 8, .7], brood: [30, 1, 1, 2, 9, .6],
+};
+function waveMenu(k, level) {
+  const w = level * 5 + k, bio = G.B.bio, menu = [];
+  for (const ty in ROSTER) {
+    const r = ROSTER[ty], mul = bio.mobs[ty] === undefined ? 1 : bio.mobs[ty], un = Math.min(r[4], bio.early[ty] || 99), wt = r[5] ? r[5] * mul : (bio.mobs[ty] || 0);
+    if (w >= un && wt > 0) menu.push([ty, wt * (w === un && w > 1 ? 2.2 : 1)]);
+  }
+  return menu;
+}
+function bossType() { const b = G.B.bio.boss; return b[Math.floor(G.level / BIOMES.length) % b.length]; }
 function buildWave(k, level) {
   const q = [], boss = k === 5, lv = 1 + .15 * level;
-  let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1);
+  let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1), heavy = 0, air = budget * .2;
   const hpMul = (1 + .13 * (k - 1)) * (1 + .22 * level) * (.85 + .15 * G.press);
-  const cost = { skel: 4, rat: 1.7, slime: 9.5, knight: 12.5, bat: 4.6 };
-  const menu = [['skel', 5]];
-  if (k >= 2 || level > 0) menu.push(['rat', k === 2 ? 6 : 3]);
-  if (k >= 3 || level > 0) { menu.push(['slime', k === 3 ? 4 : 2]); menu.push(['bat', k === 3 ? 2 : 1.2]); }
-  if (k >= 4 || level > 0) menu.push(['knight', k === 4 ? 4 : 2]);
-  if (k === 2 && level === 0) menu.push(['bat', 1]);
-  const tot = menu.reduce((a, b) => a + b[1], 0);
+  const menu = waveMenu(k, level), tot = menu.reduce((a, b) => a + b[1], 0);
   let t = .6;
-  if (boss) q.push({ t: 2.2, type: (level % 2) ? 'ogre' : 'giant', hpMul: (1 + .4 * level) * Math.pow(G.press, .4) });
+  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level) * Math.pow(G.press, .4) });
   while (budget > 0) {
     let r = rnd() * tot, type = 'skel'; for (const [ty, w] of menu) { r -= w; if (r <= 0) { type = ty; break; } }
-    const n = type === 'rat' ? Math.floor(rr(5, 9)) : type === 'bat' ? Math.floor(rr(2, 4)) : type === 'slime' ? Math.floor(rr(1, 3)) : type === 'knight' ? Math.floor(rr(1, 3)) : Math.floor(rr(3, 6));
-    const gap = type === 'rat' ? .2 : type === 'bat' ? .35 : type === 'slime' ? .9 : .5;
-    for (let i = 0; i < n && budget > 0; i++) { q.push({ t, type, hpMul }); t += gap * rr(.8, 1.25); budget -= cost[type]; }
+    let R = ROSTER[type];
+    if (R[0] > budget + 5 || (R[0] >= 30 && heavy >= 1 + (level >> 1)) || (MON[type].fly && air <= 0)) { type = 'skel'; R = ROSTER.skel; }
+    if (R[0] >= 30) heavy++;
+    const n = Math.floor(rr(R[1], R[2] + .999)), gap = R[3];
+    for (let i = 0; i < n && budget > 0; i++) { q.push({ t, type, hpMul }); t += gap * rr(.8, 1.25); budget -= R[0]; if (MON[type].fly) air -= R[0]; }
     t += rr(1.1, 2.3) * (boss ? 1.5 : 1);
   }
   q.sort((a, b) => a.t - b.t);
@@ -31,7 +42,7 @@ function buildWave(k, level) {
 function startWave() {
   G.k = G.k % 5 + 1; G.queue = buildWave(G.k, G.level); G.waveT = 0; G.spawning = true; G.bossWave = G.k === 5; G.waveKills = 0; G.waveLeaks = 0; G.bossDown = false; G.trickle = 6; G.trickleN = 0;
   sfx(G.bossWave ? 'hornBoss' : 'horn', G.B.cave.x, G.B.cave.z, 1.1);
-  UI.banner(G.bossWave ? 'Wave ' + waveNumber() + ' · ' + MON[(G.level % 2) ? 'ogre' : 'giant'].name : 'Wave ' + waveNumber(), G.bossWave ? 3.6 : 2.2, G.bossWave);
+  UI.banner(G.bossWave ? 'Wave ' + waveNumber() + ' · ' + MON[bossType()].name : 'Wave ' + waveNumber(), G.bossWave ? 3.6 : 2.2, G.bossWave);
 }
 function endWave() {
   const l = G.waveLeaks;
@@ -53,7 +64,7 @@ function updateWaves(dt) {
       G.bossAlive = G.mons.some(m => m.def.boss && !m.dead);
       if (G.bossWave && G.bossAlive) {
         G.trickle -= dt;
-        if (G.trickle <= 0 && G.trickleN < 9) { G.trickleN++; G.trickle = rr(3.2, 4.6); const ty = ['skel', 'skel', 'rat', 'rat', 'bat', 'knight'][Math.floor(rnd() * 6)], n = ty === 'rat' ? 4 : 2, hpMul = (1 + .5) * (1 + .22 * G.level); for (let i = 0; i < n; i++) G.queue.push({ t: G.waveT + i * .4, type: ty, hpMul }); }
+        if (G.trickle <= 0 && G.trickleN < 9) { G.trickleN++; G.trickle = rr(3.2, 4.6); const tm = waveMenu(5, G.level).filter(e => ROSTER[e[0]][0] < 13), ty = tm[Math.floor(rnd() * tm.length)][0], n = Math.max(1, Math.min(5, Math.round(8 / ROSTER[ty][0]))), hpMul = (1 + .5) * (1 + .22 * G.level); for (let i = 0; i < n; i++) G.queue.push({ t: G.waveT + i * .4, type: ty, hpMul }); }
       } else { G.spawning = false; endWave(); G.nextIn = G.bossWave ? -1 : 6.5; G.clearT = 0; }
     }
   } else if (G.bossWave) {
@@ -93,13 +104,13 @@ function aiThink(dt) {
   const B = G.B, towers = G.towers.filter(t => t.alive), empty = B.pads.filter(p => !p.tower), N = towers.length;
   const cnt = { archer: 0, bombard: 0, spire: 0, guard: 0 }; for (const t of towers) cnt[t.kind]++;
   const ideal = { archer: .36, bombard: .22, spire: .2, guard: .22 };
-  const lt = G.leakTypes, air = (lt.bat || 0), armor = (lt.knight || 0) + (lt.giant || 0) + (lt.ogre || 0), swarm = (lt.rat || 0) + (lt.slimelet || 0);
+  const lt = G.leakTypes; let air = 0, armor = 0, swarm = 0; for (const ty in lt) { const c = MON[ty].cat; if (c === 'air') air += lt[ty]; else if (c === 'armor') armor += lt[ty]; else if (c === 'swarm') swarm += lt[ty]; }
   const gatePress = sat(G.leaks / 8);
   const opts = [];
   for (const kind of TOWER_KINDS) {
     const def = TOWER[kind];
     let need = ideal[kind] * (N + 1.6) - cnt[kind] + .35;
-    if (kind === 'archer') need += air * .12 + (N === 0 ? 1 : 0); if (kind === 'spire') need += air * .08 + armor * .1; if (kind === 'bombard') need += armor * .08 + swarm * .06 + (N >= 2 && cnt.bombard === 0 ? .5 : 0); if (kind === 'guard') need += swarm * .04 + (N >= 1 && cnt.guard === 0 ? .9 : 0);
+    if (kind === 'archer') need += air * .2 + (N === 0 ? 1 : 0); if (kind === 'spire') need += air * .12 + armor * .1; if (kind === 'bombard') need += armor * .08 + swarm * .06 + (N >= 2 && cnt.bombard === 0 ? .5 : 0); if (kind === 'guard') need += swarm * .04 + (N >= 1 && cnt.guard === 0 ? .9 : 0);
     if (need <= 0) continue;
     for (const pad of empty) {
       const cov = padCoverage(pad, def.range[0]) / (def.range[0] * 2);

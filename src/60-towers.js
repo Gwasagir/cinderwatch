@@ -143,8 +143,9 @@ function scaffoldGeo(w, h) {
   return S.build();
 }
 
+let TOWER_STUN = false;
 function findTarget(x, z, range, air, ground, minRange = 0) {
-  if (G.phase !== 'play') return null;
+  if (G.phase !== 'play' || TOWER_STUN) return null;
   let best = null, bp = -1; const r2 = range * range, m2 = minRange * minRange;
   for (const m of G.mons) {
     if (m.dead || m.hp <= 0 || !m.vis) continue; if (m.fly ? !air : !ground) continue;
@@ -260,13 +261,16 @@ class Tower {
       return;
     }
     this.appear = Math.min(1, this.appear + dt * 2.2);
-    this.em.on = damp(this.em.on, 1, 3, dt);
+    TOWER_STUN = this.stun > 0;
+    if (TOWER_STUN) { this.stun -= dt; const k = Math.min(1, this.stun * 2); FX.add.push(this.x, this.y + 1.7, this.z, 4.2, 5.6, 0, 0, .2, .5, 1.2, .3 * k, 2, 0, 0, 0); if (rnd() < dt * 5) { const a = rnd() * TAU, h = rr(.6, 3); fxBolt([this.x + Math.cos(a) * .8, this.y + h, this.z + Math.sin(a) * .8], [this.x + Math.cos(a + 1.2) * .8, this.y + h + rr(-.5, .5), this.z + Math.sin(a + 1.2) * .8], .12, [.5, .85, 1.5], .03); } if (rnd() < dt * 18) fxPart(this.x + rr(-.7, .7), this.y + rr(.4, 3.2), this.z + rr(-.7, .7), 0, rr(-.5, .1), 0, rr(.4, .9), rr(.05, .08), .6, 1.1, 2.0, { drag: .5 }); }
+    this.em.on = damp(this.em.on, TOWER_STUN ? .12 : 1, TOWER_STUN ? 8 : 3, dt);
     if (this.flame) this.flame.on = this.em.on; if (this.flame2) this.flame2.on = this.em.on;
     this.cool -= dt;
     if (this.kind === 'archer') this.updArcher(dt, d, lvl);
     else if (this.kind === 'bombard') this.updBombard(dt, d, lvl);
     else if (this.kind === 'spire') this.updSpire(dt, d, lvl);
     else this.updGuard(dt, d, lvl);
+    TOWER_STUN = false;
   }
   updArcher(dt, d, lvl) {
     const tgt = findTarget(this.x, this.z, d.range[lvl], true, true);
