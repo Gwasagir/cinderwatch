@@ -255,10 +255,9 @@ float cwH(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx +
 float cwN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(cwH(i), cwH(i + vec2(1.0, 0.0)), f.x), mix(cwH(i + vec2(0.0, 1.0)), cwH(i + vec2(1.0, 1.0)), f.x), f.y); }
 float cwRipple(vec2 p, float t, float flow) {
-  float a = cwN(vec2(p.x * 2.6, p.y * 1.3 - t * flow * 1.5));
-  float b = cwN(vec2(p.x * 6.1 + 3.7, p.y * 3.1 - t * (0.25 + flow * 2.3)));
-  float c = cwN(vec2(p.x * 13.0 - t * 0.2, p.y * 9.0 - t * (0.3 + flow * 3.4)));
-  return a * 1.0 + b * 0.55 + c * 0.3;
+  float a = cwN(vec2(p.x * 2.6, p.y * 1.3 - t * flow * 1.0));
+  float b = cwN(vec2(p.x * 5.2 + 3.7, p.y * 2.6 - t * (0.15 + flow * 1.4)));
+  return a * 1.0 + b * 0.9;
 }`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 float cwL = floor(vSurf.x + 0.5);
@@ -268,7 +267,7 @@ roughnessFactor = clamp(vSurf.y * (1.15 - 0.3 * cwT.a), 0.045, 1.0);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 ${water ? `{
   float h0 = cwRipple(vTuv, uTime, vSurf.z);
-  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.16 * min(vSurf.z, 1.0));
+  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.09 * min(vSurf.z, 1.0));
 }` : `{
   vec2 cdx = dFdx(vTuv), cdy = dFdy(vTuv);
   float h0 = texture(uTexH, vec3(vTuv, cwL)).a;
@@ -279,7 +278,7 @@ ${water ? `{
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 totalEmissiveRadiance += diffuseColor.rgb * vSurf.w * 6.0;
 ${inst ? 'totalEmissiveRadiance += vec3(1.0, 0.8, 0.55) * vFlash * 0.55;' : ''}`)
-      .replace('#include <opaque_fragment>', `${water ? 'outgoingLight += uSky * (0.3 + 6.0 * pow(1.0 - clamp(normal.z, 0.0, 1.0), 2.0)) * (1.5 - 0.6 * min(vSurf.z, 1.0));' : ''}
+      .replace('#include <opaque_fragment>', `${water ? 'outgoingLight += uSky * (0.4 + 4.0 * pow(1.0 - clamp(normal.z, 0.0, 1.0), 2.0)) * (1.5 - 0.6 * min(vSurf.z, 1.0));' : ''}
 #include <opaque_fragment>`);
   };
   return mat;
@@ -520,10 +519,10 @@ void main(){
 precision highp float;
 varying vec2 vUv;
 uniform sampler2D tColor; uniform sampler2D tDepth; uniform vec2 uPx;
-uniform vec4 uDof;
+uniform vec4 uDof; uniform vec3 uNear;
 uniform vec2 uDither;
 ${GLSL_BAYER}
-float cocAt(float d){ return clamp((abs(d - uDof.x) - uDof.y) / uDof.z, 0.0, 1.0) * uDof.w; }
+float cocAt(float d){ float z = d - uDof.x; return z > 0.0 ? clamp((z - uDof.y) / uDof.z, 0.0, 1.0) * uDof.w : clamp((-z - uNear.x) / uNear.y, 0.0, 1.0) * uDof.w * uNear.z; }
 void main(){
   float dc = texture2D(tDepth, vUv).x, cc = cocAt(dc);
   vec3 col = texture2D(tColor, vUv).rgb; float tot = 1.0;
@@ -538,7 +537,7 @@ void main(){
     rad += 1.35 / rad; if (rad > uDof.w) break;
   }
   gl_FragColor = vec4(col / tot, 1.0);
-}`, { tColor: { value: null }, tDepth: { value: null }, uPx: { value: new THREE.Vector2() }, uDof: { value: new THREE.Vector4(0.3, 0.02, 0.06, 9) }, uDither: { value: R.ditherOfs } });
+}`, { tColor: { value: null }, tDepth: { value: null }, uPx: { value: new THREE.Vector2() }, uDof: { value: new THREE.Vector4(0.3, 0.02, 0.06, 9) }, uNear: { value: new THREE.Vector3(0.05, 0.04, 0.5) }, uDither: { value: R.ditherOfs } });
 
   M.bright = fsMat(`
 precision highp float; varying vec2 vUv; uniform sampler2D tColor; uniform vec2 uPx; uniform vec2 uThr;
@@ -649,6 +648,7 @@ function renderFrame() {
   const zr = cam.far - cam.near;
   const dsc = R.dofScale || 1;
   u.uDof.value.set((R.focusZ - cam.near) / zr, 3.2 * dsc / zr, 11.5 * dsc / zr, HASH.nodof ? 0.6 : Math.max(2, R.ih * 0.0145));
+  u.uNear.value.set(Math.max(5 * dsc, R.dofNear || 0) / zr, 8 * dsc / zr, 0.55);
   fsPass(M.dof, T.dof);
   u = M.bright.uniforms; u.tColor.value = T.dof.texture; u.uPx.value.copy(px); fsPass(M.bright, T.bA);
   u = M.blur.uniforms;
@@ -1080,7 +1080,7 @@ function buildBoard(seed, index) {
     const ch = chunkAt(cx, cz), mudc = mulC(COL.mud, .55);
     for (let k = 0; k < 11; k++) {
       const p = ring[k], q2 = ring[(k + 1) % 11];
-      waterV(ch.water, cx, y, cz, cx, cz, 0, .07); waterV(ch.water, q2[0], y, q2[1], q2[0], q2[1], 0, .07); waterV(ch.water, p[0], y, p[1], p[0], p[1], 0, .07);
+      waterV(ch.water, cx, y, cz, cx, cz, 0, .16); waterV(ch.water, q2[0], y, q2[1], q2[0], q2[1], 0, .16); waterV(ch.water, p[0], y, p[1], p[0], p[1], 0, .16);
       const e = 1.28, m1 = [cx + (p[0] - cx) * e, y - .006, cz + (p[1] - cz) * e], m2 = [cx + (q2[0] - cx) * e, y - .006, cz + (q2[1] - cz) * e];
       for (const v of [[cx, y - .006, cz], m2, m1]) ch.soup.v(v[0], v[1], v[2], 0, 1, 0, mudc[0], mudc[1], mudc[2], v[0] * .25, v[2] * .25, L_COBBLE, .28);
     }
@@ -1099,7 +1099,7 @@ function buildBoard(seed, index) {
     for (let u = 0; u < sv.length - 1; u++) {
       const a = sv[u], b = sv[u + 1], S = chunkAt((a[0] + b[0]) / 2, (a[2] + b[2]) / 2).water;
       const q = [[a[0] - a[3], a[1], a[2] - a[4], -a[6], a[5]], [a[0] + a[3], a[1], a[2] + a[4], a[6], a[5]], [b[0] + b[3], b[1], b[2] + b[4], b[6], b[5]], [b[0] - b[3], b[1], b[2] - b[4], -b[6], b[5]]];
-      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .1);
+      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .34);
     }
     const e = sv[sv.length - 1], ox = Math.abs(e[0]) > BH - .01 ? Math.sign(e[0]) : 0, oz = ox ? 0 : Math.sign(e[2]);
     fallAt = { x: e[0], y: e[1], z: e[2], ox, oz, w: e[6] };
@@ -4499,6 +4499,7 @@ function applyCamera() {
   cam.position.copy(_ct).addScaledVector(_cd, CAM.dist); cam.up.set(0, 1, 0); cam.lookAt(_ct);
   cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
   R.focusZ = CAM.dist;
+  R.dofNear = (BH - _ct.x) * _cd.x - _ct.y * _cd.y + (BH - _ct.z) * _cd.z - 3.5;
 }
 function updateCamera(dt) {
   const B = G.B; let wx = 0, wz = 0, ws = 7, boss = false;

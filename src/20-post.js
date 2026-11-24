@@ -92,10 +92,10 @@ void main(){
 precision highp float;
 varying vec2 vUv;
 uniform sampler2D tColor; uniform sampler2D tDepth; uniform vec2 uPx;
-uniform vec4 uDof;
+uniform vec4 uDof; uniform vec3 uNear;
 uniform vec2 uDither;
 ${GLSL_BAYER}
-float cocAt(float d){ return clamp((abs(d - uDof.x) - uDof.y) / uDof.z, 0.0, 1.0) * uDof.w; }
+float cocAt(float d){ float z = d - uDof.x; return z > 0.0 ? clamp((z - uDof.y) / uDof.z, 0.0, 1.0) * uDof.w : clamp((-z - uNear.x) / uNear.y, 0.0, 1.0) * uDof.w * uNear.z; }
 void main(){
   float dc = texture2D(tDepth, vUv).x, cc = cocAt(dc);
   vec3 col = texture2D(tColor, vUv).rgb; float tot = 1.0;
@@ -110,7 +110,7 @@ void main(){
     rad += 1.35 / rad; if (rad > uDof.w) break;
   }
   gl_FragColor = vec4(col / tot, 1.0);
-}`, { tColor: { value: null }, tDepth: { value: null }, uPx: { value: new THREE.Vector2() }, uDof: { value: new THREE.Vector4(0.3, 0.02, 0.06, 9) }, uDither: { value: R.ditherOfs } });
+}`, { tColor: { value: null }, tDepth: { value: null }, uPx: { value: new THREE.Vector2() }, uDof: { value: new THREE.Vector4(0.3, 0.02, 0.06, 9) }, uNear: { value: new THREE.Vector3(0.05, 0.04, 0.5) }, uDither: { value: R.ditherOfs } });
 
   M.bright = fsMat(`
 precision highp float; varying vec2 vUv; uniform sampler2D tColor; uniform vec2 uPx; uniform vec2 uThr;
@@ -221,6 +221,7 @@ function renderFrame() {
   const zr = cam.far - cam.near;
   const dsc = R.dofScale || 1;
   u.uDof.value.set((R.focusZ - cam.near) / zr, 3.2 * dsc / zr, 11.5 * dsc / zr, HASH.nodof ? 0.6 : Math.max(2, R.ih * 0.0145));
+  u.uNear.value.set(Math.max(5 * dsc, R.dofNear || 0) / zr, 8 * dsc / zr, 0.55);
   fsPass(M.dof, T.dof);
   u = M.bright.uniforms; u.tColor.value = T.dof.texture; u.uPx.value.copy(px); fsPass(M.bright, T.bA);
   u = M.blur.uniforms;

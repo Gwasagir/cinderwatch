@@ -15,6 +15,7 @@ function applyCamera() {
   cam.position.copy(_ct).addScaledVector(_cd, CAM.dist); cam.up.set(0, 1, 0); cam.lookAt(_ct);
   cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
   R.focusZ = CAM.dist;
+  R.dofNear = (BH - _ct.x) * _cd.x - _ct.y * _cd.y + (BH - _ct.z) * _cd.z - 3.5;
 }
 function updateCamera(dt) {
   const B = G.B; let wx = 0, wz = 0, ws = 7, boss = false;

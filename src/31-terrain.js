@@ -216,7 +216,7 @@ function buildBoard(seed, index) {
     const ch = chunkAt(cx, cz), mudc = mulC(COL.mud, .55);
     for (let k = 0; k < 11; k++) {
       const p = ring[k], q2 = ring[(k + 1) % 11];
-      waterV(ch.water, cx, y, cz, cx, cz, 0, .07); waterV(ch.water, q2[0], y, q2[1], q2[0], q2[1], 0, .07); waterV(ch.water, p[0], y, p[1], p[0], p[1], 0, .07);
+      waterV(ch.water, cx, y, cz, cx, cz, 0, .16); waterV(ch.water, q2[0], y, q2[1], q2[0], q2[1], 0, .16); waterV(ch.water, p[0], y, p[1], p[0], p[1], 0, .16);
       const e = 1.28, m1 = [cx + (p[0] - cx) * e, y - .006, cz + (p[1] - cz) * e], m2 = [cx + (q2[0] - cx) * e, y - .006, cz + (q2[1] - cz) * e];
       for (const v of [[cx, y - .006, cz], m2, m1]) ch.soup.v(v[0], v[1], v[2], 0, 1, 0, mudc[0], mudc[1], mudc[2], v[0] * .25, v[2] * .25, L_COBBLE, .28);
     }
@@ -235,7 +235,7 @@ function buildBoard(seed, index) {
     for (let u = 0; u < sv.length - 1; u++) {
       const a = sv[u], b = sv[u + 1], S = chunkAt((a[0] + b[0]) / 2, (a[2] + b[2]) / 2).water;
       const q = [[a[0] - a[3], a[1], a[2] - a[4], -a[6], a[5]], [a[0] + a[3], a[1], a[2] + a[4], a[6], a[5]], [b[0] + b[3], b[1], b[2] + b[4], b[6], b[5]], [b[0] - b[3], b[1], b[2] - b[4], -b[6], b[5]]];
-      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .1);
+      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .34);
     }
     const e = sv[sv.length - 1], ox = Math.abs(e[0]) > BH - .01 ? Math.sign(e[0]) : 0, oz = ox ? 0 : Math.sign(e[2]);
     fallAt = { x: e[0], y: e[1], z: e[2], ox, oz, w: e[6] };

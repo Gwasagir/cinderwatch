@@ -157,10 +157,9 @@ float cwH(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx +
 float cwN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(cwH(i), cwH(i + vec2(1.0, 0.0)), f.x), mix(cwH(i + vec2(0.0, 1.0)), cwH(i + vec2(1.0, 1.0)), f.x), f.y); }
 float cwRipple(vec2 p, float t, float flow) {
-  float a = cwN(vec2(p.x * 2.6, p.y * 1.3 - t * flow * 1.5));
-  float b = cwN(vec2(p.x * 6.1 + 3.7, p.y * 3.1 - t * (0.25 + flow * 2.3)));
-  float c = cwN(vec2(p.x * 13.0 - t * 0.2, p.y * 9.0 - t * (0.3 + flow * 3.4)));
-  return a * 1.0 + b * 0.55 + c * 0.3;
+  float a = cwN(vec2(p.x * 2.6, p.y * 1.3 - t * flow * 1.0));
+  float b = cwN(vec2(p.x * 5.2 + 3.7, p.y * 2.6 - t * (0.15 + flow * 1.4)));
+  return a * 1.0 + b * 0.9;
 }`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 float cwL = floor(vSurf.x + 0.5);
@@ -170,7 +169,7 @@ roughnessFactor = clamp(vSurf.y * (1.15 - 0.3 * cwT.a), 0.045, 1.0);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 ${water ? `{
   float h0 = cwRipple(vTuv, uTime, vSurf.z);
-  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.16 * min(vSurf.z, 1.0));
+  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.09 * min(vSurf.z, 1.0));
 }` : `{
   vec2 cdx = dFdx(vTuv), cdy = dFdy(vTuv);
   float h0 = texture(uTexH, vec3(vTuv, cwL)).a;
@@ -181,7 +180,7 @@ ${water ? `{
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 totalEmissiveRadiance += diffuseColor.rgb * vSurf.w * 6.0;
 ${inst ? 'totalEmissiveRadiance += vec3(1.0, 0.8, 0.55) * vFlash * 0.55;' : ''}`)
-      .replace('#include <opaque_fragment>', `${water ? 'outgoingLight += uSky * (0.3 + 6.0 * pow(1.0 - clamp(normal.z, 0.0, 1.0), 2.0)) * (1.5 - 0.6 * min(vSurf.z, 1.0));' : ''}
+      .replace('#include <opaque_fragment>', `${water ? 'outgoingLight += uSky * (0.4 + 4.0 * pow(1.0 - clamp(normal.z, 0.0, 1.0), 2.0)) * (1.5 - 0.6 * min(vSurf.z, 1.0));' : ''}
 #include <opaque_fragment>`);
   };
   return mat;
