@@ -257,7 +257,8 @@ float cwN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
 float cwRipple(vec2 p, float t, float flow) {
   float a = cwN(vec2(p.x * 2.6, p.y * 1.3 - t * flow * 1.0));
   float b = cwN(vec2(p.x * 5.2 + 3.7, p.y * 2.6 - t * (0.15 + flow * 1.4)));
-  return a * 1.0 + b * 0.9;
+  float c = cwN(vec2(p.x * 13.0 - t * 0.12, p.y * 9.0 - t * (0.2 + flow * 2.1)));
+  return a * 1.0 + b * 0.9 + c * 0.15;
 }`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 float cwL = floor(vSurf.x + 0.5);
@@ -267,7 +268,7 @@ roughnessFactor = clamp(vSurf.y * (1.15 - 0.3 * cwT.a), 0.045, 1.0);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 ${water ? `{
   float h0 = cwRipple(vTuv, uTime, vSurf.z);
-  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.09 * min(vSurf.z, 1.0));
+  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.11 * min(vSurf.z, 1.0));
 }` : `{
   vec2 cdx = dFdx(vTuv), cdy = dFdy(vTuv);
   float h0 = texture(uTexH, vec3(vTuv, cwL)).a;
@@ -429,7 +430,7 @@ const COL = {
 const R = {
   renderer: null, scene: null, cam: null, canvas: null,
   dw: 2, dh: 2, iw: 2, ih: 2, maxIH: 620, quality: 1,
-  viewH: 27, px: 0.04,
+  viewH: 27, fitW: 45, shiftY: 0, px: 0.04,
   sub: new THREE.Vector2(), ditherOfs: new THREE.Vector2(),
   focusZ: 60, fade: 0, exposure: 1.0,
   rt: {}, mats: {}, fsScene: null, fsCam: null, fsMesh: null,
@@ -648,7 +649,8 @@ function renderFrame() {
   const zr = cam.far - cam.near;
   const dsc = R.dofScale || 1;
   u.uDof.value.set((R.focusZ - cam.near) / zr, 3.2 * dsc / zr, 11.5 * dsc / zr, HASH.nodof ? 0.6 : Math.max(2, R.ih * 0.0145));
-  u.uNear.value.set(Math.max(5 * dsc, R.dofNear || 0) / zr, 8 * dsc / zr, 0.55);
+  const nd = R.dofD || 20;
+  u.uNear.value.set(Math.max(4 * dsc, 0.55 * nd) / zr, Math.max(6, nd) / zr, 0.6);
   fsPass(M.dof, T.dof);
   u = M.bright.uniforms; u.tColor.value = T.dof.texture; u.uPx.value.copy(px); fsPass(M.bright, T.bA);
   u = M.blur.uniforms;
@@ -876,13 +878,20 @@ function initMaterials() {
     uniforms: { uTime: SH.uTime },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: `precision highp float; varying vec2 vUv; uniform float uTime;
-float h(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
-void main(){ float x = vUv.x * 9.0, c = floor(x); float sp = 2.2 + h(vec2(c, 1.0)) * 2.0;
-  float s = fract(vUv.y * (0.7 + h(vec2(c, 2.0)) * 0.5) - uTime * sp * 0.25 + h(vec2(c, 3.0)));
-  float streak = smoothstep(0.0, 0.3, s) * smoothstep(1.0, 0.55, s) * (0.4 + 0.6 * h(vec2(c, 4.0)));
-  float edge = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x);
-  float fade = smoothstep(1.0, 0.1, vUv.y);
-  gl_FragColor = vec4(vec3(0.16, 0.24, 0.36) * (0.5 + streak), (0.22 + 0.5 * streak) * edge * fade); }`,
+float h(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
+void main(){
+  float x = vUv.x, y = vUv.y;
+  float s1 = n(vec2(x * 6.0, y * 5.0 - uTime * 2.4)), s2 = n(vec2(x * 13.0 + 3.1, y * 11.0 - uTime * 4.1)), s3 = n(vec2(x * 3.0 - 1.7, y * 2.2 - uTime * 1.3));
+  float strand = smoothstep(0.34, 0.72, s1 * 0.6 + s2 * 0.4);
+  float edge = smoothstep(0.0, 0.14, x) * smoothstep(1.0, 0.86, x);
+  float sheet = 1.0 - smoothstep(0.03, 0.3, y);
+  float body = mix(strand * (0.55 + 0.45 * s3), 1.0, sheet);
+  float fade = 1.0 - smoothstep(0.4, 1.0, y);
+  float foam = strand * smoothstep(0.02, 0.22, y);
+  vec3 col = mix(vec3(0.022, 0.034, 0.054), vec3(0.2, 0.27, 0.38), foam * 0.85 + 0.06 * s3);
+  gl_FragColor = vec4(col, edge * body * fade * (0.62 + 0.3 * foam)); }`,
   });
 }
 
@@ -1099,7 +1108,7 @@ function buildBoard(seed, index) {
     for (let u = 0; u < sv.length - 1; u++) {
       const a = sv[u], b = sv[u + 1], S = chunkAt((a[0] + b[0]) / 2, (a[2] + b[2]) / 2).water;
       const q = [[a[0] - a[3], a[1], a[2] - a[4], -a[6], a[5]], [a[0] + a[3], a[1], a[2] + a[4], a[6], a[5]], [b[0] + b[3], b[1], b[2] + b[4], b[6], b[5]], [b[0] - b[3], b[1], b[2] - b[4], -b[6], b[5]]];
-      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .34);
+      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .24);
     }
     const e = sv[sv.length - 1], ox = Math.abs(e[0]) > BH - .01 ? Math.sign(e[0]) : 0, oz = ox ? 0 : Math.sign(e[2]);
     fallAt = { x: e[0], y: e[1], z: e[2], ox, oz, w: e[6] };
@@ -1171,9 +1180,12 @@ function finalizeBoard(B) {
   }
   if (B.fallAt) {
     const f = B.fallAt, ex = -f.oz, ez = f.ox, w = f.w * 1.05, pc = B.pieces.reduce((a, b) => b.kind === 'chunk' && dist2(b.cx, b.cz, f.x, f.z) < dist2(a.cx, a.cz, f.x, f.z) ? b : a, B.pieces[0]);
-    const rows = [[0, 0, 0], [.22, -.12, .03], [.4, -.6, .1], [.5, -9.5, 1]], pos = [], uv = [], idx = [];
-    for (const [out, dy, v] of rows) for (const sd of [-1, 1]) { pos.push(f.x + f.ox * out + ex * w * sd - pc.cx, f.y + dy - pc.cy, f.z + f.oz * out + ez * w * sd - pc.cz); uv.push(sd * .5 + .5, v); }
-    for (let i = 0; i < rows.length - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 3, a, a + 3, a + 2); }
+    const NR = 14, pos = [], uv = [], idx = [];
+    for (let r = 0; r <= NR; r++) {
+      const v = r / NR, tau = 1.3 * v, out = 1.1 * tau, dy = -4.5 * tau * tau, ww = w * (1 + .35 * v);
+      for (const sd of [-1, 1]) { pos.push(f.x + f.ox * out + ex * ww * sd - pc.cx, f.y + dy - pc.cy, f.z + f.oz * out + ez * ww * sd - pc.cz); uv.push(sd * .5 + .5, v); }
+    }
+    for (let i = 0; i < NR; i++) { const a = i * 2; idx.push(a, a + 1, a + 3, a, a + 3, a + 2); }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3)); g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uv), 2)); g.setIndex(idx);
     const fm = new THREE.Mesh(g, MAT.fall); fm.renderOrder = 2; pc.mesh.add(fm);
   }
@@ -3617,7 +3629,7 @@ const PX = (() => {
 
 const UI = (() => {
   const U = {
-    ctx: null, s: 3, goldShown: 0, hurt: 0, coins: [], msg: null, hover: null, menu: null, armed: null, idle: 99, mx: -1, my: -1, inside: false,
+    ctx: null, s: 3, insetTop: 0, goldShown: 0, hurt: 0, coins: [], msg: null, hover: null, menu: null, armed: null, idle: 99, mx: -1, my: -1, inside: false,
     btns: [], hotBtn: null, press: null, gp: { sel: -1, t: 0, prev: [] , active: false }, goldBump: 0, deny: 0, hintT: 0, titleT: 0, rangeMesh: null, padMesh: null, soundRect: null, moved: 99, focus: 0, slainBump: 0, lastSlain: 0,
   };
   const COLR = { bg: 'rgba(9,11,17,0.86)', bg2: 'rgba(24,27,38,0.94)', bd: '#5d4c35', bdHi: '#e8b04a', tx: '#efe4cd', dim: '#a79e8a', amber: '#e8b04a', ember: '#ff8a3c', cold: '#8fc7ff', red: '#e5553c', dark: '#0b0d14', ok: '#9fd08a' };
@@ -3769,7 +3781,7 @@ const UI = (() => {
     }
     const stats = [['flame', '' + G.lives, U.hurt > 0 ? COLR.red : COLR.tx], ['coin', '' + Math.floor(U.goldShown), U.deny > 0 ? COLR.red : (U.goldBump > 0 ? '#ffe2a0' : COLR.tx)], ['skull', '' + G.slain, U.slainBump > .5 ? '#ffffff' : COLR.tx]];
     let wS = pad; for (const st of stats) wS += PX.iconSize(st[0])[0] * s + 2 * s + Math.max(tw(st[1]), tw('000')) + 6 * s; wS += pad - 6 * s;
-    const hS = 10 * s + pad * 2 - 2 * s, x0 = 5 * s, y0 = 5 * s;
+    const hS = 10 * s + pad * 2 - 2 * s, x0 = 5 * s, y0 = 5 * s + U.insetTop;
     plate(x0, y0, wS, hS, U.hurt > 0 ? { bd: COLR.red } : {});
     let x = x0 + pad; const goldPos = { x: 0, y: 0 };
     for (const st of stats) {
@@ -4488,9 +4500,9 @@ const _cr = new THREE.Vector3(), _cu = new THREE.Vector3(), _cd = new THREE.Vect
 function applyCamera() {
   const cam = R.cam, e = CAM.elev, sy = Math.sin(CAM.yaw), cy = Math.cos(CAM.yaw);
   _cd.set(Math.cos(e) * sy, Math.sin(e), Math.cos(e) * cy); _cr.set(cy, 0, -sy); _cu.set(-Math.sin(e) * sy, Math.cos(e), -Math.sin(e) * cy);
-  const aspect = R.dw / R.dh, base = Math.max(R.viewH, 45 / aspect), vh = base / CAM.zoom;
+  const aspect = R.dw / R.dh, base = Math.max(R.viewH, R.fitW / aspect), vh = base / CAM.zoom;
   R.px = vh / R.ih; R.viewW = vh * aspect; R.dofScale = base / R.viewH / CAM.zoom;
-  _ct.set(CAM.x, CAM.y, CAM.z).addScaledVector(_cr, FX.shakeX).addScaledVector(_cu, FX.shakeY);
+  _ct.set(CAM.x, CAM.y, CAM.z).addScaledVector(_cr, FX.shakeX).addScaledVector(_cu, FX.shakeY - R.shiftY);
   const u = _ct.dot(_cr), v = _ct.dot(_cu), us = Math.round(u / R.px) * R.px, vs = Math.round(v / R.px) * R.px;
   R.sub.set((u - us) / R.px, (v - vs) / R.px);
   R.ditherOfs.set(((Math.round(us / R.px) % 8) + 8) % 8, ((Math.round(vs / R.px) % 8) + 8) % 8);
@@ -4499,7 +4511,7 @@ function applyCamera() {
   cam.position.copy(_ct).addScaledVector(_cd, CAM.dist); cam.up.set(0, 1, 0); cam.lookAt(_ct);
   cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
   R.focusZ = CAM.dist;
-  R.dofNear = (BH - _ct.x) * _cd.x - _ct.y * _cd.y + (BH - _ct.z) * _cd.z - 3.5;
+  R.dofD = (BH - _ct.x) * _cd.x - _ct.y * _cd.y + (BH - _ct.z) * _cd.z;
 }
 function updateCamera(dt) {
   const B = G.B; let wx = 0, wz = 0, ws = 7, boss = false;
@@ -4548,7 +4560,11 @@ function step(rdt) {
     for (const f of G.men) if (!f.dead) drawFootman(f);
     if (G.phase === 'play') for (const p of B.pads) if (!p.tower) { _mm.compose(_mv.set(p.x, p.y, p.z), _mq.setFromAxisAngle(_upv, p.face), _ms); KIT.marker.put(_mm, 0, null); }
   }
-  if (live && B.fallAt && rnd() < dt * 7) { const f = B.fallAt; fxSmoke(f.x + f.ox * .3 + rr(-.5, .5) * Math.abs(f.oz), f.y - rr(.2, 1.4), f.z + f.oz * .3 + rr(-.5, .5) * Math.abs(f.ox), f.ox * .4, rr(-.6, .1), f.oz * .4, rr(.8, 1.5), .35, .7, .3, .36, .48, .3, { drag: .8 }); }
+  if (live && B.fallAt) {
+    const f = B.fallAt, ax = Math.abs(f.oz), az = Math.abs(f.ox);
+    if (rnd() < dt * 16) { const tau = rr(.7, 1.25), o = 1.1 * tau, d = 4.5 * tau * tau, sd = rr(-.8, .8) * f.w; fxSmoke(f.x + f.ox * o + ax * sd, f.y - d, f.z + f.oz * o + az * sd, f.ox * rr(.1, .5), rr(-1.6, -.6), f.oz * rr(.1, .5), rr(.9, 1.7), rr(.3, .5), .8, .9, 1.15, 1.5, .14, { drag: .5 }); }
+    if (rnd() < dt * 16) { const tau = rr(.05, .5), o = 1.1 * tau, sd = rr(-.9, .9) * f.w; fxPart(f.x + f.ox * o + ax * sd, f.y - 4.5 * tau * tau, f.z + f.oz * o + az * sd, f.ox * rr(.8, 1.6) + rr(-.3, .3), rr(-1, .6) - 9 * tau, f.oz * rr(.8, 1.6) + rr(-.3, .3), rr(.5, .9), rr(.04, .065), .3, .42, .62, { grav: 9, drag: .2 }); }
+  }
   updateDebris(dt, FX.groundAt, d => { UI.coinFrom(d.p.x, d.p.y, d.p.z, d.value || 0); fxTimed(5, d.p.x, d.p.y, d.p.z, .5, .5, 2.4, 1.8, .6, .8, .12); });
   updatePhase(dt);
   updateCamera(dt);
@@ -4595,7 +4611,7 @@ function boot() {
   R.scene.add(B.group); activateBoard(B, true);
   beginBattle(true);
   window.addEventListener('resize', resizeRenderer);
-  window.__cw = { G, R, CAM, UI, LT, FX, AI, step, setPhase, spawnMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
+  window.__cw = { G, R, CAM, UI, LT, FX, AI, PX, step, setPhase, spawnMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
   if (HASH.k) G.k = +HASH.k;
   if (HASH.ff) { const n = Math.round(+HASH.ff * 30); for (let i = 0; i < n; i++) step(1 / 30); CAM.sx = CAM.fx; CAM.sz = CAM.fz; R.fade = 1; }
   if (HASH.phase) setPhase(HASH.phase);

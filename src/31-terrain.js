@@ -12,13 +12,20 @@ function initMaterials() {
     uniforms: { uTime: SH.uTime },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: `precision highp float; varying vec2 vUv; uniform float uTime;
-float h(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
-void main(){ float x = vUv.x * 9.0, c = floor(x); float sp = 2.2 + h(vec2(c, 1.0)) * 2.0;
-  float s = fract(vUv.y * (0.7 + h(vec2(c, 2.0)) * 0.5) - uTime * sp * 0.25 + h(vec2(c, 3.0)));
-  float streak = smoothstep(0.0, 0.3, s) * smoothstep(1.0, 0.55, s) * (0.4 + 0.6 * h(vec2(c, 4.0)));
-  float edge = smoothstep(0.0, 0.18, vUv.x) * smoothstep(1.0, 0.82, vUv.x);
-  float fade = smoothstep(1.0, 0.1, vUv.y);
-  gl_FragColor = vec4(vec3(0.16, 0.24, 0.36) * (0.5 + streak), (0.22 + 0.5 * streak) * edge * fade); }`,
+float h(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
+void main(){
+  float x = vUv.x, y = vUv.y;
+  float s1 = n(vec2(x * 6.0, y * 5.0 - uTime * 2.4)), s2 = n(vec2(x * 13.0 + 3.1, y * 11.0 - uTime * 4.1)), s3 = n(vec2(x * 3.0 - 1.7, y * 2.2 - uTime * 1.3));
+  float strand = smoothstep(0.34, 0.72, s1 * 0.6 + s2 * 0.4);
+  float edge = smoothstep(0.0, 0.14, x) * smoothstep(1.0, 0.86, x);
+  float sheet = 1.0 - smoothstep(0.03, 0.3, y);
+  float body = mix(strand * (0.55 + 0.45 * s3), 1.0, sheet);
+  float fade = 1.0 - smoothstep(0.4, 1.0, y);
+  float foam = strand * smoothstep(0.02, 0.22, y);
+  vec3 col = mix(vec3(0.022, 0.034, 0.054), vec3(0.2, 0.27, 0.38), foam * 0.85 + 0.06 * s3);
+  gl_FragColor = vec4(col, edge * body * fade * (0.62 + 0.3 * foam)); }`,
   });
 }
 
@@ -235,7 +242,7 @@ function buildBoard(seed, index) {
     for (let u = 0; u < sv.length - 1; u++) {
       const a = sv[u], b = sv[u + 1], S = chunkAt((a[0] + b[0]) / 2, (a[2] + b[2]) / 2).water;
       const q = [[a[0] - a[3], a[1], a[2] - a[4], -a[6], a[5]], [a[0] + a[3], a[1], a[2] + a[4], a[6], a[5]], [b[0] + b[3], b[1], b[2] + b[4], b[6], b[5]], [b[0] - b[3], b[1], b[2] - b[4], -b[6], b[5]]];
-      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .34);
+      for (const k of [0, 1, 2, 0, 2, 3]) waterV(S, q[k][0], q[k][1], q[k][2], q[k][3], q[k][4], 1.25, .24);
     }
     const e = sv[sv.length - 1], ox = Math.abs(e[0]) > BH - .01 ? Math.sign(e[0]) : 0, oz = ox ? 0 : Math.sign(e[2]);
     fallAt = { x: e[0], y: e[1], z: e[2], ox, oz, w: e[6] };
@@ -307,9 +314,12 @@ function finalizeBoard(B) {
   }
   if (B.fallAt) {
     const f = B.fallAt, ex = -f.oz, ez = f.ox, w = f.w * 1.05, pc = B.pieces.reduce((a, b) => b.kind === 'chunk' && dist2(b.cx, b.cz, f.x, f.z) < dist2(a.cx, a.cz, f.x, f.z) ? b : a, B.pieces[0]);
-    const rows = [[0, 0, 0], [.22, -.12, .03], [.4, -.6, .1], [.5, -9.5, 1]], pos = [], uv = [], idx = [];
-    for (const [out, dy, v] of rows) for (const sd of [-1, 1]) { pos.push(f.x + f.ox * out + ex * w * sd - pc.cx, f.y + dy - pc.cy, f.z + f.oz * out + ez * w * sd - pc.cz); uv.push(sd * .5 + .5, v); }
-    for (let i = 0; i < rows.length - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 3, a, a + 3, a + 2); }
+    const NR = 14, pos = [], uv = [], idx = [];
+    for (let r = 0; r <= NR; r++) {
+      const v = r / NR, tau = 1.3 * v, out = 1.1 * tau, dy = -4.5 * tau * tau, ww = w * (1 + .35 * v);
+      for (const sd of [-1, 1]) { pos.push(f.x + f.ox * out + ex * ww * sd - pc.cx, f.y + dy - pc.cy, f.z + f.oz * out + ez * ww * sd - pc.cz); uv.push(sd * .5 + .5, v); }
+    }
+    for (let i = 0; i < NR; i++) { const a = i * 2; idx.push(a, a + 1, a + 3, a, a + 3, a + 2); }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3)); g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uv), 2)); g.setIndex(idx);
     const fm = new THREE.Mesh(g, MAT.fall); fm.renderOrder = 2; pc.mesh.add(fm);
   }

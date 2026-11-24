@@ -68,6 +68,7 @@ const PAGE = `(() => {
   await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false });
   await send('Page.navigate', { url: 'file://' + ROOT + '/index.html#seed=' + seed + '&manual=1&noscale=1' });
   await sleep(1500);
+  if (process.env.PRE) await ev(process.env.PRE + '; 1');
   console.log('canvas', await ev(PAGE));
   const quit = async () => { ws.close(); chrome.kill(); await sleep(200); try { fs.rmSync(prof, { recursive: true, force: true }); } catch (e) { } process.exit(0); };
   if (mode === 'scan') {
@@ -98,7 +99,7 @@ const PAGE = `(() => {
     }
     if (!AO) { await sleep(300); ff.stdin.end(); await new Promise(r => ff.on('close', r)); console.log('\nvideo frames', nOut); }
     const a = JSON.parse(await ev('__rec.wav(' + JSON.stringify(ranges) + ')')); fs.writeFileSync(wav, Buffer.from(a.b64, 'base64')); console.log('audio peak', a.peak, 'rms', a.rms);
-    if (AO) return quit();
+    if (AO || process.env.MASTER_ONLY) return quit();
     const dur = nOut / 60, mux = spawn(FFMPEG, ['-y', '-loglevel', 'error', '-i', tmp, '-i', wav, '-vf', 'fade=t=out:st=' + (dur - 0.5).toFixed(2) + ':d=0.5', '-af', 'afade=t=in:st=0:d=0.05,afade=t=out:st=' + (dur - 0.7).toFixed(2) + ':d=0.7', '-c:v', 'libx264', '-preset', 'slow', '-crf', process.env.CRF || '19', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out], { stdio: 'inherit' });
     await new Promise(r => mux.on('close', r)); console.log('wrote', out);
     return quit();

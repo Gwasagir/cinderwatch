@@ -2,7 +2,7 @@
 const R = {
   renderer: null, scene: null, cam: null, canvas: null,
   dw: 2, dh: 2, iw: 2, ih: 2, maxIH: 620, quality: 1,
-  viewH: 27, px: 0.04,
+  viewH: 27, fitW: 45, shiftY: 0, px: 0.04,
   sub: new THREE.Vector2(), ditherOfs: new THREE.Vector2(),
   focusZ: 60, fade: 0, exposure: 1.0,
   rt: {}, mats: {}, fsScene: null, fsCam: null, fsMesh: null,
@@ -221,7 +221,8 @@ function renderFrame() {
   const zr = cam.far - cam.near;
   const dsc = R.dofScale || 1;
   u.uDof.value.set((R.focusZ - cam.near) / zr, 3.2 * dsc / zr, 11.5 * dsc / zr, HASH.nodof ? 0.6 : Math.max(2, R.ih * 0.0145));
-  u.uNear.value.set(Math.max(5 * dsc, R.dofNear || 0) / zr, 8 * dsc / zr, 0.55);
+  const nd = R.dofD || 20;
+  u.uNear.value.set(Math.max(4 * dsc, 0.55 * nd) / zr, Math.max(6, nd) / zr, 0.6);
   fsPass(M.dof, T.dof);
   u = M.bright.uniforms; u.tColor.value = T.dof.texture; u.uPx.value.copy(px); fsPass(M.bright, T.bA);
   u = M.blur.uniforms;

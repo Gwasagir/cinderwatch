@@ -1,7 +1,7 @@
 
 const UI = (() => {
   const U = {
-    ctx: null, s: 3, goldShown: 0, hurt: 0, coins: [], msg: null, hover: null, menu: null, armed: null, idle: 99, mx: -1, my: -1, inside: false,
+    ctx: null, s: 3, insetTop: 0, goldShown: 0, hurt: 0, coins: [], msg: null, hover: null, menu: null, armed: null, idle: 99, mx: -1, my: -1, inside: false,
     btns: [], hotBtn: null, press: null, gp: { sel: -1, t: 0, prev: [] , active: false }, goldBump: 0, deny: 0, hintT: 0, titleT: 0, rangeMesh: null, padMesh: null, soundRect: null, moved: 99, focus: 0, slainBump: 0, lastSlain: 0,
   };
   const COLR = { bg: 'rgba(9,11,17,0.86)', bg2: 'rgba(24,27,38,0.94)', bd: '#5d4c35', bdHi: '#e8b04a', tx: '#efe4cd', dim: '#a79e8a', amber: '#e8b04a', ember: '#ff8a3c', cold: '#8fc7ff', red: '#e5553c', dark: '#0b0d14', ok: '#9fd08a' };
@@ -153,7 +153,7 @@ const UI = (() => {
     }
     const stats = [['flame', '' + G.lives, U.hurt > 0 ? COLR.red : COLR.tx], ['coin', '' + Math.floor(U.goldShown), U.deny > 0 ? COLR.red : (U.goldBump > 0 ? '#ffe2a0' : COLR.tx)], ['skull', '' + G.slain, U.slainBump > .5 ? '#ffffff' : COLR.tx]];
     let wS = pad; for (const st of stats) wS += PX.iconSize(st[0])[0] * s + 2 * s + Math.max(tw(st[1]), tw('000')) + 6 * s; wS += pad - 6 * s;
-    const hS = 10 * s + pad * 2 - 2 * s, x0 = 5 * s, y0 = 5 * s;
+    const hS = 10 * s + pad * 2 - 2 * s, x0 = 5 * s, y0 = 5 * s + U.insetTop;
     plate(x0, y0, wS, hS, U.hurt > 0 ? { bd: COLR.red } : {});
     let x = x0 + pad; const goldPos = { x: 0, y: 0 };
     for (const st of stats) {

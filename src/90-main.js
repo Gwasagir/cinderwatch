@@ -4,9 +4,9 @@ const _cr = new THREE.Vector3(), _cu = new THREE.Vector3(), _cd = new THREE.Vect
 function applyCamera() {
   const cam = R.cam, e = CAM.elev, sy = Math.sin(CAM.yaw), cy = Math.cos(CAM.yaw);
   _cd.set(Math.cos(e) * sy, Math.sin(e), Math.cos(e) * cy); _cr.set(cy, 0, -sy); _cu.set(-Math.sin(e) * sy, Math.cos(e), -Math.sin(e) * cy);
-  const aspect = R.dw / R.dh, base = Math.max(R.viewH, 45 / aspect), vh = base / CAM.zoom;
+  const aspect = R.dw / R.dh, base = Math.max(R.viewH, R.fitW / aspect), vh = base / CAM.zoom;
   R.px = vh / R.ih; R.viewW = vh * aspect; R.dofScale = base / R.viewH / CAM.zoom;
-  _ct.set(CAM.x, CAM.y, CAM.z).addScaledVector(_cr, FX.shakeX).addScaledVector(_cu, FX.shakeY);
+  _ct.set(CAM.x, CAM.y, CAM.z).addScaledVector(_cr, FX.shakeX).addScaledVector(_cu, FX.shakeY - R.shiftY);
   const u = _ct.dot(_cr), v = _ct.dot(_cu), us = Math.round(u / R.px) * R.px, vs = Math.round(v / R.px) * R.px;
   R.sub.set((u - us) / R.px, (v - vs) / R.px);
   R.ditherOfs.set(((Math.round(us / R.px) % 8) + 8) % 8, ((Math.round(vs / R.px) % 8) + 8) % 8);
@@ -15,7 +15,7 @@ function applyCamera() {
   cam.position.copy(_ct).addScaledVector(_cd, CAM.dist); cam.up.set(0, 1, 0); cam.lookAt(_ct);
   cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
   R.focusZ = CAM.dist;
-  R.dofNear = (BH - _ct.x) * _cd.x - _ct.y * _cd.y + (BH - _ct.z) * _cd.z - 3.5;
+  R.dofD = (BH - _ct.x) * _cd.x - _ct.y * _cd.y + (BH - _ct.z) * _cd.z;
 }
 function updateCamera(dt) {
   const B = G.B; let wx = 0, wz = 0, ws = 7, boss = false;
@@ -64,7 +64,11 @@ function step(rdt) {
     for (const f of G.men) if (!f.dead) drawFootman(f);
     if (G.phase === 'play') for (const p of B.pads) if (!p.tower) { _mm.compose(_mv.set(p.x, p.y, p.z), _mq.setFromAxisAngle(_upv, p.face), _ms); KIT.marker.put(_mm, 0, null); }
   }
-  if (live && B.fallAt && rnd() < dt * 7) { const f = B.fallAt; fxSmoke(f.x + f.ox * .3 + rr(-.5, .5) * Math.abs(f.oz), f.y - rr(.2, 1.4), f.z + f.oz * .3 + rr(-.5, .5) * Math.abs(f.ox), f.ox * .4, rr(-.6, .1), f.oz * .4, rr(.8, 1.5), .35, .7, .3, .36, .48, .3, { drag: .8 }); }
+  if (live && B.fallAt) {
+    const f = B.fallAt, ax = Math.abs(f.oz), az = Math.abs(f.ox);
+    if (rnd() < dt * 16) { const tau = rr(.7, 1.25), o = 1.1 * tau, d = 4.5 * tau * tau, sd = rr(-.8, .8) * f.w; fxSmoke(f.x + f.ox * o + ax * sd, f.y - d, f.z + f.oz * o + az * sd, f.ox * rr(.1, .5), rr(-1.6, -.6), f.oz * rr(.1, .5), rr(.9, 1.7), rr(.3, .5), .8, .9, 1.15, 1.5, .14, { drag: .5 }); }
+    if (rnd() < dt * 16) { const tau = rr(.05, .5), o = 1.1 * tau, sd = rr(-.9, .9) * f.w; fxPart(f.x + f.ox * o + ax * sd, f.y - 4.5 * tau * tau, f.z + f.oz * o + az * sd, f.ox * rr(.8, 1.6) + rr(-.3, .3), rr(-1, .6) - 9 * tau, f.oz * rr(.8, 1.6) + rr(-.3, .3), rr(.5, .9), rr(.04, .065), .3, .42, .62, { grav: 9, drag: .2 }); }
+  }
   updateDebris(dt, FX.groundAt, d => { UI.coinFrom(d.p.x, d.p.y, d.p.z, d.value || 0); fxTimed(5, d.p.x, d.p.y, d.p.z, .5, .5, 2.4, 1.8, .6, .8, .12); });
   updatePhase(dt);
   updateCamera(dt);
@@ -111,7 +115,7 @@ function boot() {
   R.scene.add(B.group); activateBoard(B, true);
   beginBattle(true);
   window.addEventListener('resize', resizeRenderer);
-  window.__cw = { G, R, CAM, UI, LT, FX, AI, step, setPhase, spawnMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
+  window.__cw = { G, R, CAM, UI, LT, FX, AI, PX, step, setPhase, spawnMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
   if (HASH.k) G.k = +HASH.k;
   if (HASH.ff) { const n = Math.round(+HASH.ff * 30); for (let i = 0; i < n; i++) step(1 / 30); CAM.sx = CAM.fx; CAM.sz = CAM.fz; R.fade = 1; }
   if (HASH.phase) setPhase(HASH.phase);

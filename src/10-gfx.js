@@ -159,7 +159,8 @@ float cwN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
 float cwRipple(vec2 p, float t, float flow) {
   float a = cwN(vec2(p.x * 2.6, p.y * 1.3 - t * flow * 1.0));
   float b = cwN(vec2(p.x * 5.2 + 3.7, p.y * 2.6 - t * (0.15 + flow * 1.4)));
-  return a * 1.0 + b * 0.9;
+  float c = cwN(vec2(p.x * 13.0 - t * 0.12, p.y * 9.0 - t * (0.2 + flow * 2.1)));
+  return a * 1.0 + b * 0.9 + c * 0.15;
 }`)
       .replace('#include <color_fragment>', `#include <color_fragment>
 float cwL = floor(vSurf.x + 0.5);
@@ -169,7 +170,7 @@ roughnessFactor = clamp(vSurf.y * (1.15 - 0.3 * cwT.a), 0.045, 1.0);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 ${water ? `{
   float h0 = cwRipple(vTuv, uTime, vSurf.z);
-  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.09 * min(vSurf.z, 1.0));
+  normal = cwBump(-vViewPosition, normal, dFdx(h0), dFdy(h0), 0.03 + 0.11 * min(vSurf.z, 1.0));
 }` : `{
   vec2 cdx = dFdx(vTuv), cdy = dFdy(vTuv);
   float h0 = texture(uTexH, vec3(vTuv, cwL)).a;
