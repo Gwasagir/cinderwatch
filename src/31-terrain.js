@@ -345,6 +345,11 @@ function finalizeBoard(B) {
   const sw = o => { const t = o.x; o.x = o.z; o.z = t; };
   B.pieces = [];
   B.group = new THREE.Group();
+  { const TN = 72, raw = new Float32Array(TN * TN).fill(-99), top = new Float32Array(TN * TN);
+    const mark = S => { const P = S.P; for (let i = 0; i < P.length; i += 3) { const ix = Math.floor((P[i] + BH) * 2), iz = Math.floor((P[i + 2] + BH) * 2); if (ix < 0 || iz < 0 || ix >= TN || iz >= TN) continue; const o = iz * TN + ix; if (P[i + 1] > raw[o]) raw[o] = P[i + 1]; } };
+    for (const ch of B.chunks) mark(ch.soup); for (const st of B.structs) mark(st.soup);
+    for (let z = 0; z < TN; z++) for (let x = 0; x < TN; x++) { let m = -99; for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, zz = z + dz; if (xx >= 0 && zz >= 0 && xx < TN && zz < TN && raw[zz * TN + xx] > m) m = raw[zz * TN + xx]; } top[z * TN + x] = m; }
+    B.topAt = (x, z) => { if (mir) { const t = x; x = z; z = t; } return top[clamp(Math.floor((z + BH) * 2), 0, TN - 1) * TN + clamp(Math.floor((x + BH) * 2), 0, TN - 1)]; }; }
   const mkPiece = (soup, cx, cy, cz, kind, water, extras) => {
     if (mir) { soup.mirrorXZ(); if (water) water.mirrorXZ(); const t = cx; cx = cz; cz = t; }
     const P = soup.P; for (let i = 0; i < P.length; i += 3) { P[i] -= cx; P[i + 1] -= cy; P[i + 2] -= cz; }
@@ -396,6 +401,8 @@ function finalizeBoard(B) {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3)); g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uv), 2)); g.setIndex(idx);
     const fm = new THREE.Mesh(g, MAT.fall); fm.renderOrder = 2; pc.mesh.add(fm);
   }
+  { const n = B.n, W = 14; B.ax = new Float32Array(n); B.az = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const w = Math.min(W, i, n - 1 - i); let sx = 0, sz = 0; for (let k = -w; k <= w; k++) { sx += B.px[i + k]; sz += B.pz[i + k]; } B.ax[i] = sx / (2 * w + 1); B.az[i] = sz / (2 * w + 1); } }
   for (const p of B.pads) { p.y = p.y0 + .29; p.tower = null; p.face = 0; const q = pathNear(B, p.x, p.z, p.s, 30); p.s = q.s; p.face = Math.atan2(B.px[q.i] - p.x, B.pz[q.i] - p.z); }
   B.soupsDone = true; setBoardCasting(B, false);
   B.chunks.forEach(c => { c.soup = c.water = null; }); B.structs.forEach(s => { s.soup = null; });

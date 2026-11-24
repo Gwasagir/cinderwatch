@@ -5,7 +5,7 @@ const MON = {
   slime: { name: 'Slime', tip: 'Splits in two when it dies.', hp: 95, spd: .82, rad: .42, mass: 2.2, bounty: 9, lives: 1, hitH: .3, top: .75, dmg: 8, atkT: 1.2, eye: [1.8, 2.8, .4], scale: 1, death: 'goo', hop: [.95, 2.35], split: ['slimelet', 2] },
   slimelet: { name: 'Slimelet', hp: 30, spd: 1.2, rad: .26, mass: .9, bounty: 3, lives: 1, hitH: .2, top: .48, dmg: 4, atkT: 1.0, eye: [1.8, 2.8, .4], scale: .58, death: 'goo', hop: [1.25, 2.35], cat: 'swarm' },
   knight: { name: 'Skeleton knight', tip: 'Its armor turns most arrows.', hp: 118, spd: 1.0, rad: .3, mass: 2.2, bounty: 15, lives: 1, hitH: .8, top: 1.6, dmg: 11, atkT: 1.05, eye: [.5, 1.7, 3.4], scale: 1.08, armor: .35, death: 'bones', blade: true, cat: 'armor', tint: [.74, .78, .9] },
-  bat: { name: 'Bat', tip: 'Flies over the road. Only archers and spires reach it.', hp: 15, spd: 2.2, rad: .22, mass: .3, bounty: 6, lives: 1, hitH: 0, top: .35, dmg: 0, atkT: 1, eye: [3.2, .5, .3], scale: 1.25, fly: true, death: 'bat', cat: 'air', alt: [2.9, 3.8], flap: 21 },
+  bat: { name: 'Bat', tip: 'Flies over the road. Only archers and spires reach it.', hp: 20, spd: 2.3, rad: .22, mass: .3, bounty: 6, lives: 1, hitH: 0, top: .35, dmg: 0, atkT: 1, eye: [3.2, .5, .3], scale: 1.25, fly: true, death: 'bat', cat: 'air', alt: [2.9, 3.8], flap: 21 },
   ghoul: { name: 'Ghoul', tip: 'Runs faster the more it is hurt.', hp: 40, spd: 1.85, rad: .27, mass: .9, bounty: 7, lives: 1, hitH: .5, top: .95, dmg: 9, atkT: .7, eye: [3.2, 2.8, .6], scale: .62, frenzy: .55, death: 'flesh', tint: [1.24, 1.03, 1.9] },
   spider: { name: 'Cave spider', tip: 'Slips past your footmen.', hp: 20, spd: 2.25, rad: .24, mass: .4, bounty: 3, lives: 1, hitH: .18, top: .45, dmg: 4, atkT: .6, eye: [3.4, .3, .2], scale: 1, slip: true, death: 'bug', cat: 'swarm', tint: [.6, .55, .6] },
   scarab: { name: 'Scarab', hp: 9, spd: 2.5, rad: .15, mass: .2, bounty: 1, lives: 1, hitH: .1, top: .28, dmg: 2, atkT: .6, eye: [1.2, 3.0, 2.6], scale: .5, slip: true, death: 'bug', cat: 'swarm', tint: [1.5, 1.15, .45] },
@@ -13,9 +13,9 @@ const MON = {
   bomber: { name: 'Sapper', tip: 'Its powder keg blows up friend and foe.', hp: 38, spd: 1.55, rad: .27, mass: 1, bounty: 8, lives: 2, hitH: .75, top: 1.55, dmg: 0, atkT: 1, eye: [3.6, 1.4, .2], scale: 1, explode: { r: 1.7, dmg: 46, men: 30 }, death: 'bones', tint: [.95, .85, .75] },
   wraith: { name: 'Wraith', tip: 'Arrows and swords miss while it fades.', hp: 58, spd: 1.3, rad: .28, mass: 1, bounty: 11, lives: 1, hitH: .8, top: 1.5, dmg: 0, atkT: 1, eye: [.8, 2.4, 3.6], scale: 1, ghost: [1.7, 3.0], death: 'ghost' },
   toad: { name: 'Bog toad', tip: 'Covers ground in long hops.', hp: 78, spd: 1.0, rad: .38, mass: 1.8, bounty: 9, lives: 1, hitH: .3, top: .75, dmg: 9, atkT: 1.0, eye: [3.0, 2.4, .3], scale: 1, hop: [1.2, 2.5], death: 'flesh' },
-  wisp: { name: 'Wisp', tip: 'A fast flyer. Easy to kill, hard to catch.', hp: 7, spd: 2.2, rad: .14, mass: .1, bounty: 2, lives: 1, hitH: 0, top: .3, dmg: 0, atkT: 1, eye: [1, 1, 1], scale: 1, fly: true, death: 'wisp', cat: 'air', alt: [1.3, 2.3], flap: 6, glow: 8 },
+  wisp: { name: 'Wisp', tip: 'A fast flyer. Easy to kill, hard to catch.', hp: 10, spd: 3.0, rad: .14, mass: .1, bounty: 2, lives: 1, hitH: 0, top: .3, dmg: 0, atkT: 1, eye: [1, 1, 1], scale: 1, fly: true, death: 'wisp', cat: 'air', alt: [1.3, 2.3], flap: 6, glow: 8 },
   drummer: { name: 'War drummer', tip: 'Speeds up everything near it.', hp: 92, spd: 1.15, rad: .3, mass: 1.6, bounty: 14, lives: 1, hitH: .8, top: 2.35, dmg: 6, atkT: 1, eye: [3.6, .6, .2], scale: 1.05, aura: [3.4, .3], death: 'bones' },
-  gargoyle: { name: 'Gargoyle', tip: 'A flyer that shrugs off arrows.', hp: 52, spd: 1.45, rad: .32, mass: 1.2, bounty: 13, lives: 1, hitH: 0, top: .6, dmg: 0, atkT: 1, eye: [3.6, 1.2, .2], scale: 1.15, fly: true, armor: .72, death: 'rock', cat: 'air', alt: [2.4, 3.1], flap: 9 },
+  gargoyle: { name: 'Gargoyle', tip: 'A flyer that shrugs off arrows.', hp: 90, spd: 1.6, rad: .32, mass: 1.2, bounty: 13, lives: 1, hitH: 0, top: .6, dmg: 0, atkT: 1, eye: [3.6, 1.2, .2], scale: 1.15, fly: true, armor: .5, death: 'rock', cat: 'air', alt: [2.4, 3.1], flap: 9 },
   necro: { name: 'Necromancer', tip: 'Raises skeletons as it walks.', hp: 105, spd: .85, rad: .3, mass: 1.6, bounty: 18, lives: 1, hitH: .8, top: 1.8, dmg: 5, atkT: 1.2, eye: [.6, 3.4, 1.0], scale: 1.08, summon: { type: 'skel', n: 2, every: 7.5, max: 3, hp: .6 }, death: 'bones', tint: [.7, .74, .7] },
   mummy: { name: 'Mummy', tip: 'Bursts into scarabs when it falls.', hp: 135, spd: .9, rad: .3, mass: 2, bounty: 14, lives: 1, hitH: .8, top: 1.55, dmg: 12, atkT: 1.1, eye: [.6, 3.0, 2.6], scale: 1.1, split: ['scarab', 3], death: 'bones', tint: [1.08, .95, .72] },
   brute: { name: 'Troll', tip: 'Heals unless you keep hitting it.', hp: 360, spd: .82, rad: .5, mass: 8, bounty: 30, lives: 2, hitH: 1.0, top: 1.95, dmg: 24, atkT: 1.4, eye: [3.4, 2.4, .4], scale: 1.5, regen: .035, death: 'flesh', cat: 'armor', tint: [.83, .8, 2.0] },
@@ -44,8 +44,8 @@ function spawnMonster(type, o = {}) {
   if (type === 'skel') m.tint = rnd() < .3 ? [.9, .86, .74] : null;
   if (def.glow) { m.glowL = true; m.lI = def.glow; m.lCol = B.bio.wispHex || 0xb0a0ff; }
   if (m.fly) {
-    const c = B.cave, b = B.beacon; m.x = c.x + rr(-.5, .5); m.z = c.z + rr(-1, 1); m.y = c.y + 2.2; m.fx0 = m.x; m.fz0 = m.z; m.d0 = Math.hypot(b.x - m.x, b.z - m.z);
-    m.alt = rr(def.alt[0], def.alt[1]); m.side = rr(-1.2, 1.2) * (def.glow ? 2.2 : 1); m.vis = true;
+    const c = B.cave; m.x = c.x + rr(-.5, .5); m.z = c.z + rr(-1, 1); m.y = c.y + 2.2; m.s = c.s + rr(0, .6);
+    m.alt = rr(def.alt[0], def.alt[1]); m.side = rr(-1.1, 1.1) * (def.glow ? 1.4 : 1); m.vis = true;
   } else { const p = pathAt(B, m.s, _ap); m.x = p.x - p.tz * m.lat; m.z = p.z + p.tx * m.lat; m.y = p.y; }
   if (m.vis) UI.sawMonster(type);
   G.mons.push(m); return m;
@@ -346,14 +346,21 @@ function updateUnits(dt) {
   }
 }
 function updateBat(m, dt) {
-  const b = G.B.beacon, dx = b.x - m.x, dz = b.z - m.z, d = Math.hypot(dx, dz) || 1, v = m.def.spd * m.spdMul * (1 - m.slowF);
-  const wob = Math.sin(G.t * (m.def.glow ? 2.6 : 1.7) + m.lseed * 3) * m.side * Math.min(1, d / 6);
-  m.vx = dx / d * v - dz / d * wob * .5; m.vz = dz / d * v + dx / d * wob * .5;
-  m.x += m.vx * dt; m.z += m.vz * dt;
-  const ground = G.B.heightAt(m.x, m.z), wantY = d < 5 ? lerp(b.y - .2, ground + m.alt, sat((d - 1) / 4)) : ground + m.alt;
-  m.y = damp(m.y, wantY + (m.def.glow ? Math.sin(G.t * 2.3 + m.lseed * 5) * .35 : 0), 2.5, dt); m.yaw = angDamp(m.yaw, Math.atan2(m.vx, m.vz), 8, dt); m.ph += dt * m.def.flap;
-  m.prog = clamp(1 - d / m.d0, 0, 1) * .98;
-  if (d < .9) leak(m);
+  const B = G.B, b = B.beacon, def = m.def, v = def.spd * m.spdMul * (1 - m.slowF);
+  m.s = Math.min(B.L, m.s + v * dt);
+  const f = clamp(m.s / PATH_STEP, 0, B.n - 1.001), i = Math.floor(f), u = f - i, dxp = B.ax[i + 1] - B.ax[i], dzp = B.az[i + 1] - B.az[i], dl = Math.hypot(dxp, dzp) || 1;
+  const lat = m.side + Math.sin(G.t * (def.glow ? 2.6 : 1.7) + m.lseed * 3) * (def.glow ? .7 : .45), e = sat((m.s - (B.L - 6)) / 6), e2 = e * e * (3 - 2 * e);
+  const tx = lerp(lerp(B.ax[i], B.ax[i + 1], u) - dzp / dl * lat, b.x, e2), tz = lerp(lerp(B.az[i], B.az[i + 1], u) + dxp / dl * lat, b.z, e2);
+  let vx = (tx - m.x) * 4, vz = (tz - m.z) * 4; const sp = Math.hypot(vx, vz), cap = v * 2.2 + .5; if (sp > cap) { vx *= cap / sp; vz *= cap / sp; }
+  m.vx = damp(m.vx, vx, 8, dt); m.vz = damp(m.vz, vz, 8, dt); m.x += m.vx * dt; m.z += m.vz * dt;
+  const ground = B.heightAt(m.x, m.z), k = sat((m.s - B.cave.s - 1.5) / 2.5);
+  let top = Math.max(B.topAt(m.x, m.z), B.topAt(m.x + m.vx * .45, m.z + m.vz * .45));
+  for (const t of G.towers) if (t.alive && dist2(t.x, t.z, m.x + m.vx * .3, m.z + m.vz * .3) < 3.2) top = Math.max(top, t.y + (t.mounts ? t.mounts.top : 2.5) + .4);
+  let wantY = Math.max(ground + m.alt, lerp(ground + m.alt, top + (def.glow ? .45 : .7), k)) + (def.glow ? Math.sin(G.t * 2.3 + m.lseed * 5) * .3 : 0);
+  wantY = lerp(wantY, b.y - .2, e2 * e2);
+  m.y = damp(m.y, wantY, wantY > m.y ? 5 : 2.2, dt); if (sp > .05) m.yaw = angDamp(m.yaw, Math.atan2(m.vx, m.vz), 8, dt); m.ph += dt * def.flap;
+  m.prog = m.s / B.L * .98;
+  if (e >= 1 && (dist2(b.x, b.z, m.x, m.z) < .8 || (m.endT = (m.endT || 0) + dt) > 3)) leak(m);
 }
 function leak(m) {
   const B = G.B, n = m.def.lives;
