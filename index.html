@@ -1655,11 +1655,14 @@ function buildBridge(B) {
 }
 
 function buildPads(B) {
+  const bright = B.bio.key === 'frost' || B.bio.key === 'dunes', top = bright ? C(0x5a6070) : C(0x8e929e), rim = bright ? C(0x363a46) : C(0x565a66), brass = mulC(COL.brass, bright ? 1.7 : 1.25);
   for (const p of B.pads) {
     const T = new Soup(), rng = B.rng;
-    T.cyl(1.36, .34, 0, .12, 0, mulC(COL.stoneD, .8), { n: 8, l: L_MASON, r: [0, PI / 8, 0] });
-    T.cyl(1.16, .05, 0, .3, 0, mulC(COL.stoneD, 1.05), { n: 8, l: L_MASON, r: [0, PI / 8, 0] });
-    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; T.box(.46, .2, .28, Math.cos(a) * 1.34, .1 + rng() * .06, Math.sin(a) * 1.34, mixC(COL.stoneD, COL.stone, rng() * .6), { l: L_ROCK, r: [rng.range(-.1, .1), -a + HPI, 0] }); }
+    T.cyl(1.36, .34, 0, .12, 0, mulC(rim, .8), { n: 8, l: L_MASON, r: [0, PI / 8, 0] });
+    T.cyl(1.2, .05, 0, .3, 0, top, { n: 8, l: L_MASON, r: [0, PI / 8, 0], emis: .03 });
+    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; T.box(.46, .2, .28, Math.cos(a) * 1.34, .1 + rng() * .06, Math.sin(a) * 1.34, mixC(rim, top, rng() * .5), { l: L_ROCK, r: [rng.range(-.1, .1), -a + HPI, 0], emis: .026 }); }
+    for (let k = 0; k < 8; k++) { const a = (k + .5) / 8 * TAU; T.box(.62, .03, .09, Math.cos(a) * .8, .333, Math.sin(a) * .8, brass, { l: L_METAL, rough: .4, emis: .07, jit: 0, r: [0, -a + HPI, 0] }); }
+    for (const r of [0, HPI]) T.box(.5, .03, .09, 0, .333, 0, brass, { l: L_METAL, rough: .4, emis: .07, jit: 0, r: [0, r, 0] });
     B.put(T, p.x, p.z, { y: p.y0, ry: rng() * TAU, ao: [0, .3, .7] });
   }
 }
@@ -5486,7 +5489,15 @@ function step(rdt) {
     updateProjectiles(dt);
     for (const m of G.mons) drawMonster(m, G.t);
     for (const f of G.men) if (!f.dead) drawFootman(f);
-    if (G.phase === 'play') for (const p of B.pads) if (!p.tower) { _mm.compose(_mv.set(p.x, p.y, p.z), _mq.setFromAxisAngle(_upv, p.face), _ms); KIT.marker.put(_mm, 0, null); }
+    if (G.phase === 'play') {
+      const k0 = (G.gold >= 70 ? 1 : .5) * (UI.manual ? 1.25 : 1);
+      for (let i = 0; i < B.pads.length; i++) {
+        const p = B.pads[i]; if (p.tower) continue;
+        _mm.compose(_mv.set(p.x, p.y, p.z), _mq.setFromAxisAngle(_upv, p.face + Math.sin(G.t * 1.3 + i * 2.1) * .3), _ms); KIT.marker.put(_mm, 0, null);
+        const w = .5 + .5 * Math.sin(G.t * 2.1 + i * 1.7), sz = 3.7 + .25 * w, a = (.55 + .45 * w) * k0;
+        FX.add.push(p.x, p.y + .07, p.z, sz, sz, 0, 0, 2.6, 1.6, .55, a, 4, 0, .52, 1);
+      }
+    }
   }
   const spray = B.bio.spray;
   if (live && B.fallAt && spray === 'lava') {
@@ -5541,7 +5552,12 @@ function boot() {
   if (window.matchMedia && matchMedia('(pointer: coarse)').matches && !HASH.noscale) R.quality = .85;
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) FX.shakeK = .25;
   initRenderer(); initMaterials(); resizeRenderer(); initLights(); initFX(); initWeather(); initKits(); UI.init();
-  KIT.marker = new PartBatch(S => { S.box(.07, .75, .07, 0, .37, 0, COL.woodD, { l: L_WOOD, r: [0, 0, .08] }); clothPanel(S, { x0: .03, x1: .36, yTop: .72, len: .26, z: 0, col: COL.clothT, rng: makeRng(9), nx: 2, ny: 2, rag: 0, sway: 0 }); S.rock(.12, -.2, .04, .15, COL.stone, {}); S.rock(.09, .22, .03, -.12, COL.stoneD, {}); }, 14, { rad: .1 });
+  KIT.marker = new PartBatch(S => {
+    const gold = mulC(COL.gold, .85), amber = C(0xc9682a);
+    S.box(.08, 1.15, .08, 0, .57, 0, COL.woodD, { l: L_WOOD, r: [0, 0, .05] }); S.cone(.07, .14, .03, 1.2, 0, COL.brass, { n: 4, l: L_METAL, emis: .05 });
+    for (const [order, nz] of [[[0, 1, 2, 0, 2, 3], 1], [[0, 3, 2, 0, 2, 1], -1]]) { const q = [[.06, 1.1, 0], [.06, .68, 0], [.44, .78, 0], [.62, .89, 0]], cols = [gold, amber, amber, gold]; for (const k of order) S.v(q[k][0], q[k][1], q[k][2], 0, 0, nz, cols[k][0], cols[k][1], cols[k][2], q[k][0] * .5, q[k][1] * .5, L_CLOTH, .9, 0, .05); }
+    S.rock(.12, -.2, .04, .15, C(0x767b88), {}); S.rock(.09, .22, .03, -.12, C(0x4c505c), {});
+  }, 14, { rad: .1 });
   G.boardSeed = HASH.seed ? +HASH.seed : 1 + Math.floor(Math.random() * 9000);
   G.boardIndex = +(HASH.board || 0); G.level = +(HASH.level || 0);
   { const bi = HASH.biome === undefined ? -1 : BIOMES.findIndex(b => b.key === HASH.biome || b.name.toLowerCase() === String(HASH.biome).toLowerCase()); BIOME.start = (bi >= 0 ? bi : HASH.biome !== undefined && isFinite(+HASH.biome) ? +HASH.biome : HASH.seed ? 0 : Math.floor(Math.random() * BIOMES.length)) - G.boardIndex; }

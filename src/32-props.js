@@ -225,11 +225,14 @@ function buildBridge(B) {
 }
 
 function buildPads(B) {
+  const bright = B.bio.key === 'frost' || B.bio.key === 'dunes', top = bright ? C(0x5a6070) : C(0x8e929e), rim = bright ? C(0x363a46) : C(0x565a66), brass = mulC(COL.brass, bright ? 1.7 : 1.25);
   for (const p of B.pads) {
     const T = new Soup(), rng = B.rng;
-    T.cyl(1.36, .34, 0, .12, 0, mulC(COL.stoneD, .8), { n: 8, l: L_MASON, r: [0, PI / 8, 0] });
-    T.cyl(1.16, .05, 0, .3, 0, mulC(COL.stoneD, 1.05), { n: 8, l: L_MASON, r: [0, PI / 8, 0] });
-    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; T.box(.46, .2, .28, Math.cos(a) * 1.34, .1 + rng() * .06, Math.sin(a) * 1.34, mixC(COL.stoneD, COL.stone, rng() * .6), { l: L_ROCK, r: [rng.range(-.1, .1), -a + HPI, 0] }); }
+    T.cyl(1.36, .34, 0, .12, 0, mulC(rim, .8), { n: 8, l: L_MASON, r: [0, PI / 8, 0] });
+    T.cyl(1.2, .05, 0, .3, 0, top, { n: 8, l: L_MASON, r: [0, PI / 8, 0], emis: .03 });
+    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; T.box(.46, .2, .28, Math.cos(a) * 1.34, .1 + rng() * .06, Math.sin(a) * 1.34, mixC(rim, top, rng() * .5), { l: L_ROCK, r: [rng.range(-.1, .1), -a + HPI, 0], emis: .026 }); }
+    for (let k = 0; k < 8; k++) { const a = (k + .5) / 8 * TAU; T.box(.62, .03, .09, Math.cos(a) * .8, .333, Math.sin(a) * .8, brass, { l: L_METAL, rough: .4, emis: .07, jit: 0, r: [0, -a + HPI, 0] }); }
+    for (const r of [0, HPI]) T.box(.5, .03, .09, 0, .333, 0, brass, { l: L_METAL, rough: .4, emis: .07, jit: 0, r: [0, r, 0] });
     B.put(T, p.x, p.z, { y: p.y0, ry: rng() * TAU, ao: [0, .3, .7] });
   }
 }
