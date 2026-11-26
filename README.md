@@ -139,6 +139,13 @@ node tools/record.js capture 4 5130-5490,9870-10230 out.mp4
 
 `record.js` steps the game at a fixed 1/60 s, so a seed always replays the same way. `scan` logs what happens when, `stills` saves frames, and `capture` writes a video of the given frame ranges with the game's own audio.
 
+```bash
+node tools/balance.js 1-8 90
+node tools/balance.js 1-8 60 level=5
+```
+
+`balance.js` lets the AI commander play each seed headless, without drawing, until its first defeat or the time limit in game minutes (90 minutes takes well under a minute per seed). It reports the wave each seed reached, how much damage each tower deals at level 3 and on each level 4 path, and for every battlefield the lives lost to regular waves and to the boss, how often the boss got through, and the unspent gold at the start of waves 2 to 4 and before the boss. `B=1` adds a line per battlefield, `V=1` a line per wave, `FILE=other.html` tests another build, and `LCAP=14` splits the later battlefields further. On Linux it uses software WebGL, so Chrome for Testing's `chrome-headless-shell` works as `CHROME`. With a fixed seed the game starts in Ashen Pass, so `level=5` and `level=10` keep each battlefield in its usual land and boss; other values pair them differently from a real run.
+
 URL flags, for example `index.html#seed=4&fps=1`:
 
 | Flag | Effect |
