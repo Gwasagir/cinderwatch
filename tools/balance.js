@@ -1,9 +1,13 @@
 // Balance harness: lets the AI commander play headless, without rendering, for each seed until its first defeat or a time cap,
 // then reports how far it got, how each battlefield went (regular waves, the boss, unspent gold) and how much damage each tower level and path deals.
-// Usage: node tools/balance.js [seeds, e.g. 1-8] [minutes per seed] [extra URL flags, e.g. level=6]
+// Usage: node tools/balance.js [seeds, e.g. 1-8] [minutes per seed] [extra URL flags, e.g. level=5]
+// Seeds run in parallel, JOBS at a time. Each seed runs its own headless Chrome, which keeps more than one core busy,
+// so the default stays near half of the machine's CPU; set JOBS to change it.
 const { spawn } = require('child_process'); const fs = require('fs'); const os = require('os'); const path = require('path');
 const ROOT = path.dirname(__dirname);
 const [seedArg = '1-8', maxMin = '90', extra = ''] = process.argv.slice(2);
+const CORES_PER_JOB = 2; // measured on 24 cores: each running seed keeps about 1.6 cores busy, so 6 seeds use about 40% of the CPU
+const JOBS = Math.max(1, +(process.env.JOBS || Math.floor(os.cpus().length / 2 / CORES_PER_JOB)));
 const FILE = path.resolve(process.env.FILE || path.join(ROOT, 'index.html')), LCAP = +(process.env.LCAP || 9);
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const GL = process.platform === 'darwin' ? ['--headless=new', '--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] : ['--headless', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
@@ -36,7 +40,7 @@ const PAGE = `(() => { const c = __cw, G = c.G; c.UI.setManual(false); window.__
     if (G.phase === 'play' && G.spawning && G.waveT < .05 && G.k >= 2 && G.k <= 4) { bd.mid += G.gold; bd.midN++; }
     if (G.phase === 'play' && G.k === 4 && !G.spawning) bd.preBoss = Math.max(bd.preBoss, G.gold);
     for (const ty in G.leakTypes) if (c.MON[ty].boss) bd.leak = true;
-    if (G.phase === 'crumble' && this.prevPh !== 'crumble') this.boards.push(bd);
+    if (G.phase === 'crumble' && this.prevPh !== 'crumble') { bd.lt = Object.assign({}, G.leakTypes); this.boards.push(bd); }
     if (G.phase === 'crumble' || G.phase === 'rise') this.bd = null;
     this.prevPh = G.phase;
   } }; return 1; })()`;
@@ -63,9 +67,13 @@ async function runSeed(seed) {
 }
 
 (async () => {
-  const all = [];
-  for (const s of seeds) {
-    const r = await runSeed(s); all.push(r);
+  const all = [], queue = seeds.slice(), t0 = Date.now();
+  const worker = async () => { while (queue.length) { const s = queue.shift(); all.push(await runSeed(s)); process.stderr.write(`\r${all.length}/${seeds.length} seeds done`); } };
+  await Promise.all(Array.from({ length: Math.min(JOBS, seeds.length) }, worker));
+  process.stderr.write(`\r${seeds.length} seeds in ${((Date.now() - t0) / 1000).toFixed(0)} s, ${JOBS} at a time\n`);
+  all.sort((a, b) => a.seed - b.seed);
+  for (const r of all) {
+    const s = r.seed;
     console.log(`seed ${s}: ${r.res} at wave ${r.max} (${(r.t / 60).toFixed(1)} game minutes)` + (r.errs.length ? '  ERRORS: ' + r.errs.join(' | ') : ''));
     if (process.env.B) for (const b of r.boards) console.log(`  L${b.L}: waves 1-4 lost ${b.a}, boss wave lost ${b.b}${b.leak ? ', boss got through' : ''}, mid gold ${Math.round(b.mid / Math.max(1, b.midN))}, pre-boss gold ${Math.round(b.preBoss)}`);
     if (process.env.V) for (const l of r.log) console.log(`  w${l.w} lost ${l.lost} lives ${l.lives} press ${l.press} gold ${l.gold} [${l.tw}]`);
@@ -78,6 +86,8 @@ async function runSeed(seed) {
   console.log(`\nper battlefield (L${LCAP} includes later ones; averages per battlefield):`);
   console.log('        boards  lives lost w1-4  lives lost boss wave  boss got through  gold at waves 2-4  gold before boss');
   for (const k in byL) { const e = byL[k]; console.log(`  L${String(k).padEnd(4)}${String(e.n).padStart(6)}${(e.a / e.n).toFixed(1).padStart(17)}${(e.b / e.n).toFixed(1).padStart(22)}${(e.leak + '/' + e.n).padStart(18)}${String(Math.round(e.mid / e.n)).padStart(19)}${String(Math.round(e.pre / e.n)).padStart(18)}`); }
+  const LT = {}; for (const r of all) for (const b of r.boards) for (const ty in b.lt || {}) LT[ty] = (LT[ty] || 0) + b.lt[ty];
+  const lt = Object.entries(LT).sort((a, b) => b[1] - a[1]); if (lt.length) console.log('\nlives lost to each enemy (all battlefields): ' + lt.map(([k, v]) => k + ' ' + v).join(', '));
   const ws = all.map(r => r.max).sort((a, b) => a - b);
-  console.log('\nwaves reached:', ws.join(' '), '  median', ws[Math.floor(ws.length / 2)]);
+  console.log('\nwaves reached:', ws.join(' '), '  median', ws[Math.floor(ws.length / 2)], '  mean', (ws.reduce((a, b) => a + b, 0) / ws.length).toFixed(1));
 })();
