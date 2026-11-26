@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
@@ -121,7 +122,9 @@ public class MainActivity extends Activity {
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
         }
 
-        web.loadUrl(START_URL);
+        // Debug builds show the game's frame rate counter.
+        boolean debuggable = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+        web.loadUrl(debuggable ? START_URL + "#fps=1" : START_URL);
         web.requestFocus();
         hideSystemBars();
     }

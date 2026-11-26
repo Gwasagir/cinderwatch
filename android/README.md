@@ -66,7 +66,7 @@ The GitHub workflow in `.github/workflows/android.yml` builds the APK on every p
 
 ### Debugging
 
-Debug builds allow remote debugging of the WebView: with the phone connected, open `chrome://inspect` in desktop Chrome and pick the Cinderwatch page, then use the console as in the browser (`__cw.G.lives` and so on).
+Debug builds show the game's frame rate counter (the `fps=1` flag) at the bottom left, and allow remote debugging of the WebView: with the phone connected, open `chrome://inspect` in desktop Chrome and pick the Cinderwatch page, then use the console as in the browser (`__cw.G.lives` and so on).
 
 ## Layout
 
