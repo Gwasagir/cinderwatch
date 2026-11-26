@@ -12,6 +12,11 @@ on:
 permissions:
   contents: write
 
+# A newer push to the same branch cancels a build still running for an older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   apk:
     runs-on: ubuntu-latest

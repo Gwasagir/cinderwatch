@@ -96,6 +96,15 @@ Open `index.html`. It works from `file://` with no server, no build step and no 
 
 `ios/` holds the same kind of app for iPhone and iPad, an Xcode project around the same `index.html`. See [ios/README.md](ios/README.md) to build it and get it onto a device.
 
+### Building everything at once
+
+```bash
+tools/apps.sh              # web build, Android APK and iOS .ipa into dist/
+tools/apps.sh android      # or only some of: web android ios
+```
+
+It prints one line per step and keeps the full output in `dist/logs/`. The APK is built locally (JDK 17 and the Android SDK). The iOS app needs Xcode, so on a Mac it is built locally; anywhere else the script downloads the unsigned `.ipa` that the iOS workflow built on GitHub for the current commit, so push first. Both workflows cancel a build that a newer push to the same branch makes obsolete.
+
 ## Build it
 
 ```bash

@@ -8,9 +8,19 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      simulator:
+        description: Also build the app for the iOS Simulator
+        type: boolean
+        default: false
 
 permissions:
   contents: write
+
+# A newer push to the same branch cancels a build still running for an older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   app:
@@ -18,7 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The device build below already checks that the app compiles; the simulator build is only for
+      # running it in the Simulator, so it is opt-in to keep macOS minutes down.
       - name: Build for the simulator
+        if: inputs.simulator
         run: >
           xcodebuild -project ios/Cinderwatch.xcodeproj -scheme Cinderwatch -configuration Debug
           -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/sim
@@ -35,7 +48,7 @@ jobs:
           mkdir -p out/Payload
           cp -R build/device/Build/Products/Release-iphoneos/Cinderwatch.app out/Payload/
           (cd out && zip -qr cinderwatch-unsigned.ipa Payload)
-          (cd build/sim/Build/Products/Debug-iphonesimulator && zip -qr "$GITHUB_WORKSPACE/out/cinderwatch-simulator.zip" Cinderwatch.app)
+          if [ -d build/sim ]; then (cd build/sim/Build/Products/Debug-iphonesimulator && zip -qr "$GITHUB_WORKSPACE/out/cinderwatch-simulator.zip" Cinderwatch.app); fi
 
       - uses: actions/upload-artifact@v4
         with:

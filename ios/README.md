@@ -12,7 +12,7 @@ Apple only lets signed apps onto a device, so there are three ways in:
 
 It needs iOS 15 or newer.
 
-To try it without a device, unzip `cinderwatch-simulator.zip` from the workflow and drag `Cinderwatch.app` onto a running iOS Simulator, or run the scheme on a simulator from Xcode.
+To try it without a device, run the iOS workflow by hand (*Actions*, *iOS*, *Run workflow*) with *Also build the app for the iOS Simulator* ticked, unzip `cinderwatch-simulator.zip` from that run and drag `Cinderwatch.app` onto a running iOS Simulator, or run the scheme on a simulator from Xcode.
 
 ## What the app adds
 
@@ -43,7 +43,7 @@ From the command line, without signing:
 xcodebuild -project ios/Cinderwatch.xcodeproj -scheme Cinderwatch -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 ```
 
-The workflow in `.github/workflows/ios.yml` runs the same simulator build and an unsigned device build on every push that touches the game or the app, and keeps the `.ipa` and the simulator app as downloads on the run. Publishing a GitHub release also attaches the `.ipa` to it.
+The workflow in `.github/workflows/ios.yml` makes an unsigned device build on every push that touches the game or the app and keeps the `.ipa` as a download on the run; run it by hand to also get a simulator build. On any machine, `tools/apps.sh ios` fetches that `.ipa` for the current commit (or builds it with Xcode on a Mac). Publishing a GitHub release also attaches the `.ipa` to it.
 
 ### Debugging
 
