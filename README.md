@@ -91,6 +91,10 @@ Open `index.html`. It works from `file://` with no server, no build step and no 
 
 `android/` holds a small app that plays the same `index.html` full screen and offline, installed from an APK without Google Play. See [android/README.md](android/README.md) to build and install it.
 
+### As an iOS app
+
+`ios/` holds the same kind of app for iPhone and iPad, an Xcode project around the same `index.html`. See [ios/README.md](ios/README.md) to build it and get it onto a device.
+
 ## Build it
 
 ```bash
@@ -117,6 +121,7 @@ This joins `src/*.js` into `index.html` and inlines three.js from `vendor/`.
 | `src/90-main.js` | Camera and main loop |
 | `tools/` | Build script and test tools |
 | `android/` | The Android app |
+| `ios/` | The iOS app |
 
 ## Development tools
 
