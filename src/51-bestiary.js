@@ -20,15 +20,41 @@ function golemKit(cap) {
 function initBestiary() {
   const I = KIT.item, cloth = C(0x3b3048), clothL = C(0x6a4a78), wrap = C(0xcdbf9a), N = { rad: .2, shadow: false };
   KIT.golem = golemKit(8);
+  I.towerShield = new PartBatch(S => {
+    const iron = COL.iron, face = C(0x34405a);
+    S.box(.5, .78, .06, 0, -.05, 0, face, { l: L_METAL, rough: .5 }); S.box(.56, .07, .08, 0, .34, .005, iron, { l: L_METAL }); S.box(.56, .07, .08, 0, -.44, .005, iron, { l: L_METAL });
+    for (const sg of [-1, 1]) S.box(.06, .86, .08, sg * .27, -.05, .005, iron, { l: L_METAL });
+    S.sph(.09, 0, 0, .05, COL.ironL, { l: L_METAL, w: 6, h: 4, smooth: false }); S.box(.05, .5, .02, 0, -.05, .04, C(0x7fc4ff), { emis: .45, jit: 0 }); S.box(.3, .05, .02, 0, .05, .04, C(0x7fc4ff), { emis: .45, jit: 0 });
+  }, 16, { rad: .3, shadow: false });
+  I.lantern = new PartBatch(S => {
+    S.seg([0, -.55, 0], [0, .95, 0], .028, .024, COL.woodD, { l: L_WOOD, n: 5 }); S.seg([0, .95, 0], [.16, 1.0, 0], .02, .018, COL.woodD, { l: L_WOOD, n: 4 });
+    S.seg([.16, 1.0, 0], [.16, .9, 0], .006, .006, COL.iron, { n: 3, jit: 0 }); S.box(.12, .03, .12, .16, .89, 0, COL.iron, { l: L_METAL }); S.box(.09, .13, .09, .16, .8, 0, C(0xff8a3c), { emis: .9, jit: 0 }); S.box(.12, .03, .12, .16, .72, 0, COL.iron, { l: L_METAL });
+  }, 16, N);
+  I.sack = new PartBatch(S => { const sk = C(0x6a5a3a); S.ico(.15, 0, .3, -.17, sk, { sc: [1, 1.1, .8], d: 1 }); S.cyl(.05, .06, 0, .46, -.17, mulC(sk, .8), { n: 6 }); S.cyl(.025, .02, .06, .25, -.05, COL.gold, { n: 6, emis: .3, l: L_METAL }); S.box(.04, .4, .02, 0, .25, .05, COL.leather, { r: [0, 0, .6] }); }, 48, N);
+  KIT.drake = {
+    body: new PartBatch(S => {
+      const sc = C(0x5a2418), sd = C(0x341410), belly = C(0xff7a2a);
+      S.ico(.22, 0, 0, 0, sc, { sc: [.85, .8, 1.35], d: 1 }); S.ico(.1, 0, -.1, .05, belly, { sc: [1, .5, 1.8], d: 1, emis: .5, jit: 0 });
+      S.seg([0, .06, .25], [0, .16, .44], .09, .07, sc, { n: 6 }); S.ico(.1, 0, .17, .5, sc, { sc: [.85, .75, 1.35], d: 1 }); S.box(.1, .05, .14, 0, .13, .6, sd, {});
+      for (const s of [-1, 1]) { S.cone(.03, .14, s * .05, .26, .44, sd, { n: 4, r: [-.9, 0, 0] }); S.box(.03, .025, .02, s * .05, .19, .58, COL.black, { jit: 0 }); S.seg([s * .1, -.1, .12], [s * .13, -.28, .22], .045, .03, sd, { n: 4 }); S.seg([s * .09, -.12, -.12], [s * .12, -.3, -.04], .05, .03, sd, { n: 4 }); }
+      S.seg([0, 0, -.28], [0, -.06, -.62], .07, .035, sc, { n: 5 }); S.seg([0, -.06, -.62], [0, -.04, -.9], .035, .01, sd, { n: 4 }); S.cone(.06, .1, 0, -.04, -.95, belly, { n: 4, r: [-HPI, 0, 0], emis: .4 });
+      for (let i = 0; i < 4; i++) S.cone(.035, .09, 0, .16 - i * .02, .28 - i * .2, sd, { n: 4 });
+    }, 10, { rad: .3 }),
+    wing: new PartBatch(S => {
+      const c = C(0x6a2a1a), c2 = C(0x3a1610), pts = [[0, 0, .14], [.4, .1, .26], [.98, .06, .12], [.86, 0, -.14], [.6, 0, -.06], [.46, 0, -.32], [.22, 0, -.14], [0, 0, -.24]];
+      for (let i = 1; i < pts.length - 1; i++) { S.tri(pts[0], pts[i + 1], pts[i], i & 1 ? c : c2, L_PLAIN, .9); S.tri(pts[0], pts[i], pts[i + 1], i & 1 ? c : c2, L_PLAIN, .9); }
+      S.seg([0, 0, .14], [.4, .1, .26], .04, .03, c2, { n: 4 }); S.seg([.4, .1, .26], [.98, .06, .12], .03, .012, c2, { n: 4 }); S.cone(.02, .08, .98, .06, .14, COL.bone, { n: 4, r: [0, 0, -HPI] });
+    }, 20, { rad: .3, shadow: false }),
+  };
   I.hood = new PartBatch(S => {
     S.add(gDome(8, 4), { s: [.2, .17, .21], p: [0, .19, -.03], c: cloth, l: L_CLOTH });
     S.box(.34, .24, .1, 0, .1, -.15, cloth, { l: L_CLOTH }); S.box(.3, .05, .05, 0, .2, .15, clothL, { l: L_CLOTH });
     for (const s of [-1, 1]) S.box(.06, .26, .2, s * .18, .1, -.04, mulC(cloth, .8), { l: L_CLOTH });
-  }, 12, N);
+  }, 24, N);
   I.robe = new PartBatch(S => {
     S.add(gCyl(8, .5, true), { s: [.3, 1.12, .27], p: [0, -.12, 0], c: cloth, l: L_CLOTH, dbl: true, deform: v => { if (v.y < 0) { const j = .85 + .3 * vnoise(Math.atan2(v.z, v.x) * 2 + 3, 1, 7); v.x *= j; v.z *= j; v.y += (j - 1) * .25; } }, cf: v => .7 + .3 * sat(v.y / .56 + .5) });
     S.box(.46, .1, .28, 0, .4, 0, clothL, { l: L_CLOTH }); S.cyl(.2, .05, 0, .02, 0, COL.rope, { n: 8 });
-  }, 12, N);
+  }, 24, N);
   I.staff = new PartBatch(S => {
     S.seg([0, -.55, 0], [0, .95, 0], .028, .024, COL.woodD, { l: L_WOOD, n: 5 });
     for (let a = 0; a < 3; a++) S.seg([0, .9, 0], [Math.cos(a * 2.1) * .09, 1.08, Math.sin(a * 2.1) * .09], .02, .008, COL.bone, { l: L_BONE, n: 4 });

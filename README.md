@@ -15,12 +15,13 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
   - bombard: a **rocket battery** that fires salvos at very long range, or a **great cannon** whose wide blast staggers everything it hits
   - storm spire: a **thunder spire** whose longer chains leave live roots in the ground, or a **plasma spire** whose single beam burns hotter the longer it holds
   - guard post: a **knight hall** of armored knights who hold more enemies at once, or an **assassin den** of quick blades that dodge, catch spiders and cut wraiths
-- **Twenty kinds of monster**, each with its own model and trick. Skeletons, giant rats, slimes that split, shield-bearing knights and bats are joined by:
+- **Twenty-four kinds of monster**, each with its own model and trick. Skeletons, giant rats, slimes that split, shield-bearing knights and bats are joined by:
   - ghouls that run faster as they are hurt, dire wolves, and cave spiders and scarabs that slip past the guards
   - sappers whose powder keg blows up friend and foe, and wraiths that arrows and swords pass through while they fade
   - war drummers that speed up everything near them, and necromancers that raise more skeletons
   - bog toads, mummies that burst into scarabs, and brood mothers that burst into spiders
   - trolls that heal, stone golems that shrug off arrows, and gargoyles and glowing wisps in the air
+  - on later battlefields: ash thieves that stay hidden until close to a tower and steal gold if they reach the fire, rust hags that slow nearby towers and cure poison, shield wardens whose dome stops arrows, bolts and shells (but not lightning), and armored ember drakes that burn footmen from the air
 - **A boss on every fifth wave, one per land**: the Bone Giant, the Frost Jotun that freezes towers, the Brood Queen, the Magma Colossus and the Buried King, with the Ogre waiting on a second visit to Ashen Pass. Each land also favors its own monsters, and tints some of them to match.
 - **Battlefields that rebuild themselves.** After each boss the slab crumbles away and a new one, with a different road, assembles out of the dark.
 - **Five lands.** Each new battlefield is in the next one: Ashen Pass, Frostfall (snow, a frozen stream and falling snow), Mirefen (bog pools, willows, glowing mushrooms and fireflies), Emberscar (a lava river, charred trees and ash) and Duskmesa (dunes, palms and an oasis). A page opened without a seed starts in a random one.

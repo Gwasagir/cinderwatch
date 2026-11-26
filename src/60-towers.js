@@ -1,7 +1,7 @@
 
 const G = {
   B: null, t: 0, gold: 0, lives: 20, maxLives: 20, wave: 0, slain: 0, level: 0, run: 1,
-  towers: [], mons: [], men: [], arrows: [], shells: [], stuck: [], fields: [], hbars: [], phase: 'play',
+  towers: [], mons: [], men: [], arrows: [], shells: [], stuck: [], fields: [], domes: [], hbars: [], phase: 'play',
 };
 const TOWER = {
   archer: { name: 'Archer tower', short: 'Archers', icon: 'archer', cost: [70, 90, 140], range: [6.2, 6.8, 7.4], dmg: [9, 11, 14], rate: [.85, .78, .7], n: [1, 2, 3], air: true, ground: true, light: [80, 105, 140], desc: ['Fast flaming arrows.', 'Can hit flyers.'] },
@@ -213,7 +213,7 @@ function findTarget(x, z, range, air, ground, minRange = 0, mode = 0, skip = nul
   let best = null, bp = -1e9; const r2 = range * range, m2 = minRange * minRange;
   for (const m of G.mons) {
     if (m.dead || m.hp <= 0 || !m.vis || m === skip) continue; if (m.fly ? !air : !ground) continue;
-    const d = dist2(x, z, m.x, m.z); if (d > r2 || d < m2) continue;
+    const d = dist2(x, z, m.x, m.z); if (d > r2 || d < m2 || (m.def.stealth && d > m.def.stealth * m.def.stealth)) continue;
     const sc = mode === 'tough' ? m.hp * (1 + m.prog * .5) : m.prog + (m.fly ? 2 : 0); if (sc > bp) { bp = sc; best = m; }
   }
   return best;
@@ -357,6 +357,10 @@ class Tower {
     if (TOWER_STUN) { this.stun -= dt; const k = Math.min(1, this.stun * 2); FX.add.push(this.x, this.y + 1.7, this.z, 4.2, 5.6, 0, 0, .2, .5, 1.2, .3 * k, 2, 0, 0, 0); if (rnd() < dt * 5) { const a = rnd() * TAU, h = rr(.6, 3); fxBolt([this.x + Math.cos(a) * .8, this.y + h, this.z + Math.sin(a) * .8], [this.x + Math.cos(a + 1.2) * .8, this.y + h + rr(-.5, .5), this.z + Math.sin(a + 1.2) * .8], .12, [.5, .85, 1.5], .03); } if (rnd() < dt * 18) fxPart(this.x + rr(-.7, .7), this.y + rr(.4, 3.2), this.z + rr(-.7, .7), 0, rr(-.5, .1), 0, rr(.4, .9), rr(.05, .08), .6, 1.1, 2.0, { drag: .5 }); }
     this.em.on = damp(this.em.on, TOWER_STUN ? .12 : 1, TOWER_STUN ? 8 : 3, dt);
     if (this.flame) this.flame.on = this.em.on; if (this.flame2) this.flame2.on = this.em.on;
+    if (this.rustT > 0) {
+      this.rustT -= dt; dt *= 1 - (this.rustF || 0);
+      if (rnd() < dt * 9) fxPart(this.x + rr(-.8, .8), this.y + rr(.3, (this.mounts.top || 2.5) - .3), this.z + rr(-.8, .8), rr(-.1, .1), rr(-.4, 0), rr(-.1, .1), rr(.5, 1), rr(.04, .07), 1.6, .6, .2, { grav: 1.5, drag: 1 });
+    }
     this.cool -= dt;
     if (this.path === 'crossbow') this.updCrossbow(dt, d, lvl);
     else if (this.kind === 'archer') this.updArcher(dt, d, lvl);
@@ -369,7 +373,7 @@ class Tower {
   venomTarget(a, range) {
     let best = null, bp = -1e9; const r2 = range * range;
     for (const m of G.mons) {
-      if (m.dead || m.hp <= 0 || !m.vis || dist2(this.x, this.z, m.x, m.z) > r2) continue;
+      const d2 = dist2(this.x, this.z, m.x, m.z); if (m.dead || m.hp <= 0 || !m.vis || d2 > r2 || (m.def.stealth && d2 > m.def.stealth * m.def.stealth)) continue;
       let sc = m.prog + (m.fly ? 2 : 0) - (m.poisonT > 1 ? 3 : 0); for (const o of this.archers) if (o !== a && o.tgt === m) sc -= 1.5;
       if (sc > bp) { bp = sc; best = m; }
     }
