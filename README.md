@@ -10,7 +10,11 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
 
 ## What is in it
 
-- **Four towers, three levels each**, raised piece by piece inside scaffolding: archer tower, bombard, storm spire and guard post.
+- **Four towers, four levels each**, raised piece by piece inside scaffolding: archer tower, bombard, storm spire and guard post. At the fourth level each tower takes one of two paths:
+  - archer tower: a **crossbow tower** whose bolts fly far, hit hard and punch through armor, or **venom archers** whose poison keeps hurting for three seconds
+  - bombard: a **rocket battery** that fires salvos at very long range, or a **great cannon** whose wide blast staggers everything it hits
+  - storm spire: a **thunder spire** whose longer chains leave live roots in the ground, or a **plasma spire** whose single beam burns hotter the longer it holds
+  - guard post: a **knight hall** of armored knights who hold more enemies at once, or an **assassin den** of quick blades that dodge, catch spiders and cut wraiths
 - **Twenty kinds of monster**, each with its own model and trick. Skeletons, giant rats, slimes that split, shield-bearing knights and bats are joined by:
   - ghouls that run faster as they are hurt, dire wolves, and cave spiders and scarabs that slip past the guards
   - sappers whose powder keg blows up friend and foe, and wraiths that arrows and swords pass through while they fade
@@ -38,8 +42,8 @@ The game needs no input. Your first command puts you in charge, and the AI comma
 | Hover a pad or tower | Highlight it and show its range |
 | Click or tap an empty pad | Open the build menu |
 | Click or tap a tower | Upgrade or sell |
-| `1` to `4` | Pick a tower kind |
-| `U` | Upgrade the hovered or selected tower |
+| `1` to `4` | Pick a tower kind; in a level 3 tower's menu, `1` or `2` picks its path |
+| `U` | Upgrade the hovered or selected tower (at level 3 it opens the path choice) |
 | `X` | Sell the selected tower (press twice, or click Sell twice, to confirm) |
 | `Space` | Call the next wave early |
 | `C`, or click the commander plate | Hand command back to the AI, or take it |
@@ -64,7 +68,7 @@ The game plays in portrait and in landscape, and follows the screen when it turn
 | --- | --- |
 | Tap an empty pad | Open the build menu |
 | Tap a tower in the menu | Show what it does and its range; tap it again to build |
-| Tap a built tower | Upgrade, or sell (sell asks for a second tap) |
+| Tap a built tower | Upgrade, or sell (sell asks for a second tap); at level 3, tap a path to see it and tap it again to take it |
 | Tap the wave plate | Call the next wave early |
 | Tap the commander plate | Hand command back to the AI, or take it |
 | Drag | Move the view |
