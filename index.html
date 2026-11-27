@@ -4830,7 +4830,7 @@ const UI = (() => {
     ctx: null, s: 3, insetTop: 0, goldShown: 0, hurt: 0, coins: [], msg: null, hover: null, menu: null, armed: null, idle: 99, mx: -1, my: -1, inside: false,
     btns: [], hotBtn: null, press: null, gp: { sel: -1, t: 0, prev: [] , active: false }, goldBump: 0, deny: 0, hintT: 0, titleT: 0, rangeMesh: null, padMesh: null, soundRect: null, cmdRect: null, manual: false, moved: 99, focus: 0, slainBump: 0, lastSlain: 0,
     touch: false, ptrs: new Map(), gest: null, lastTap: { t: -9, x: 0, y: 0 }, waveRect: null, followRect: null, menuRect: null, wake: null, panning: false,
-    hud: [], tips: [], tip: null, keys: new Set(), sndArmed: false, vvT: 0, vvN: 0, panel: null, panelRect: null, pbtns: [], saveT: 0, opts: { blur: true, shake: true },
+    hud: [], tips: [], tip: null, keys: new Set(), sndArmed: false, vvT: 0, vvN: 0, panel: null, panelRect: null, pbtns: [], saveT: 0, opts: { blur: true, shake: true, help: true },
   };
   const COLR = { bg: 'rgba(9,11,17,0.86)', bg2: 'rgba(24,27,38,0.94)', bd: '#5d4c35', bdHi: '#e8b04a', tx: '#efe4cd', dim: '#a79e8a', amber: '#e8b04a', ember: '#ff8a3c', cold: '#8fc7ff', red: '#e5553c', dark: '#0b0d14', ok: '#9fd08a' };
   const _pv = new THREE.Vector3(), _o = new THREE.Vector3(), _d = new THREE.Vector3();
@@ -5164,7 +5164,8 @@ const UI = (() => {
       c.globalAlpha = a; plate(x, y, w, h, { bd: d.boss ? COLR.ember : '#8a6a3a' }); text(head, x + w / 2, y + pad - s, COLR.amber, { align: 'c' }); lines.forEach((l, k) => text(l, x + w / 2, y + pad - s + (k + 1) * LH, COLR.tx, { align: 'c' })); c.globalAlpha = 1; yUp = y - g3;
     } else {
       const first = U.titleT < 16, a = tch ? sat(Math.min(U.titleT - 7.2, first ? 1 : 3 - U.moved, U.manual && !first ? 0 : 1, 62 - U.titleT)) : sat(Math.min(U.titleT - 7.2, 3 - Math.min(U.moved, U.idle > 20 ? U.moved : 0) + (U.titleT < 18 ? 8 : 0)));
-      if (a > .02 && !U.menu && !G.paused) {
+      // the controls hint shows during the first five waves of a run, unless help is switched off in the settings
+      if (a > .02 && !U.menu && !G.paused && U.opts.help && waveNumber() <= 5) {
         const parts = tch ? ['Tap a pad to build', 'Drag to look around', 'Pinch or double-tap to zoom'] : ['Click a pad to build', '1-4 pick a tower', 'Space calls the next wave', 'Wheel zooms, drag moves the view'];
         let lines = [parts.join(' · ')]; if (tw(lines[0]) + pad * 2 > boxW) { lines = parts.length > 3 ? [parts.slice(0, 2).join(' · '), parts.slice(2).join(' · ')] : parts; if (lines.some(l => tw(l) + pad * 2 > boxW)) lines = parts; }
         let w = 0; for (const l of lines) w = Math.max(w, tw(l)); w += pad * 2; const h = LH * lines.length + pad * 2 - s, hx = Math.round((iL + Wr - w) / 2), hy = yUp - h;
@@ -5282,6 +5283,7 @@ const UI = (() => {
       ['Speed: ' + G.speed + 'x', () => { G.speed = G.speed % 3 + 1; sfx('uiClick', CAM.x, CAM.z, .6); }, G.speed > 1],
       [U.opts.blur ? 'Blur: on' : 'Blur: off', () => { U.opts.blur = !U.opts.blur; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.blur],
       [U.opts.shake ? 'Shake: on' : 'Shake: off', () => { U.opts.shake = !U.opts.shake; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.shake],
+      [U.opts.help ? 'Help: waves 1-5' : 'Help: off', () => { U.opts.help = !U.opts.help; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.help],
     ];
     const recs = [['Waves cleared', N.cleared, A.cleared], ['Enemies slain', N.kills, A.kills], ['Gold earned', N.gold, A.gold], ['Lives lost', N.lives, A.lives]];
     const credits = ['Cinderwatch by kevintngo', 'Additions by Niko Keurulainen', 'Made with three.js · MIT license', 'All art and sound made in code'];
@@ -5293,9 +5295,9 @@ const UI = (() => {
     const labU = Math.max(...recs.map(q => M(q[0]))), numU = Math.max(M('This run'), M('All time'), ...recs.map(q => Math.max(M(fmt(q[1])), M(fmt(q[2]))))), recU = labU + 2 * (numU + 8);
     const credU = Math.max(...credits.map(M), note ? M(note) : 0), botU = Math.max(M(rl), M('Close')) * 2 + 30;
     const innerU = Math.max(gridU, recU, credU, botU, M('Settings') * 2), LHU = PX.LINE;
-    const bhU = 14, hU = 6 + LHU * 2 + 4 + (bhU * 2 + 3) + 8 + LHU + 2 + LHU * 4 + (note ? LHU : 0) + 8 + LHU + 2 + LHU * 4 + 8 + bhU + 6;
+    const bhU = 14, rows = Math.ceil(opts.length / 2), hU = 6 + LHU * 2 + 4 + (bhU * rows + 3 * (rows - 1)) + 8 + LHU + 2 + LHU * 4 + (note ? LHU : 0) + 8 + LHU + 2 + LHU * 4 + 8 + bhU + 6;
     let k = U.s; while (k > 1 && ((innerU + 12) * k > W - iL - iR - 6 * k || hU * k > H - iT - iB - 6 * k)) k--;
-    const LH = LHU * k, mp = 6 * k, bh = Math.max(bhU * k, tch ? Math.round(36 * dpr) : 0), extra = (bh - bhU * k) * 3;
+    const LH = LHU * k, mp = 6 * k, bh = Math.max(bhU * k, tch ? Math.round(36 * dpr) : 0), extra = (bh - bhU * k) * (rows + 1);
     const w = (innerU + 12) * k, h = hU * k + extra, x0 = Math.round((iL + W - iR - w) / 2), y0 = Math.round(Math.max(iT + 3 * k, (iT + H - iB - h) / 2));
     const T = (str, x, y, col, o) => PX.text(c, str, x, y, k, col || COLR.tx, o);
     c.fillStyle = 'rgba(3,4,8,0.55)'; c.fillRect(0, 0, W, H);
@@ -5309,8 +5311,9 @@ const UI = (() => {
     const xi = x0 + mp, wi = w - mp * 2; let y = y0 + mp;
     PX.text(c, 'Settings', xi, y - k, k * 2, COLR.amber); y += LH * 2 + 4 * k;
     const bw = Math.floor((wi - 3 * k) / 2);
-    opts.forEach((o, i) => btn('opt' + i, xi + (i % 2) * (bw + 3 * k), y + Math.floor(i / 2) * (bh + 3 * k), bw, o[0], o[1], o[2]));
-    y += bh * 2 + 3 * k + 8 * k;
+    // two buttons a row; an odd last one takes the whole row
+    opts.forEach((o, i) => { const full = i === opts.length - 1 && i % 2 === 0; btn('opt' + i, xi + (i % 2) * (bw + 3 * k), y + Math.floor(i / 2) * (bh + 3 * k), full ? wi : bw, o[0], o[1], o[2]); });
+    y += rows * bh + (rows - 1) * 3 * k + 8 * k;
     const cx2 = xi + wi, cx1 = cx2 - (numU + 8) * k;
     T('Records', xi, y, COLR.amber); T('This run', cx1, y, COLR.dim, { align: 'r' }); T('All time', cx2, y, COLR.dim, { align: 'r' }); y += LH + 2 * k;
     for (const q of recs) { T(q[0], xi, y, COLR.tx); T(fmt(q[1]), cx1, y, COLR.tx, { align: 'r' }); T(fmt(q[2]), cx2, y, COLR.amber, { align: 'r' }); y += LH; }

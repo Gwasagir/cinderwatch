@@ -29,7 +29,7 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
 - **A miniature look.** The scene is drawn at about half resolution, then given an ordered dither, a depth-aware tilt-shift blur, a vignette and film grain.
 - **No asset files.** Every model, texture and sound is generated in code.
 - **Small comforts.** The first time each monster appears, a line says what it does. Tower menus show what the next level brings. The wave plate shows the gold for calling a wave early. Your best wave and your mute setting are remembered.
-- **Settings and records.** The gear button next to the zoom buttons (or `O`) pauses the game and opens a panel with sound, speed, blur and screen shake, your records for this run and for all runs (best wave cleared, enemies slain, gold earned, lives lost) and the credits. A page opened with `level=`, `k=` or `ff=` is a test, so its first run is not added to the records.
+- **Settings and records.** The gear button next to the zoom buttons (or `O`) pauses the game and opens a panel with sound, speed, blur, screen shake and help (the controls hint at the bottom, shown during the first five waves of a run unless switched off), your records for this run and for all runs (best wave cleared, enemies slain, gold earned, lives lost) and the credits. A page opened with `level=`, `k=` or `ff=` is a test, so its first run is not added to the records.
 
 ![Frostfall, Mirefen, Emberscar and Duskmesa](media/biomes.jpg)
 
