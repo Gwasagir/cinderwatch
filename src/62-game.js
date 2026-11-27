@@ -132,7 +132,8 @@ function sellTower(t) {
   G.gold += refund; t.sell(); const i = G.towers.indexOf(t); if (i >= 0) G.towers.splice(i, 1); return true;
 }
 
-const AI = { think: .15, wait: 0, last: '' };
+// style (from #ai=, for the balance harness): 'tall' upgrades eagerly and takes level 4 early, 'wide' fills every pad before upgrading.
+const AI = { think: .15, wait: 0, last: '', style: HASH.ai || 'normal' };
 function aiThink(dt) {
   if (G.phase !== 'play' || UI.playerActive()) return;
   AI.think -= dt; if (AI.think > 0) return; AI.think = .5;
@@ -164,6 +165,7 @@ function aiThink(dt) {
     if (t.state !== 'active' || t.lvl >= 3) continue;
     const pi = t.lvl === 2 ? aiPath(t, air, armor, swarm) : undefined, c = upgradeCost(t, pi), use = sat(t.recent / 60);
     let sc = (.5 + use * .9 + (t.lvl === 0 ? .12 : 0)) * (N >= 4 ? 1.25 : .7) * (empty.length === 0 ? 1.6 : 1) * (110 / c);
+    if (AI.style === 'tall') sc *= (t.lvl === 2 ? Math.pow(c / 110, .8) : 1) * 1.8; else if (AI.style === 'wide') sc *= empty.length ? .25 : (t.lvl === 2 ? .5 : 1);
     if (t.lvl === 2 && towers.some(o => o.lvl < 2 && o.state === 'active')) sc *= .75;
     if (t.kind === 'archer') sc *= 1 + air * .06; if (t.kind === 'spire') sc *= 1 + armor * .05;
     opts.push({ sc, cost: c, act: 'up', t, pi });

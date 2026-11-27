@@ -22,13 +22,15 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
   - bog toads, mummies that burst into scarabs, and brood mothers that burst into spiders
   - trolls that heal, stone golems that shrug off arrows, and gargoyles and glowing wisps in the air
   - on later battlefields: ash thieves that stay hidden until close to a tower and steal gold if they reach the fire, rust hags that slow nearby towers and cure poison, shield wardens whose dome stops arrows, bolts and shells (but not lightning), and armored ember drakes that burn footmen from the air
-- **A boss on every fifth wave, one per land**: the Bone Giant, the Frost Jotun that freezes towers, the Brood Queen, the Magma Colossus and the Buried King, with the Ogre waiting on a second visit to Ashen Pass (and the Drowned Admiral and the Crystal Wyrm in the second campaign). Each land also favors its own monsters, and tints some of them to match.
+- **A boss on every fifth wave, one per land**: the Bone Giant, the Frost Jotun that freezes towers, the Brood Queen, the Magma Colossus and the Buried King, with the Ogre waiting on a second visit to Ashen Pass (and the Drowned Admiral, the Crystal Wyrm, the Bell Lich and the Storm Roc in the second campaign). Each land also favors its own monsters, and tints some of them to match.
 - **Battlefields that rebuild themselves.** After each boss the slab crumbles away and a new one, with a different road, assembles out of the dark.
 - **Five lands.** Each new battlefield is in the next one: Ashen Pass, Frostfall (snow, a frozen stream and falling snow), Mirefen (bog pools, willows, glowing mushrooms and fireflies), Emberscar (a lava river, charred trees and ash) and Duskmesa (dunes, palms and an oasis). A page opened without a seed starts in a random one.
 - **Light as the main character.** A flickering beacon, a brazier on every tower, flaming arrows, cannon flashes and chain lightning, with moving shadows.
-- **A second campaign, in progress.** *The Drowned Deep* takes turns between two new lands, played with `#campaign=deep` for now (later the campaigns unlock one after another). Neither land appears in the first campaign, so its balance is untouched.
+- **A second campaign, in progress.** *The Far Reaches* takes turns between four new lands, played with `#campaign=deep` for now (later the campaigns unlock one after another). None of them appears in the first campaign, so its balance is untouched.
   - **Saltreach**, a drowned coast at night: black sand, shipwrecks, sea walls, rain and a lighthouse whose beam sweeps the field. The tide comes and goes; at high tide about a third of the road floods and everything wading through it, footmen too, slows down. Its boss is the Drowned Admiral, who calls drowned sailors to his side and is not slowed by the tide.
   - **Glimmerdeep**, a crystal cavern with no sky. When chain lightning hits a monster near one of the big crystals beside the road, the crystal discharges at up to three monsters around it, so spires built near crystals pay off. Its boss is the Crystal Wyrm, which burrows under the road, out of reach, and comes up closer to the fire.
+  - **Hollowmere**, a ruined gothic city under a big pale moon: a broken cathedral with stained glass, street lamps, graves and fallen leaves. Every half minute the cathedral bell tolls and, for a few seconds, every skeleton, ghoul and wraith hurries. Its boss is the Bell Lich, who raises the fallen near him as skeletons.
+  - **Stormcrown**, a stormy mountain pass with wind-bent pines, prayer flags and a white shrine. Lightning strikes the road every ten seconds or so; a glowing ring marks the spot a moment before, and the bolt hurts everything there, footmen too. Its boss is the Storm Roc, the first flying boss: only archers and spires reach it, and its own lightning stuns towers.
   - **Road shapes of their own.** The first campaign's roads wind from the cave to the keep at random. In the second campaign each visit to a land brings the next of three shapes: a **switchback** of three long lanes stacked across the board, where a tower between two lanes covers both; a **horseshoe** that runs out to the front and back in one big U, often with a wide bulb, with pads inside reaching both legs; and a **ring road** that circles a small castle in the middle of the board before turning in at its gate, the beacon burning on its central tower.
   - More land ideas are in [docs/lands.md](docs/lands.md).
 - **A miniature look.** The scene is drawn at about half resolution, then given an ordered dither, a depth-aware tilt-shift blur, a vignette and film grain.
@@ -183,9 +185,9 @@ URL flags, for example `index.html#seed=4&fps=1`:
 | Flag | Effect |
 | --- | --- |
 | `seed=N` | Fix the battlefield and the run (starts in Ashen Pass) |
-| `campaign=deep` | Play the second campaign (Saltreach and Glimmerdeep) |
+| `campaign=deep` | Play the second campaign (Saltreach, Glimmerdeep, Hollowmere, Stormcrown) |
 | `road=NAME` | Force a road shape: `classic`, `switchback`, `horseshoe` or `ring` |
-| `biome=NAME` | Start in `ashen`, `frost`, `fen`, `ember` or `dunes`, or `salt` or `glim` (which also picks their campaign) |
+| `biome=NAME` | Start in `ashen`, `frost`, `fen`, `ember` or `dunes`, or `salt`, `glim`, `holl` or `storm` (which also picks their campaign) |
 | `level=N`, `k=N` | Start at a later battlefield or wave |
 | `ff=S` | Fast-forward S seconds before the first frame |
 | `fps=1` | Show frame rate and draw calls |

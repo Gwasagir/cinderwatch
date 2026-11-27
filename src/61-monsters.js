@@ -32,6 +32,8 @@ const MON = {
   colossus: { name: 'Magma Colossus', tip: 'Speeds up when it is nearly dead.', hp: 1250, spd: .7, rad: 1.05, mass: 60, bounty: 200, lives: 10, hitH: 2.2, top: 4.3, dmg: 60, atkT: 2.0, eye: [4, 1.6, .3], scale: 3.0, boss: true, armor: .85, slowRes: .3, enrage: [.3, 1.25], death: 'rock', cat: 'armor', tint: [1.5, .5, .26] },
   admiral: { name: 'The Drowned Admiral', tip: 'Calls drowned sailors to his side. The tide does not slow him.', hp: 1200, spd: .84, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.3, dmg: 48, atkT: 1.7, eye: [.6, 3.2, 2.6], scale: 2.7, boss: true, summon: { type: 'skel', n: 2, every: 9, max: 99, hp: .7 }, noTide: true, death: 'bones', blade: true, cat: 'armor', tint: [.55, .82, .74] },
   wyrm: { name: 'The Crystal Wyrm', tip: 'Burrows under the road and comes up closer to the fire.', hp: 1100, spd: .82, rad: 1.0, mass: 50, bounty: 200, lives: 10, hitH: 1.0, top: 2.2, dmg: 50, atkT: 1.6, eye: [2.6, 1.2, 3.8], scale: 2.4, boss: true, armor: .8, burrow: [14, 3.0, 1.6, 2.4, 1.6], death: 'rock', cat: 'armor' },
+  lich: { name: 'The Bell Lich', tip: 'Raises the fallen near him as skeletons.', hp: 1150, spd: .8, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.4, dmg: 44, atkT: 1.7, eye: [.6, 3.4, 1.2], scale: 2.6, boss: true, raise: [5.5, .6, 16], lamp: [18, 0x70ff9a], death: 'bones', cat: 'armor', tint: [.75, .92, .85] },
+  roc: { name: 'The Storm Roc', tip: 'Flies over everything: only archers and spires reach it. Its lightning stuns towers.', hp: 950, spd: .7, rad: .9, mass: 30, bounty: 200, lives: 10, hitH: 0, top: 1.4, dmg: 0, atkT: 1, eye: [3, 3.4, 4], scale: 3.2, boss: true, fly: true, alt: [4.4, 5.0], flap: 3.2, storm: [8, 1.6, 9], death: 'bat', cat: 'air', lamp: [20, 0x9fd0ff] },
   king: { name: 'The Buried King', tip: 'Summons mummies to walk with him.', hp: 1250, spd: .86, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.2, dmg: 46, atkT: 1.7, eye: [.6, 3.0, 2.6], scale: 2.7, boss: true, summon: { type: 'mummy', n: 1, every: 9, max: 99, hp: .7 }, death: 'bones', blade: true, cat: 'armor', tint: [1.2, 1.0, .55] },
 };
 
@@ -111,6 +113,12 @@ function blastAround(m, ex) {
 }
 function killMonster(m, kind, dx, dz, tower) {
   const B = G.B, def = m.def, t = m.type, dth = def.death; if (tower) tower.kills++;
+  if (!def.boss && !m.fly) for (const l of G.mons) { // the Bell Lich raises the fallen near him as skeletons
+    const R = l.def.raise; if (!R || l.dead || l.dying || !l.vis || (l.raised || 0) >= R[2] || dist2(l.x, l.z, m.x, m.z) > R[0] * R[0] || rnd() > R[1]) continue;
+    l.raised = (l.raised || 0) + 1; l.cast = 1;
+    const q = spawnMonster('skel', { s: m.s, lat: m.lat, hpMul: (l.maxHp / l.def.hp) * .35, pop: 1 }); q.tint = [.6, 1.0, .75];
+    fxTimed(4, q.x, q.y + .08, q.z, 1.6, 1.6, .4, 1.6, .7, .6, .6, { ground: true }); fxBolt([l.x, l.y + 3.2, l.z], [q.x, q.y + .6, q.z], .15, [.4, 1.6, .7], .06); break;
+  }
   if (def.boss) { m.dying = 1.9; m.hp = 0; m.foe = null; G.slowmo = 1.4; sfx('roar', m.x, m.z, 1, 1); return; }
   G.slain++; G.waveKills++; stat('kills', 1);
   const ix = (dx || 0) * 2.2, iz = (dz || 0) * 2.2, up = kind === 'blast' ? 1.7 : 1, sc = m.scale;
@@ -167,6 +175,8 @@ const RIGS = {
   mummy(m) { m.shamble = true; m.wraps = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   admiral(m) { m.weapon = KIT.item.anchor; m.wScale = 1.25; m.heavy = true; m.tricorn = true; return rigHuman(KIT.giant, SPEC.skel, m); },
   wyrm: m => rigWyrm(m),
+  lich(m) { m.weapon = KIT.item.staff; m.wScale = 1.3; m.staff = true; m.hood = true; m.robe = true; m.crown = true; m.heavy = true; return rigHuman(KIT.giant, SPEC.skel, m); },
+  roc: m => rigBat(m, KIT.roc, .16, .12),
   king(m) { m.weapon = KIT.item.khopesh; m.wScale = 1.25; m.heavy = true; m.crown = true; m.wraps = true; return rigHuman(KIT.giant, SPEC.skel, m); },
   warden(m) { m.weapon = KIT.item.sword; m.wScale = 1.1; m.shield = KIT.item.towerShield; m.helm = true; m.plate = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   hag(m) { m.weapon = KIT.item.lantern; m.staff = true; m.hood = true; m.robe = true; m.shamble = false; return rigHuman(KIT.skel, SPEC.skel, m); },
@@ -178,7 +188,7 @@ const RIGS = {
 function rigMonster(m) { return RIGS[m.type](m); }
 const EYES = {
   skel: SKEL_EYE, knight: SKEL_EYE, giant: [.058, .185, .152, .075], ogre: OGRE_EYE, rat: [.05, .03, .42, .05], bat: [.04, .03, .16, .05], slime: [.13, .2, .44, .08], slimelet: [.13, .2, .44, .08],
-  ghoul: OGRE_EYE, brute: OGRE_EYE, jotun: OGRE_EYE, golem: [.04, .1, .17, .05], colossus: [.04, .1, .17, .05], necro: SKEL_EYE, drummer: SKEL_EYE, bomber: SKEL_EYE, mummy: SKEL_EYE, king: [.058, .185, .152, .075], admiral: [.058, .185, .152, .075], wyrm: [.13, .34, .5, .06],
+  ghoul: OGRE_EYE, brute: OGRE_EYE, jotun: OGRE_EYE, golem: [.04, .1, .17, .05], colossus: [.04, .1, .17, .05], necro: SKEL_EYE, drummer: SKEL_EYE, bomber: SKEL_EYE, mummy: SKEL_EYE, king: [.058, .185, .152, .075], admiral: [.058, .185, .152, .075], wyrm: [.13, .34, .5, .06], lich: [.058, .185, .152, .075], roc: [.07, .2, .55, .04],
   warden: SKEL_EYE, hag: SKEL_EYE, thief: OGRE_EYE, drake: [.05, .19, .58, .035],
   spider: BUG_EYE, scarab: BUG_EYE, brood: [.05, .055, .19, .022], queen: [.05, .055, .19, .016], wolf: [.05, .27, .63, .04], wraith: [.045, 1.04, .17, .055], toad: [.125, .345, .285, .035], gargoyle: [.045, .15, .28, .045], wisp: null,
 };
@@ -191,7 +201,7 @@ function drawMonster(m, t) {
   }
   if (ty === 'wisp') { const k = m.tint || [1, 1, 1]; FX.add.push(m.x, m.y, m.z, .26, .26, 0, 0, k[0] * 2.2, k[1] * 2.2, k[2] * 2.2, tw, 0, 0, 0, 0); FX.add.push(m.x, m.y, m.z, 1.5, 1.5, 0, 0, k[0] * .5, k[1] * .5, k[2] * .5, .5 * tw, 2, 0, 0, 0); m.lx = m.x; m.ly = m.y; m.lz = m.z; if (rnd() < .3) fxPart(m.x + rr(-.05, .05), m.y + rr(-.05, .05), m.z + rr(-.05, .05), -m.vx * .2, rr(-.2, .2), -m.vz * .2, rr(.3, .6), .05, k[0] * 1.6, k[1] * 1.6, k[2] * 1.6, { drag: 1 }); }
   else if (ty === 'wraith') { const a = m.eth ? .5 + .2 * Math.sin(t * 23) : .16; FX.add.push(m.x, m.y + .75 * sc, m.z, 2.3 * sc, 2.6 * sc, 0, 0, .25, .55, 1.2, a, 2, 0, 0, 0); if (m.eth && rnd() < .3) fxPart(m.x + rr(-.25, .25), m.y + rr(.1, 1.3), m.z + rr(-.25, .25), 0, rr(.3, .9), 0, rr(.3, .6), .05, .5, 1.0, 2.0, { drag: .5 }); }
-  else if (ty === 'necro' || ty === 'queen' || ty === 'king') { if (m.cast > 0) { const g = ty === 'necro' ? [.4, 1.6, .6] : ty === 'queen' ? [1.2, .5, 1.6] : [.4, 1.5, 1.3]; FX.add.push(m.x, m.y + m.hitH * 1.6, m.z, 3.2 * m.cast * sc, 3.2 * m.cast * sc, 0, 0, g[0], g[1], g[2], .28 * m.cast, 2, 0, 0, 0); } }
+  else if (ty === 'necro' || ty === 'queen' || ty === 'king' || ty === 'lich') { if (ty === 'lich') { m.lx = m.x; m.ly = m.y + 3.4; m.lz = m.z; FX.add.push(m.x, m.y + 2.4, m.z, 3.4, 4, 0, 0, .25, .9, .45, .14, 2, 0, 0, 0); } if (m.cast > 0) { const g = ty === 'necro' ? [.4, 1.6, .6] : ty === 'queen' ? [1.2, .5, 1.6] : ty === 'lich' ? [.4, 1.7, .8] : [.4, 1.5, 1.3]; FX.add.push(m.x, m.y + m.hitH * 1.6, m.z, 3.2 * m.cast * sc, 3.2 * m.cast * sc, 0, 0, g[0], g[1], g[2], .28 * m.cast, 2, 0, 0, 0); } }
   else if (ty === 'colossus' && rnd() < (m.rage ? .5 : .12)) fxPart(m.x + rr(-.7, .7), m.y + rr(.6, 3), m.z + rr(-.7, .7), rr(-.3, .3), rr(.6, 1.8), rr(-.3, .3), rr(.6, 1.2), rr(.05, .08), 2.6, .9, .15, { drag: .3, wob: 1, rise: .3 });
   else if (ty === 'warden' && m.domeHp > 0) { const R = m.def.dome[0], k = .5 + .5 * sat(m.domeHp / m.domeMax), h = m.domeHit; FX.add.push(m.x, m.y + R * .45, m.z, R * 2.4, R * 2, 0, 0, .4 + h, .7 + h, 1.8 + h, (.32 + .4 * h) * k, 2, 0, 0, 0); FX.add.push(m.x, m.y + .1, m.z, R * 2.8, R * 2.8, 0, 0, .6 + h, 1 + h, 2.4 + h, (.9 + .6 * h) * k, 4, m.lseed, .4, 1); FX.add.push(m.x, m.y + R * .5, m.z, R * 2.8, R * 2.2, 0, 0, .5 + h, .9 + h, 2.2 + h, (.5 + .5 * h) * k, 4, m.lseed, .4, 0); }
   else if (ty === 'hag') { m.lx = RIGOUT.tip.x; m.ly = RIGOUT.tip.y; m.lz = RIGOUT.tip.z; FX.add.push(m.lx, m.ly, m.lz, .5, .5, 0, 0, 3, 1.4, .4, tw, 0, 0, 0, 0); FX.add.push(m.lx, m.ly, m.lz, 2, 2, 0, 0, 1, .45, .12, .25 * tw, 2, 0, 0, 0); }
@@ -301,7 +311,7 @@ function updateUnits(dt) {
   const B = G.B, mons = G.mons, men = G.men, L = B.L, maxLatBase = ROAD_HALF + .04;
   for (let i = men.length - 1; i >= 0; i--) { const f = men[i]; if (f.gone) { swapRemove(men, i); continue; } footmanThink(f, dt); if (f.gone) swapRemove(men, i); }
   _units.length = 0; G.domes.length = 0;
-  for (const m of mons) { m.haste = 0; if (!m.dead && !m.fly && !m.def.ghost) _units.push(m); if (!m.dead && m.def.dome && m.domeHp > 0 && m.vis && !m.dying) G.domes.push(m); }
+  for (const m of mons) { m.haste = LAND.toll > 0 && isUndead(m.def) ? BELL.haste : 0; if (!m.dead && !m.fly && !m.def.ghost) _units.push(m); if (!m.dead && m.def.dome && m.domeHp > 0 && m.vis && !m.dying) G.domes.push(m); }
   for (const m of mons) {
     const def = m.def; if (m.dead) continue;
     if (def.stealth) { const r2 = def.stealth * def.stealth; m.hidden = !G.towers.some(t => t.alive && t.state === 'active' && dist2(t.x, t.z, m.x, m.z) < r2); }
@@ -326,6 +336,7 @@ function updateUnits(dt) {
       if ((m.vis || m.fly) && rnd() < dt * 7) fxPart(m.x + rr(-.2, .2) * m.scale, m.y + (m.fly ? 0 : m.hitH) + rr(-.1, .3), m.z + rr(-.2, .2) * m.scale, rr(-.1, .1), rr(.3, .8), rr(-.1, .1), rr(.4, .8), rr(.04, .07), .5, 2.2, .35, { drag: 1, wob: 1, rise: .2 });
       if (m.hp <= 0) { killMonster(m, 'poison', 0, 0, pb); continue; }
     }
+    if (m.fly && m.dying > 0) { m.dying -= dt; m.flinch = .5 + .5 * Math.sin(m.dying * 22); m.y -= dt * 1.8; if (rnd() < dt * 10) fxDust(m.x + rr(-.6, .6), m.y, m.z + rr(-.6, .6), 1, .7, { a: .35 }); if (m.dying <= 0) finishBoss(m); continue; }
     if (m.fly) { updateBat(m, dt); continue; }
     const def = m.def, maxLat = Math.max(0, maxLatBase - m.rad * .7);
     if (def.burrow && !m.dying) {
@@ -445,6 +456,14 @@ function updateBat(m, dt) {
   wantY = lerp(wantY, b.y - .2, e2 * e2);
   m.y = damp(m.y, wantY, wantY > m.y ? 5 : 2.2, dt); if (sp > .05) m.yaw = angDamp(m.yaw, Math.atan2(m.vx, m.vz), 8, dt); m.ph += dt * def.flap;
   m.prog = m.s / B.L * .98;
+  if (def.storm && m.vis && !m.dying) {
+    m.stormT = (m.stormT === undefined ? def.storm[0] * .5 : m.stormT) - dt;
+    if (m.stormT <= 0) {
+      m.stormT = def.storm[0]; let tg = null, bd = def.storm[2] * def.storm[2];
+      for (const t of G.towers) { if (!t.alive || t.state !== 'active') continue; const d = dist2(t.x, t.z, m.x, m.z); if (d < bd) { bd = d; tg = t; } }
+      if (tg) { const top = [tg.x, tg.y + (tg.mounts ? tg.mounts.top : 2.5), tg.z]; fxBolt([m.x, m.y, m.z], top, .3, [1.3, 1.6, 2.4], .12); fxSparks(top[0], top[1], top[2], 12, 4, 1.5, 2.5, 3, { grav: 5, size: .06 }); tg.stun = def.storm[1]; fxTimed(5, tg.x, tg.y + 2, tg.z, 3, 3, .8, 1.2, 2.4, .9, .3); lightFlash(top[0], top[1], top[2], 0xc8e0ff, 900, .3, 20); sfx('thunder', tg.x, tg.z, .8); }
+    }
+  }
   if (def.breath && m.vis) {
     m.brT -= dt;
     if (m.brT <= 0) {

@@ -125,6 +125,23 @@ function initBestiary() {
         for (let k = 0; k < 2; k++) S.add(gOct(), { s: [.06, .26 - k * .06, .06], p: [k ? .1 : -.06, .28, k ? -.08 : .06], r: [-.3, k, k ? .3 : -.2], c: cr, rough: .1, emis: .32 });
       }, 18, { rad: .3 }),
     }; }
+  // the Storm Roc: a great grey-blue bird, built like the drake with a bigger body and feathered wings
+  KIT.roc = {
+    body: new PartBatch(S => {
+      const f = C(0x4a5468), fd = C(0x2c323e), fl = C(0x8a96aa), beak = C(0xd8b04a);
+      S.ico(.24, 0, 0, 0, f, { sc: [.9, .85, 1.4], d: 1 }); S.ico(.14, 0, -.08, .08, fl, { sc: [1, .6, 1.6], d: 1 });
+      S.ico(.13, 0, .14, .42, f, { sc: [.9, .9, 1.1], d: 1 }); S.cone(.06, .2, 0, .1, .6, beak, { n: 5, r: [HPI + .3, 0, 0] });
+      for (const s of [-1, 1]) { S.box(.03, .025, .02, s * .07, .18, .5, COL.black, { jit: 0 }); S.seg([s * .08, -.12, .05], [s * .1, -.32, .12], .04, .03, beak, { n: 4 }); }
+      for (let i = 0; i < 5; i++) S.box(.06, .02, .34, (i - 2) * .06, -.02, -.42 - Math.abs(i - 2) * .04, i & 1 ? fd : f, { r: [0, (i - 2) * .18, 0] });
+      for (let i = 0; i < 3; i++) S.add(gOct(), { s: [.025, .08, .025], p: [0, .26 + i * .02, .32 - i * .1], r: [-.6, 0, 0], c: [.6, .8, 1.4], emis: .4 });
+    }, 4, { rad: .3 }),
+    wing: new PartBatch(S => {
+      const c = C(0x56607a), c2 = C(0x323a4a), tip = C(0x9aa6ba);
+      for (let k = 0; k < 7; k++) { const x0 = .05 + k * .14, len = .34 + Math.sin(k / 6 * PI) * .16 - k * .015; S.box(.14, .02, len, x0, .02 * Math.sin(k), .04 - len / 2 + .12, k & 1 ? c : c2, { r: [0, -k * .06, 0] }); }
+      for (let k = 0; k < 4; k++) S.box(.06, .015, .36, .86 + k * .05, .03, -.08 - k * .03, tip, { r: [0, -.4 - k * .12, 0] });
+      S.seg([0, 0, .12], [.5, .06, .16], .05, .035, c2, { n: 4 }); S.seg([.5, .06, .16], [1.0, .04, .02], .035, .015, c2, { n: 4 });
+    }, 8, { rad: .4, shadow: false }),
+  };
   KIT.spider = {
     body: new PartBatch(S => {
       const c = [.3, .27, .27], cd = [.19, .17, .18];

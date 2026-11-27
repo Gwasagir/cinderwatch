@@ -20,7 +20,7 @@ const TOWER_PATHS = {
     { key: 'cannon', name: 'Great cannon', short: 'Cannon', cost: 270, range: 8.4, minRange: 2.6, dmg: 180, splash: 3.0, rate: 3.5, stagger: [.5, .9], light: 95, desc: ['Huge shells, a wide', 'blast that staggers.'] },
   ],
   spire: [
-    { key: 'thunder', name: 'Thunder spire', short: 'Thunder', cost: 260, range: 6.9, dmg: 42, jumps: 8, rate: 1.9, slow: .5, slowT: 1.8, roots: [1.25, 15, 2.6], light: 32, desc: ['Longer chains that leave', 'live roots in the ground.'] },
+    { key: 'thunder', name: 'Thunder spire', short: 'Thunder', cost: 260, range: 6.9, dmg: 42, jumps: 8, rate: 1.9, slow: .35, slowT: 1.1, roots: [1.25, 15, 2.6], light: 32, desc: ['Longer chains that leave', 'live roots in the ground.'] },
     { key: 'plasma', name: 'Plasma spire', short: 'Plasma', cost: 280, range: 7.2, dmg: 40, beam: [40, 150, 2.4], jumps: 1, light: 34, desc: ['One beam that burns', 'hotter the longer it holds.'] },
   ],
   guard: [
@@ -654,7 +654,7 @@ function updateFields(dt) {
     for (const m of G.mons) {
       if (m.dead || m.hp <= 0 || m.fly || !m.vis || m.shockAt === id) continue;
       if (dist2(m.x, m.z, f.x, f.z) > r2 + m.rad * m.rad) continue;
-      m.shockAt = id; slowMonster(m, .3, .3); burnMonster(m, f.dps * dt, f.tower, 'shock');
+      m.shockAt = id; slowMonster(m, .15, .3); burnMonster(m, f.dps * dt, f.tower, 'shock');
     }
     FX.add.push(f.x, f.y + .1, f.z, f.r * 2.4, f.r * 2.4, 0, 0, .25, .5, 1.2, .35 * k, 4, f.seed, .5, 1);
     f.zap -= dt;

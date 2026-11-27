@@ -183,9 +183,75 @@ Object.assign(PROP, {
     for (let k = 0, n = rng.int(1, 3); k < n; k++) { const a = rng() * TAU, h2 = hh * rng.range(.3, .6); S.cone(h2 * .22, h2, Math.cos(a) * hh * .2, h2 / 2 - .1, Math.sin(a) * hh * .2, mulC(c, .9), { n: 5, l: L_ROCK, jit: .08 }); }
   },
 });
+// Hollowmere and Stormcrown props
+const GLASS = [[.95, .32, .2], [.3, .5, 1.0], [.95, .75, .25], [.4, .85, .5]];
+Object.assign(PROP, {
+  // A ruined cathedral: a nave with stained glass, a rose window and a bell tower. Returns where the bell hangs.
+  cathedral(S, rng) {
+    const sd = COL.stoneD, sl = COL.stoneL, mc = () => mixC(sd, sl, rng() * .7 + .15), M = { l: L_MASON, jit: .03 };
+    S.box(6.2, .3, 3.4, -.3, .05, 0, sd, { l: L_MASON });
+    for (const sz of [-1, 1]) for (let k = 0; k < 5; k++) {
+      const x = -2.9 + k * 1.1, h = rng() < .3 ? rng.range(.8, 1.9) : rng.range(2.7, 3.1);
+      S.box(1.1, h, .32, x, h / 2, sz * 1.55, mc(), M);
+      if (h > 2.4) { S.box(.38, 1.15, .36, x, 1.55, sz * 1.55, mulC(GLASS[(k + (sz > 0 ? 1 : 0)) % 4], .7), { emis: .4, jit: 0 }); S.cone(.2, .3, x, 2.27, sz * 1.55, mc(), { n: 4, l: L_MASON }); }
+      if (k < 4) S.box(.3, rng.range(1.6, 2.4), .45, x + .55, .9, sz * 1.8, mc(), M);
+    }
+    S.box(.4, 3.8, 3.4, -3.5, 1.9, 0, mc(), M); S.cyl(.62, .42, -3.5, 2.6, 0, mulC(GLASS[1], .75), { n: 10, emis: .45, jit: 0, r: [0, 0, HPI] });
+    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; S.box(.44, .06, .06, -3.5, 2.6 + Math.sin(a) * .3, Math.cos(a) * .3, COL.iron, { l: L_METAL, r: [a, 0, 0] }); }
+    S.box(.44, 1.4, .9, -3.5, .7, 0, COL.black, { jit: 0 }); for (const sz of [-1, 1]) S.box(.4, 1.3, 1.6, -3.5, 4.1, sz * .8, mc(), Object.assign({ r: [sz * .55, 0, 0] }, M));
+    for (let k = 0; k < 4; k++) S.seg([-2.8 + k * 1.3, 3.0, -1.5], [-2.6 + k * 1.3, 3.6 + rng() * .3, rng.range(-.4, .6)], .07, .06, COL.woodD, { l: L_WOOD, n: 4 });
+    const tx = 3.2; S.box(1.6, 5.0, 1.6, tx, 2.5, 0, mc(), M);
+    for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) S.box(.24, 1.3, .24, tx + dx * .65, 5.65, dz * .65, mc(), M);
+    S.box(1.8, .24, 1.8, tx, 6.4, 0, sl, M); S.cone(1.0, 1.9, tx, 7.45, 0, sd, { n: 4, l: L_MASON, r: [0, PI / 4, 0] });
+    S.add(gDome(8, 4), { s: [.42, .5, .42], p: [tx, 5.25, 0], r: [PI, 0, 0], c: mulC(COL.brass, .9), l: L_METAL, rough: .4 }); S.ico(.08, tx, 4.78, 0, COL.iron, { d: 0 });
+    S.box(.2, .6, .26, tx, 3.6, .81, mulC(GLASS[2], .7), { emis: .4, jit: 0 });
+    for (let k = 0; k < 8; k++) S.rock(rng.range(.15, .35), rng.range(-3.8, 4), .05, rng.sign() * rng.range(1.8, 2.4), mc(), { sq: .7 });
+    return [tx, 5.2, 0];
+  },
+  lamppost(S, rng) {
+    S.seg([0, 0, 0], [0, 2.1, 0], .045, .035, COL.iron, { l: L_METAL, n: 6 }); S.seg([0, 2.0, 0], [.34, 2.08, 0], .025, .025, COL.iron, { l: L_METAL, n: 4 });
+    S.box(.16, .22, .16, .36, 1.88, 0, [1.0, .72, .35], { emis: .55, jit: 0 }); S.cone(.15, .1, .36, 2.04, 0, COL.iron, { n: 4, l: L_METAL, r: [0, PI / 4, 0] });
+    S.cyl(.09, .12, 0, .06, 0, COL.iron, { n: 6, l: L_METAL });
+  },
+  ruinhouse(S, rng) {
+    const w = rng.range(2.0, 2.8), d = rng.range(1.6, 2.2), mc = () => mixC(COL.stoneD, COL.stoneL, rng() * .6 + .1), M = { l: L_MASON, jit: .04 };
+    for (const sz of [-1, 1]) { const h = rng.range(1.2, 2.2); S.box(w, h, .26, 0, h / 2, sz * d / 2, mc(), M); if (rng() < .7) S.box(.36, .46, .3, rng.range(-w / 4, w / 4), h * .6, sz * d / 2, rng() < .5 ? [1.0, .65, .3] : COL.black, { emis: .35, jit: 0 }); }
+    for (const sx of [-1, 1]) { const h = rng.range(1.6, 2.6); S.box(.26, h, d, sx * w / 2, h / 2, 0, mc(), M); if (h > 2.1) S.box(.24, .8, d * .7, sx * w / 2, h + .3, 0, mc(), Object.assign({ r: [0, 0, sx * .2] }, M)); }
+    for (let k = 0; k < 3; k++) S.seg([-w / 2, 1.9, rng.range(-d / 2, d / 2)], [w / 2, 1.6 + rng() * .5, rng.range(-d / 2, d / 2)], .06, .05, COL.woodD, { l: L_WOOD, n: 4 });
+    for (let k = 0; k < 5; k++) S.rock(rng.range(.12, .3), rng.range(-w / 2, w / 2), .05, rng.range(-d / 2, d / 2), mc(), { sq: .7 });
+  },
+  windpine(S, rng, h) { const T = new Soup(); PROP.pine(T, rng, h); S.merge(T, { r: [0, 0, -.16 - .08 * rng()] }); },
+  prayerflags(S, rng, len) {
+    const cols = [[.85, .2, .15], [.95, .8, .2], [.25, .6, .3], [.25, .4, .85], [.92, .9, .85]];
+    for (const sx of [-1, 1]) S.seg([sx * len / 2, -.1, 0], [sx * len / 2, 2.3, 0], .05, .04, COL.woodD, { l: L_WOOD, n: 5 });
+    const n = Math.round(len / .32);
+    for (let k = 0; k <= n; k++) { const u = k / n, x = -len / 2 + u * len, y = 2.25 - Math.sin(u * PI) * .45; if (k < n) { const u2 = (k + 1) / n; S.seg([x, y, 0], [-len / 2 + u2 * len, 2.25 - Math.sin(u2 * PI) * .45, 0], .008, .008, COL.rope, { n: 3 }); }
+      if (k > 0 && k < n) S.box(.2, .24, .015, x, y - .14, 0, cols[k % 5], { l: L_CLOTH, sway: .6, jit: 0 }); }
+  },
+  shrine(S, rng) {
+    const w = C(0xd8d2c4), g = mulC(COL.gold, .9), M = { l: L_MASON, jit: .02 };
+    S.box(2.2, .4, 2.2, 0, .2, 0, mixC(COL.stoneD, COL.stone, .5), M); S.box(1.7, .35, 1.7, 0, .57, 0, w, M); S.box(1.3, .3, 1.3, 0, .89, 0, w, M);
+    S.sph(.72, 0, 1.25, 0, w, { sc: [1, .8, 1], w: 10, h: 6 }); S.box(.5, .3, .5, 0, 1.95, 0, g, { l: L_METAL, emis: .05 });
+    for (let k = 0; k < 5; k++) S.cyl(.22 - k * .035, .12, 0, 2.2 + k * .13, 0, g, { n: 8, l: L_METAL, emis: .05 });
+    S.cone(.06, .3, 0, 3.0, 0, g, { n: 6, l: L_METAL, emis: .1 });
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) S.box(.06, .1, .06, dx * .75, .8, dz * .75, [1.0, .7, .3], { emis: .6, jit: 0 });
+  },
+});
 const GLIM_COLS = [[.62, .36, 1.0], [.3, .85, 1.0], [1.0, .4, .82]], GLIM_HEX = [0x9a5cff, 0x4cd8ff, 0xff66d0];
 
 const BIOME_FIRST = {
+  // Hollowmere's cathedral goes down first; its bell is what tolls.
+  holl(X) {
+    const { B, rng } = X, p = X.find(3.6, { far: 3.4, steep: true }) || X.find(3.2, { far: 2.6, steep: true }); if (!p) return;
+    const ry = rng() * TAU, T = new Soup(), b = PROP.cathedral(T, rng); B.put(T, p[0], p[1], { ry }); X.placed.push([p[0], p[1], 3.6]);
+    const v = new THREE.Vector3(b[0], b[1], b[2]).applyAxisAngle(new THREE.Vector3(0, 1, 0), ry);
+    B.bell = { x: p[0] + v.x, y: X.H(p[0], p[1]) + v.y, z: p[1] + v.z };
+    B.env.push({ x: p[0], y: X.H(p[0], p[1]) + 2, z: p[1], c: 0x8090ff, I: 10, d: 7 });
+  },
+  storm(X) {
+    const { B, rng, drop } = X; B.windRy = rng() * TAU;
+    drop(T => PROP.shrine(T, rng), 1.6, { far: 3, steep: true });
+  },
   salt(X) {
     const { B, rng, drop } = X;
     let top = 0; const lp = drop(T => { top = PROP.lighthouse(T, rng); }, 1.5, { far: 3.4, steep: true }) || drop(T => { top = PROP.lighthouse(T, rng); }, 1.3, { far: 2.2, steep: true });
@@ -237,6 +303,21 @@ const BIOME_DRESS = {
     B.env.push({ x: B.bridge.x, y: B.wlc + .55, z: B.bridge.z, c: 0xff5a1e, I: 44, d: 9, flick: 1 });
     if (B.ponds[0]) { const q = B.ponds[0]; B.env.push({ x: q.x, y: q.y + .7, z: q.z, c: 0xff5a1e, I: 40, d: 9, flick: 1 }); }
     if (B.fallAt) B.env.push({ x: B.fallAt.x - B.fallAt.ox * 1.2, y: B.fallAt.y + .6, z: B.fallAt.z - B.fallAt.oz * 1.2, c: 0xff5a1e, I: 36, d: 8, flick: 1 });
+  },
+  holl(X) {
+    const { B, rng, drop, beside } = X;
+    for (let k = 0; k < 3; k++) drop(T => PROP.ruinhouse(T, rng), 1.5, { far: 1.8 });
+    for (let k = 0; k < 7; k++) { const p = beside(6, B.L - 5, .7, .25); if (p) drop(T => PROP.lamppost(T, rng), .3, { at: p, ry: -p[2] + HPI * (p[3] > 0 ? 0 : 2) }); }
+    for (let k = 0; k < 10; k++) drop(T => PROP.grave(T, rng), .45, { far: 1.2 });
+    for (let k = 0; k < 3; k++) { const p = beside(8, B.L - 6, 1.0, .4); if (p) { const len = rng.range(2.5, 4); drop(T => PROP.fence(T, rng, len), 1.2, { at: p, ry: -p[2] }); } }
+    drop(T => PROP.statue(T, rng), 1.2, { far: 2 });
+  },
+  storm(X) {
+    const { B, rng, drop, beside } = X;
+    for (let k = 0; k < 5; k++) { const p = beside(8, B.L - 6, 1.3, .5); if (p) { const len = rng.range(2.4, 3.6); drop(T => PROP.prayerflags(T, rng, len), .9, { at: p, ry: -p[2] + rng.range(-.3, .3) }); } }
+    const cols = [COL.stoneD, COL.stone, COL.stoneL, COL.stoneD];
+    for (let k = 0; k < 7; k++) { const hh = rng.range(2.4, 4.8); drop(T => PROP.spire(T, rng, hh, cols), hh * .28, { far: 1.6, steep: true }); }
+    for (let k = 0; k < 5; k++) drop(T => PROP.cairn(T, rng), .5, {});
   },
   salt(X) {
     const { B, rng, drop, beside } = X;

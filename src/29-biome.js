@@ -94,10 +94,38 @@ const BIOMES = [
     tints: { golem: [.85, .75, 1.6], bat: [.8, .7, 1.25], spider: [.7, .62, 1.15], wisp: [1.2, .6, 1.6], scarab: [.8, .9, 1.7], gargoyle: [.9, .8, 1.4], brood: [.75, .6, 1.2] }, wispHex: 0xc080ff,
     trees: [], stumps: 0, rocks: 96, tufts: 70, webs: 0,
   },
+  {
+    key: 'holl', name: 'Hollowmere', campaign: 'deep', roads: ['ring', 'switchback', 'horseshoe'],
+    col: { stone: 0x5a5e6a, stoneD: 0x34363f, stoneL: 0x80848f, earth: 0x2c2a2c, earthD: 0x1a191b, grass: 0x3a3e34, grassD: 0x282c24, moss: 0x3a4436, road: 0x6e6c6a, roadD: 0x4a4846, mud: 0x222024, bark: 0x2a2420, tuftA: 0x4a4a3a, tuftB: 0x6a6248, leaf: 0x5a3a1a, leafL: 0x8a5a22 },
+    strata: [0x4a4e58, 0x2a2c34, 0x60646e, 0x383a42, 0x6e7078, 0x30323a, 0x7a7e88, 0x2c2e36],
+    hemi: [0x7c8cc8, 0x1a1c26, 1.05], moon: [0xd8e2ff, 1.8], fill: [0x5068a8, .3], moonPos: [-12, 40, -32],
+    clear: [.004, .006, .014], mistAmb: [.06, .07, .12], mist: [-.3, .5, .85, .12], sky: [.02, .025, .05], lift: [.012, .014, .03], sat: .82, expo: 1.0, sprAmb: [.06, .07, .1],
+    cover: [.3, .6, 1.0, .5], coverCol: [.13, .09, .06], coverP: [.9, .45, .4, 0],
+    wat: [0, 1, 1, 0], watA: [.01, .015, .03], watB: [.25, .3, .42], fall: [0, 1, 1, 0], fallA: [.022, .03, .05], fallB: [.2, .25, .35], spray: 'water',
+    relief: [1.2, .35, .9, 0], puddles: 14, ponds: 1, sway: .8, wind: .9,
+    wx: { n: [.12, .05], velA: [.5, -.7, .3], swayA: [.9, .9], sizeA: [.04, .07], colA: [.7, .38, .12, 1], alA: [.9, 0, 0], yA: [-1, 9], velB: [.2, -.2, .1], swayB: [.4, .3], sizeB: [.02, .035], colB: [.6, .6, .65, 1], alB: [.3, 0, 0], yB: [-1, 8], amb: [.18, .18, .26] },
+    mobs: { skel: 1.6, knight: 1.6, wraith: 1.6, necro: 1.8, ghoul: 1.6, mummy: .6, drummer: 1.3, bat: 1.0, toad: 0, scarab: 0, slime: .4, hag: 1.0, thief: .8, spider: .5 }, early: { necro: 4, knight: 3, wraith: 3 }, boss: ['lich'],
+    tints: { skel: [.85, .88, 1.0], ghoul: [.9, .95, 1.25], wisp: [.7, .8, 1.4], golem: [.8, .85, 1.0], gargoyle: [.8, .85, 1.0] }, wispHex: 0x9fb8ff,
+    trees: [['tree', 9, 2.6, 4.4]], stumps: 4, rocks: 50, tufts: 200, webs: 3,
+  },
+  {
+    key: 'storm', name: 'Stormcrown', campaign: 'deep', roads: ['horseshoe', 'ring', 'switchback'],
+    col: { stone: 0x6a6e78, stoneD: 0x3a3e48, stoneL: 0x9aa0aa, earth: 0x3a3a36, earthD: 0x24241f, grass: 0x4a5a3a, grassD: 0x34402a, moss: 0x4a5a44, road: 0x7a7870, roadD: 0x56544c, mud: 0x2c2c28, bark: 0x3a2e26, tuftA: 0x6a7448, tuftB: 0x9a9a68, leaf: 0x22382c, leafL: 0x34503c },
+    strata: [0x6a6e78, 0x3a3e48, 0x80848e, 0x4a4e58, 0x9098a2, 0x44484f, 0xaab0b8, 0x50545c],
+    hemi: [0x8aa0c8, 0x24282e, 1.15], moon: [0xc8d4f0, 1.25], fill: [0x6a7ab0, .32], moonPos: [10, 46, -30],
+    clear: [.02, .026, .036], mistAmb: [.12, .14, .18], mist: [-.4, .55, .7, .12], sky: [.05, .06, .08], lift: [.02, .024, .03], sat: .8, expo: .95, sprAmb: [.1, .11, .14],
+    cover: [.28, .5, .34, .8], coverCol: [.42, .45, .5], coverP: [.78, .85, .32, 0],
+    wat: [0, 1.4, 1.2, 0], watA: [.02, .04, .06], watB: [.35, .45, .55], fall: [0, 1.3, 1, 0], fallA: [.03, .06, .08], fallB: [.35, .45, .55], spray: 'water',
+    relief: [2.0, .55, 1.3, 0], puddles: 6, ponds: 1, sway: 1.6, wind: 1.6, beacon: .9,
+    wx: { n: [.6, .1], velA: [3.5, -12, 1.5], swayA: [.05, .3], sizeA: [.01, .018], colA: [.75, .8, .9, 1], alA: [.4, 0, 1.6], yA: [-2, 14], velB: [5, .2, 2.2], swayB: [.6, .5], sizeB: [.08, .16], colB: [.7, .75, .8, 1], alB: [.1, 0, .8], yB: [-1, 6], amb: [.3, .32, .4] },
+    mobs: { gargoyle: 2.2, bat: 2.0, wisp: 1.6, drake: 1.8, wolf: 1.4, golem: 1.0, knight: .8, toad: 0, mummy: 0, scarab: 0, slime: .4, spider: .5 }, early: { gargoyle: 4, bat: 1, wisp: 3 }, boss: ['roc'],
+    tints: { gargoyle: [.85, .9, 1.1], wolf: [1.2, 1.2, 1.3], golem: [.9, .95, 1.1], wisp: [.8, 1.0, 1.6] }, wispHex: 0xa0c8ff,
+    trees: [['windpine', 14, 2.6, 4.6]], stumps: 3, rocks: 90, tufts: 160, webs: 0,
+  },
 ];
 // Campaigns: lists of lands played in turn. The page picks one with #campaign= (main by default); later they unlock one after another.
 const CAMPAIGNS = { main: BIOMES.filter(b => !b.campaign), deep: BIOMES.filter(b => b.campaign === 'deep') };
-const CAMPAIGN_NAMES = { main: 'The Cinder Road', deep: 'The Drowned Deep' };
+const CAMPAIGN_NAMES = { main: 'The Cinder Road', deep: 'The Far Reaches' };
 const BIOME = { start: 0, list: CAMPAIGNS.main, campaign: 'main' };
 // A land with its own road shapes takes the next one on each visit; the first campaign's lands keep the classic road.
 function roadShapeFor(bio, index) {

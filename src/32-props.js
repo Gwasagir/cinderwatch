@@ -428,7 +428,7 @@ function scatterProps(B) {
   for (let k = 0; k < 3; k++) drop(T => PROP.cairn(T, rng), .5, {});
   BIOME_DRESS[bio.key](X);
   const trees = [];
-  for (const [kind, cnt, h0, h1] of bio.trees) for (let k = 0; k < cnt; k++) { const h = rng.range(h0, h1), p = drop(T => PROP[kind](T, rng, h), kind === 'tree' || kind === 'charred' ? .55 : .8, { far: 1.0, water: kind === 'palm' && k < 6 ? 5.5 : 0 }); if (p && kind === 'tree') trees.push([p, h]); }
+  for (const [kind, cnt, h0, h1] of bio.trees) for (let k = 0; k < cnt; k++) { const h = rng.range(h0, h1), p = drop(T => PROP[kind](T, rng, h), kind === 'tree' || kind === 'charred' ? .55 : .8, { far: 1.0, water: kind === 'palm' && k < 6 ? 5.5 : 0, ry: kind === 'windpine' ? B.windRy + rng.range(-.25, .25) : undefined }); if (p && kind === 'tree') trees.push([p, h]); }
   for (let k = 0; k < bio.webs && k < trees.length; k++) {
     const [p, h] = trees[k], y = H(p[0], p[1]), a = rng() * TAU, T = new Soup();
     PROP.web(T, [0, h * .42, 0], [Math.cos(a) * .9, h * .55, Math.sin(a) * .9], [Math.cos(a) * .7, h * .18, Math.sin(a) * .7]);

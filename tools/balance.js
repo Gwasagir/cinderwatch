@@ -40,6 +40,7 @@ const PAGE = `(() => { const c = __cw, G = c.G; c.UI.setManual(false); window.__
     if (G.phase === 'play' && G.spawning && G.waveT < .05 && G.k >= 2 && G.k <= 4) { bd.mid += G.gold; bd.midN++; }
     if (G.phase === 'play' && G.k === 4 && !G.spawning) bd.preBoss = Math.max(bd.preBoss, G.gold);
     for (const ty in G.leakTypes) if (c.MON[ty].boss) bd.leak = true;
+    if (G.phase === 'clear' && !bd.tw) { bd.tw = [0, 0, 0, 0]; for (const t of G.towers) if (t.alive) bd.tw[t.lvl]++; }
     if (G.phase === 'crumble' && this.prevPh !== 'crumble') { bd.lt = Object.assign({}, G.leakTypes); this.boards.push(bd); }
     if (G.phase === 'crumble' || G.phase === 'rise') this.bd = null;
     this.prevPh = G.phase;
@@ -86,6 +87,9 @@ async function runSeed(seed) {
   console.log(`\nper battlefield (L${LCAP} includes later ones; averages per battlefield):`);
   console.log('        boards  lives lost w1-4  lives lost boss wave  boss got through  gold at waves 2-4  gold before boss');
   for (const k in byL) { const e = byL[k]; console.log(`  L${String(k).padEnd(4)}${String(e.n).padStart(6)}${(e.a / e.n).toFixed(1).padStart(17)}${(e.b / e.n).toFixed(1).padStart(22)}${(e.leak + '/' + e.n).padStart(18)}${String(Math.round(e.mid / e.n)).padStart(19)}${String(Math.round(e.pre / e.n)).padStart(18)}`); }
+  const TW = {}; for (const r of all) for (const b of r.boards) if (b.tw) { const k = Math.min(b.L, LCAP), e = TW[k] = TW[k] || [0, 0, 0, 0, 0]; e[4]++; for (let i = 0; i < 4; i++) e[i] += b.tw[i]; }
+  console.log('\ntowers standing when the boss falls, by level (averages per battlefield):');
+  for (const k in TW) { const e = TW[k]; console.log(`  L${String(k).padEnd(4)}` + [0, 1, 2, 3].map(i => `level ${i + 1}: ${(e[i] / e[4]).toFixed(1)}`).join('   ')); }
   const SHP = {}; for (const r of all) for (const b of r.boards) { const k = b.land + ' ' + b.shape, e = SHP[k] = SHP[k] || { n: 0, lost: 0, leak: 0, len: 0 }; e.n++; e.lost += b.a + b.b; e.leak += b.leak ? 1 : 0; e.len += b.len; }
   if (Object.keys(SHP).length > 1) { console.log('\nper land and road shape (averages per battlefield):'); for (const k of Object.keys(SHP).sort()) { const e = SHP[k]; console.log(`  ${k.padEnd(18)}${String(e.n).padStart(4)} boards  road ${(e.len / e.n).toFixed(0)}  lives lost ${(e.lost / e.n).toFixed(1)}  boss got through ${e.leak}/${e.n}`); } }
   const LT = {}; for (const r of all) for (const b of r.boards) for (const ty in b.lt || {}) LT[ty] = (LT[ty] || 0) + b.lt[ty];

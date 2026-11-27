@@ -2,7 +2,7 @@
 
 Ideas for lands beyond the first five (Ashen Pass, Frostfall, Mirefen, Emberscar, Duskmesa). The new lands belong to a second campaign, so they never join the first campaign's cycle and do not change its balance. Later the campaigns are meant to unlock one after another.
 
-Status: **Saltreach** and **Glimmerdeep** are being built on the `campaign` branch, as the second campaign (`#campaign=deep`). Hollowmere and Stormcrown are ideas for later.
+Status: all four are built on the `campaign` branch, as the second campaign, *The Far Reaches* (`#campaign=deep`).
 
 Each land has its own look and light, a twist that changes how it plays, the monsters it favors, and a boss.
 
@@ -22,7 +22,7 @@ Each land has its own look and light, a twist that changes how it plays, the mon
 - **Favors:** cave spiders, golems, bats, scarabs and wisps.
 - **Boss:** the Crystal Wyrm, which burrows underground for part of the road and comes up closer to the fire.
 
-## Hollowmere: a ruined gothic city (later)
+## Hollowmere: a ruined gothic city
 
 - **Look:** moonlit streets, a broken cathedral with glowing stained glass, a graveyard and iron fences.
 - **Light and weather:** a big pale moon, cold blue shadows, warm candlelit windows, falling leaves or ash.
@@ -31,11 +31,11 @@ Each land has its own look and light, a twist that changes how it plays, the mon
 - **Boss:** the Bell Lich, who raises the fallen near him.
 - **Note:** dark and undead, so it overlaps a little with Ashen Pass.
 
-## Stormcrown: peaks above the clouds (later)
+## Stormcrown: peaks above the clouds
 
 - **Look:** narrow rock bridges over a sea of clouds, wind-bent pines, prayer flags and a stone shrine.
 - **Light and weather:** a constant thunderstorm with flashes that light the whole field for an instant, and gusting wind.
-- **Twist:** random lightning strikes hit the road and hurt whatever stands there; gusts push flyers and bend arrows.
+- **Twist:** random lightning strikes hit the road and hurt whatever stands there, after a glowing ring marks the spot. (Gusts that push flyers and bend arrows are an idea not built yet.)
 - **Favors:** gargoyles, wisps, bats and drakes.
 - **Boss:** the Storm Roc, the first flying boss: only towers that reach the air can hit it.
 - **Note:** mountains, so it overlaps a little with Frostfall.

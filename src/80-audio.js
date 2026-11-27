@@ -413,7 +413,24 @@ const AU = (function () {
     const n = gn(lp), nf = flt(n, 'bandpass', 3000, 2); noi(t, 0.46, nf); ad(n.gain, t, 0.05, 0.05, 0.38);
   };
 
+  // Hollowmere's cathedral bell: a struck strike tone over a bell's inharmonic partials, ringing out for a few seconds.
+  S.bell = (d, t) => {
+    const f = 174.6 * rr(.99, 1.01), lp = flt(d, 'lowpass', 3800);
+    const R = [.5, 1, 1.183, 1.506, 2, 2.514, 2.662, 3.011, 4.166], A = [.32, .5, .3, .18, .26, .1, .08, .06, .04], D = [4.2, 3.6, 2.6, 2.2, 2.4, 1.4, 1.2, .9, .6];
+    for (let i = 0; i < R.length; i++) { const g = gn(lp); osc('sine', f * R[i], t, D[i] + .2, g); ad(g.gain, t, A[i] * .5, .004, D[i]); }
+    const c = gn(d), cf = flt(c, 'bandpass', 1400, 1.5); noi(t, .08, cf); ad(c.gain, t, .4, .001, .05);
+  };
+  // Stormcrown's lightning: a sharp crack, then thunder rolling away.
+  S.thunder = (d, t, p) => {
+    const sh = shape(d, 1.6), c = gn(d), cf = flt(c, 'highpass', 900); noi(t, .25, cf); ad(c.gain, t, .9, .001, .16);
+    const b = gn(sh), bf = flt(b, 'lowpass', 1400, .7); noi(t, .6, bf); sw(bf.frequency, t, 2200, 200, .5); ad(b.gain, t, .8, .003, .45);
+    const r = gn(d), rf = flt(r, 'lowpass', 140, .6); noi(t + .08, 3.4, rf, bufBrown); r.gain.setValueAtTime(.0001, t);
+    for (let i = 0; i < 7; i++) r.gain.linearRampToValueAtTime(rr(.25, .65) * (1 - i / 8), t + .1 + i * .4);
+    r.gain.linearRampToValueAtTime(.0001, t + 3.3);
+  };
   const DEF = {
+    bell: [S.bell, 1.0, 0.7, 3, 4.6, 0.85],
+    thunder: [S.thunder, 0.4, 0.6, 3, 3.6, 0.9],
     crossbow: [S.crossbow, 0.08, 0.25, 1, 0.4, 0.6],
     rocket: [S.rocket, 0.08, 0.35, 1, 0.9, 0.7],
     plasma: [S.plasma, 0.3, 0.2, 0, 0.5, 0.6],
