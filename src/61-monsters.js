@@ -30,6 +30,8 @@ const MON = {
   jotun: { name: 'Frost Jotun', tip: 'Its stomp freezes nearby towers.', hp: 1150, spd: .8, rad: 1.0, mass: 46, bounty: 200, lives: 10, hitH: 1.9, top: 3.6, dmg: 52, atkT: 1.8, eye: [.8, 2.4, 4], scale: 2.75, boss: true, stomp: { every: 10, r: 5.2, stun: 1.8 }, death: 'flesh', blade: true, cat: 'armor', tint: [1.0, 1.25, 3.4] },
   queen: { name: 'Brood Queen', tip: 'Keeps hatching spiders.', hp: 1150, spd: .85, rad: 1.1, mass: 40, bounty: 200, lives: 10, hitH: 1.0, top: 2.0, dmg: 40, atkT: 1.5, eye: [3.8, .3, .9], scale: 4.2, boss: true, summon: { type: 'spider', n: 2, every: 8, max: 99, hp: 1 }, death: 'bug', cat: 'armor', tint: [.85, .55, 1.0] },
   colossus: { name: 'Magma Colossus', tip: 'Speeds up when it is nearly dead.', hp: 1250, spd: .7, rad: 1.05, mass: 60, bounty: 200, lives: 10, hitH: 2.2, top: 4.3, dmg: 60, atkT: 2.0, eye: [4, 1.6, .3], scale: 3.0, boss: true, armor: .85, slowRes: .3, enrage: [.3, 1.25], death: 'rock', cat: 'armor', tint: [1.5, .5, .26] },
+  admiral: { name: 'The Drowned Admiral', tip: 'Calls drowned sailors to his side. The tide does not slow him.', hp: 1200, spd: .84, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.3, dmg: 48, atkT: 1.7, eye: [.6, 3.2, 2.6], scale: 2.7, boss: true, summon: { type: 'skel', n: 2, every: 9, max: 99, hp: .7 }, noTide: true, death: 'bones', blade: true, cat: 'armor', tint: [.55, .82, .74] },
+  wyrm: { name: 'The Crystal Wyrm', tip: 'Burrows under the road and comes up closer to the fire.', hp: 1100, spd: .82, rad: 1.0, mass: 50, bounty: 200, lives: 10, hitH: 1.0, top: 2.2, dmg: 50, atkT: 1.6, eye: [2.6, 1.2, 3.8], scale: 2.4, boss: true, armor: .8, burrow: [14, 3.0, 1.6, 2.4, 1.6], death: 'rock', cat: 'armor' },
   king: { name: 'The Buried King', tip: 'Summons mummies to walk with him.', hp: 1250, spd: .86, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.2, dmg: 46, atkT: 1.7, eye: [.6, 3.0, 2.6], scale: 2.7, boss: true, summon: { type: 'mummy', n: 1, every: 9, max: 99, hp: .7 }, death: 'bones', blade: true, cat: 'armor', tint: [1.2, 1.0, .55] },
 };
 
@@ -76,7 +78,7 @@ function hitDome(w, dmg, x, y, z) {
   }
 }
 function hitMonster(m, dmg, kind, dx, dz, tower, pierce = 0) {
-  if (m.dead || m.hp <= 0) return false;
+  if (m.dead || m.hp <= 0 || m.burrowed > 0) return false;
   if ((kind === 'arrow' || kind === 'blast') && G.domes.length) { const w = domeOver(m); if (w) { hitDome(w, dmg, m.x, m.y + m.hitH, m.z); return null; } }
   if (m.eth) { if (kind === 'arrow' || kind === 'sword') { if (rnd() < .5) fxTimed(0, m.x + rr(-.2, .2), m.y + m.hitH + rr(-.2, .3), m.z + rr(-.2, .2), .5, .5, .5, .9, 1.8, .7, .18); return false; } dmg *= .5; }
   if (kind === 'arrow' && m.def.armor) { dmg *= lerp(m.def.armor, 1, pierce); if (rnd() < .6 - pierce * .5) { fxSparks(m.x, m.y + m.hitH, m.z, 3, 3, 2.4, 2.2, 1.6, { size: .05 }); } }
@@ -163,6 +165,8 @@ const RIGS = {
   drummer(m) { m.weapon = KIT.item.stick; m.drum = true; m.standard = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   bomber(m) { m.keg = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   mummy(m) { m.shamble = true; m.wraps = true; return rigHuman(KIT.skel, SPEC.skel, m); },
+  admiral(m) { m.weapon = KIT.item.anchor; m.wScale = 1.25; m.heavy = true; m.tricorn = true; return rigHuman(KIT.giant, SPEC.skel, m); },
+  wyrm: m => rigWyrm(m),
   king(m) { m.weapon = KIT.item.khopesh; m.wScale = 1.25; m.heavy = true; m.crown = true; m.wraps = true; return rigHuman(KIT.giant, SPEC.skel, m); },
   warden(m) { m.weapon = KIT.item.sword; m.wScale = 1.1; m.shield = KIT.item.towerShield; m.helm = true; m.plate = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   hag(m) { m.weapon = KIT.item.lantern; m.staff = true; m.hood = true; m.robe = true; m.shamble = false; return rigHuman(KIT.skel, SPEC.skel, m); },
@@ -174,11 +178,12 @@ const RIGS = {
 function rigMonster(m) { return RIGS[m.type](m); }
 const EYES = {
   skel: SKEL_EYE, knight: SKEL_EYE, giant: [.058, .185, .152, .075], ogre: OGRE_EYE, rat: [.05, .03, .42, .05], bat: [.04, .03, .16, .05], slime: [.13, .2, .44, .08], slimelet: [.13, .2, .44, .08],
-  ghoul: OGRE_EYE, brute: OGRE_EYE, jotun: OGRE_EYE, golem: [.04, .1, .17, .05], colossus: [.04, .1, .17, .05], necro: SKEL_EYE, drummer: SKEL_EYE, bomber: SKEL_EYE, mummy: SKEL_EYE, king: [.058, .185, .152, .075],
+  ghoul: OGRE_EYE, brute: OGRE_EYE, jotun: OGRE_EYE, golem: [.04, .1, .17, .05], colossus: [.04, .1, .17, .05], necro: SKEL_EYE, drummer: SKEL_EYE, bomber: SKEL_EYE, mummy: SKEL_EYE, king: [.058, .185, .152, .075], admiral: [.058, .185, .152, .075], wyrm: [.13, .34, .5, .06],
   warden: SKEL_EYE, hag: SKEL_EYE, thief: OGRE_EYE, drake: [.05, .19, .58, .035],
   spider: BUG_EYE, scarab: BUG_EYE, brood: [.05, .055, .19, .022], queen: [.05, .055, .19, .016], wolf: [.05, .27, .63, .04], wraith: [.045, 1.04, .17, .055], toad: [.125, .345, .285, .035], gargoyle: [.045, .15, .28, .045], wisp: null,
 };
 function drawMonster(m, t) {
+  if (m.burrowed > 0) { if (rnd() < .7) fxDust(m.x + rr(-.6, .6), m.y + .05, m.z + rr(-.6, .6), 1, .8, { speed: 1.2, a: .5 }); if (rnd() < .3) FX.decals.add(G.B.heightAt, m.x, m.z, .5, .02, .017, .015, .5, 6); return; }
   const M = rigMonster(m), ey = EYES[m.type], c = m.def.eye, sc = m.scale, tw = .8 + .2 * Math.sin(t * 9 + m.lseed * 7), ty = m.type;
   if (ey) {
     for (const sg of [-1, 1]) { _tv.set(sg * ey[0], ey[1], ey[2]).applyMatrix4(M); FX.add.push(_tv.x, _tv.y, _tv.z, ey[3] * sc * 1.5, ey[3] * sc * 1.5, 0, 0, c[0], c[1], c[2], tw, 0, 0, 0, 0); }
@@ -228,7 +233,7 @@ function footmanThink(f, dt) {
   const B = G.B, tw = f.tower; f.age += dt;
   if (f.lvlUp) { f.lvlUp = false; const d = tw.def, r = f.hp / f.maxHp; f.maxHp = d.hp[tw.lvl]; f.hp = f.maxHp * Math.max(r, .6); f.dmg = d.dmg[tw.lvl]; footmanPath(f, tw); }
   if (!tw.alive) f.leave = true;
-  let gx, gz, face = null, speed = f.swift ? 3.4 : 2.1, fighting = false; const reachS = f.swift ? 3.6 : 2.5;
+  let gx, gz, face = null, speed = (f.swift ? 3.4 : 2.1) * (1 - tideSlow(f.y || 0)), fighting = false; const reachS = f.swift ? 3.6 : 2.5;
   const rally = slotPos(f, _fp), rs = tw.pad.s;
   if (f.leave) { f.gone = true; f.alive = false; if (f.flame) { removeFlame(f.flame); f.flame = null; } fxDust(f.x, f.y + .3, f.z, 4, .6); return; }
   let m = f.target;
@@ -323,6 +328,17 @@ function updateUnits(dt) {
     }
     if (m.fly) { updateBat(m, dt); continue; }
     const def = m.def, maxLat = Math.max(0, maxLatBase - m.rad * .7);
+    if (def.burrow && !m.dying) {
+      const [every, dur, , quake] = def.burrow; if (m.daze > 0) m.daze -= dt;
+      if (m.burrowed > 0) {
+        m.burrowed -= dt; m.foe = null;
+        if (m.burrowed <= 0) { // comes up: knocks footmen about and shakes the ground
+          m.vis = true; m.daze = def.burrow[4] || 0; FX.shake = Math.min(1.3, FX.shake + .9); sfx('bossStep', m.x, m.z, 1.3, .5); sfx('roar', m.x, m.z, .9, .6); fxDust(m.x, m.y + .1, m.z, 18, 2, { speed: 4 }); lightFlash(m.x, m.y + 1, m.z, 0xb090ff, 280, .4, 12);
+          for (const f of men) if (!f.dead && Math.hypot(f.x - m.x, f.z - m.z) < quake) { f.hp -= 40 * G.dmgMul; f.flash = 1; f.flinch = 1; if (f.hp <= 0) killFootman(f, (f.x - m.x) || .1, (f.z - m.z) || .1); }
+        }
+      } else if (m.vis && m.prog < .72) {
+        m.burT = (m.burT === undefined ? every * .6 : m.burT) - dt; if (m.burT <= 0) { m.burT = every; m.burrowed = dur; m.vis = false; m.foe = null; sfx('crumble', m.x, m.z, .8); fxDust(m.x, m.y + .1, m.z, 14, 1.6, { speed: 3 }); FX.shake = Math.min(1.2, FX.shake + .5); } }
+    }
     if (m.dying > 0) {
       m.dying -= dt; m.flinch = .5 + .5 * Math.sin(m.dying * 22); m.mv = 0; m.atk = -1; m.y -= dt * .12;
       if (rnd() < dt * 14) fxDust(m.x + rr(-.8, .8), m.y + rr(.4, 2.6), m.z + rr(-.8, .8), 1, .7, { a: .4 });
@@ -349,13 +365,14 @@ function updateUnits(dt) {
         for (const tw of G.towers) if (tw.alive && tw.state === 'active' && dist2(tw.x, tw.z, m.x, m.z) < sp.r * sp.r) { tw.stun = sp.stun; fxTimed(5, tw.x, tw.y + 2, tw.z, 3, 3, .6, 1.2, 2.4, .9, .3); }
       }
     }
-    let want = def.spd * m.spdMul * (1 - m.slowF) * (1 + m.haste), hopMul = 1;
+    let want = def.spd * m.spdMul * (1 - m.slowF) * (1 + m.haste) * (m.burrowed > 0 ? def.burrow[2] : m.daze > 0 ? .25 : 1) * (def.noTide ? 1 : 1 - tideSlow(m.y) * (def.boss ? .5 : 1)), hopMul = 1;
+    if (LAND.tideY > m.y && rnd() < dt * 2.5) fxPart(m.x + rr(-.2, .2), LAND.tideY + .02, m.z + rr(-.2, .2), rr(-.4, .4), rr(.6, 1.4), rr(-.4, .4), rr(.3, .5), .04, .6, .8, .85, { grav: 6 });
     if (def.frenzy) want *= 1 + def.frenzy * (1 - m.hp / m.maxHp);
     if (def.enrage && m.hp < m.maxHp * def.enrage[0]) { want *= def.enrage[1]; if (!m.rage) { m.rage = true; sfx('roar', m.x, m.z, 1, .9); fxEmbers(m.x, m.y + 2, m.z, 40, 1.2); FX.shake = Math.min(1.2, FX.shake + .6); } }
     if (def.hop) { if (!m.foe) m.hop = (m.hop + dt * def.hop[0] * (1 - m.slowF * .6)) % 1; hopMul = (m.hop > .22 && m.hop < .62) ? def.hop[1] : .1; }
     let v = want * hopMul, obstacle = null, og = 9;
     if (def.boss) {
-      if (!m.foe) for (const f of men) if (!f.dead && f.onRoad && f.s > m.s - .3 && f.s - m.s < 1.9 && Math.abs(f.lat - m.lat) < 1.4) { m.foe = f; break; }
+      if (!m.foe && !(m.burrowed > 0)) for (const f of men) if (!f.dead && f.onRoad && f.s > m.s - .3 && f.s - m.s < 1.9 && Math.abs(f.lat - m.lat) < 1.4) { m.foe = f; break; }
       if (m.foe) v *= .55;
     } else if (m.foe) v = 0;
     else if (!def.ghost) for (let j = 0; j < nu; j++) {
@@ -409,7 +426,7 @@ function updateUnits(dt) {
     const p = pathAt(B, m.s, _ap); m.x = p.x - p.tz * m.lat; m.z = p.z + p.tx * m.lat;
     let yaw = Math.atan2(p.tx, p.tz); if (m.foe) yaw = Math.atan2(m.foe.x - m.x, m.foe.z - m.z);
     m.yaw = angDamp(m.yaw, yaw, m.def.boss ? 4 : 9, dt);
-    m.prog = m.s / L; if (!m.vis && m.s > B.cave.s + 1.7) { m.vis = true; UI.sawMonster(m.type); }
+    m.prog = m.s / L; if (!m.vis && !(m.burrowed > 0) && m.s > B.cave.s + 1.7) { m.vis = true; UI.sawMonster(m.type); }
     if (m.pop > 0) m.pop = Math.max(0, m.pop - dt * 3);
   }
 }

@@ -97,6 +97,34 @@ function initBestiary() {
     for (let a = 0; a < 5; a++) S.add(gOct(), { s: [.09, .25, .09], p: [Math.cos(a * 1.26) * .07, .6 + (a & 1) * .06, Math.sin(a * 1.26) * .07], r: [Math.sin(a * 1.26) * .5, a, -Math.cos(a * 1.26) * .5], c: COL.ice, rough: .15, emis: .05 });
   }, 2, { rad: .1, shadow: false });
 
+  // the Drowned Admiral's anchor and hat
+  I.anchor = new PartBatch(S => {
+    const ir = mulC(COL.iron, 1.1), rust = C(0x6a4a34);
+    S.seg([0, -.12, 0], [0, .95, 0], .04, .035, ir, { l: L_METAL, n: 6 }); S.box(.42, .05, .06, 0, .78, 0, rust, { l: L_WOOD });
+    S.add(gTorus(8, .2, 4), { s: .08, p: [0, 1.02, 0], c: ir, l: L_METAL });
+    let pL = [0, -.1, 0], pR = [0, -.1, 0];
+    for (let j = 1; j <= 4; j++) { const a = j / 4 * 1.5, q = [Math.sin(a) * .32, -.1 + (1 - Math.cos(a)) * .32, 0]; S.seg(pR, q, .035, .032, ir, { l: L_METAL, n: 5 }); const ql = [-q[0], q[1], 0]; S.seg(pL, ql, .035, .032, ir, { l: L_METAL, n: 5 }); pR = q; pL = ql; }
+    for (const sd of [-1, 1]) S.cone(.07, .14, sd * .33, .27, 0, ir, { n: 4, l: L_METAL, r: [0, 0, -sd * .5] });
+    for (let k = 0; k < 6; k++) S.ico(.03, h2(k, 1, 7) * .3 - .15, h2(k, 2, 7) * .8, .04, C(0xb8b4a4), { d: 0 });
+  }, 2, { rad: .2, shadow: false });
+  I.tricorn = new PartBatch(S => {
+    const hat = C(0x1c2230), trim = mulC(COL.gold, .8);
+    S.cyl(.27, .04, 0, .33, 0, hat, { n: 9, l: L_CLOTH }); S.add(gDome(8, 3), { s: [.17, .15, .18], p: [0, .34, 0], c: hat, l: L_CLOTH });
+    for (let k = 0; k < 3; k++) { const a = k / 3 * TAU + PI / 2; S.box(.34, .13, .03, Math.cos(a) * .2, .4, Math.sin(a) * .2, hat, { l: L_CLOTH, r: [0, -a + HPI, 0] }); S.box(.34, .025, .035, Math.cos(a) * .2, .465, Math.sin(a) * .2, trim, { l: L_METAL, r: [0, -a + HPI, 0], emis: .03 }); }
+  }, 2, N);
+  // the Crystal Wyrm: a head and a chain of crystal-backed body segments
+  { const body = C(0x5a4c78), belly = C(0x8a78a0), cr = [.7, .45, 1.1];
+    KIT.wyrm = {
+      head: new PartBatch(S => {
+        S.ico(.34, 0, .02, .08, body, { sc: [1, .72, 1.45], d: 1 }); S.box(.4, .09, .5, 0, -.16, .38, mulC(belly, .9), { jit: .04 });
+        for (const sd of [-1, 1]) { for (let t = 0; t < 4; t++) S.cone(.03, .1, sd * (.14 - t * .03), -.1, .2 + t * .1, C(0xd8d0e8), { n: 4, r: [PI, 0, 0] }); S.add(gOct(), { s: [.06, .3, .06], p: [sd * .2, .3, -.05], r: [-.6, 0, sd * .45], c: cr, rough: .1, emis: .35 }); }
+        for (let k = 0; k < 3; k++) S.add(gOct(), { s: [.05, .2, .05], p: [0, .28, -.1 - k * .14], r: [-.5, 0, 0], c: cr, rough: .1, emis: .35 });
+      }, 2, { rad: .4 }),
+      seg: new PartBatch(S => {
+        S.ico(.34, 0, 0, 0, body, { sc: [1, .82, 1.15], d: 1 }); S.box(.44, .1, .46, 0, -.22, 0, belly, { jit: .04 });
+        for (let k = 0; k < 2; k++) S.add(gOct(), { s: [.06, .26 - k * .06, .06], p: [k ? .1 : -.06, .28, k ? -.08 : .06], r: [-.3, k, k ? .3 : -.2], c: cr, rough: .1, emis: .32 });
+      }, 18, { rad: .3 }),
+    }; }
   KIT.spider = {
     body: new PartBatch(S => {
       const c = [.3, .27, .27], cd = [.19, .17, .18];
@@ -159,6 +187,17 @@ function initBestiary() {
   };
 }
 
+const _wp = { x: 0, y: 0, z: 0, tx: 0, tz: 0 };
+function rigWyrm(e) {
+  const K = KIT.wyrm, s = e.scale || 1, fl = e.flash || 0, ph = e.ph || 0, t = SH.uTime.value + (e.lseed || 0), B = G.B;
+  const M0 = xf(_M[0], null, e.x, e.y + (.6 + Math.sin(ph * 1.5) * .05) * s, e.z, -(e.flinch || 0) * .3 + Math.sin(t * 1.3) * .06, e.yaw, Math.sin(ph) * .06, s, s, s);
+  K.head.put(M0, fl, e.tint);
+  if (B && e.s !== undefined) for (let k = 1; k <= 8; k++) {
+    const p = pathAt(B, Math.max(.2, e.s - k * .4 * s), _wp), w = ph * .9 - k * .8, lat = (e.lat || 0) + Math.sin(w) * .22, sc = s * (1 - k * .07);
+    K.seg.put(xf(_M[k], null, p.x - p.tz * lat, p.y + (.45 - k * .02 + Math.abs(Math.sin(w)) * .1) * s, p.z + p.tx * lat, 0, Math.atan2(p.tx, p.tz), Math.sin(w) * .1, sc, sc, sc), fl, e.tint);
+  }
+  return M0;
+}
 function rigSpider(e) {
   const K = KIT.spider, s = e.scale || 1, fl = e.flash || 0, ph = e.ph, mv = e.mv, Z = [.15, .08, 0, -.08], A = [1.0, .4, -.3, -.9];
   const M0 = xf(_M[0], null, e.x, e.y + (.19 + Math.abs(Math.sin(ph * 2)) * .015 * mv) * s, e.z, -(e.flinch || 0) * .3, e.yaw, Math.sin(ph) * .04 * mv, s, s, s);

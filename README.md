@@ -22,10 +22,14 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
   - bog toads, mummies that burst into scarabs, and brood mothers that burst into spiders
   - trolls that heal, stone golems that shrug off arrows, and gargoyles and glowing wisps in the air
   - on later battlefields: ash thieves that stay hidden until close to a tower and steal gold if they reach the fire, rust hags that slow nearby towers and cure poison, shield wardens whose dome stops arrows, bolts and shells (but not lightning), and armored ember drakes that burn footmen from the air
-- **A boss on every fifth wave, one per land**: the Bone Giant, the Frost Jotun that freezes towers, the Brood Queen, the Magma Colossus and the Buried King, with the Ogre waiting on a second visit to Ashen Pass. Each land also favors its own monsters, and tints some of them to match.
+- **A boss on every fifth wave, one per land**: the Bone Giant, the Frost Jotun that freezes towers, the Brood Queen, the Magma Colossus and the Buried King, with the Ogre waiting on a second visit to Ashen Pass (and the Drowned Admiral and the Crystal Wyrm in the second campaign). Each land also favors its own monsters, and tints some of them to match.
 - **Battlefields that rebuild themselves.** After each boss the slab crumbles away and a new one, with a different road, assembles out of the dark.
 - **Five lands.** Each new battlefield is in the next one: Ashen Pass, Frostfall (snow, a frozen stream and falling snow), Mirefen (bog pools, willows, glowing mushrooms and fireflies), Emberscar (a lava river, charred trees and ash) and Duskmesa (dunes, palms and an oasis). A page opened without a seed starts in a random one.
 - **Light as the main character.** A flickering beacon, a brazier on every tower, flaming arrows, cannon flashes and chain lightning, with moving shadows.
+- **A second campaign, in progress.** *The Drowned Deep* takes turns between two new lands, played with `#campaign=deep` for now (later the campaigns unlock one after another). Neither land appears in the first campaign, so its balance is untouched.
+  - **Saltreach**, a drowned coast at night: black sand, shipwrecks, sea walls, rain and a lighthouse whose beam sweeps the field. The tide comes and goes; at high tide about a third of the road floods and everything wading through it, footmen too, slows down. Its boss is the Drowned Admiral, who calls drowned sailors to his side and is not slowed by the tide.
+  - **Glimmerdeep**, a crystal cavern with no sky. When chain lightning hits a monster near one of the big crystals beside the road, the crystal discharges at up to three monsters around it, so spires built near crystals pay off. Its boss is the Crystal Wyrm, which burrows under the road, out of reach, and comes up closer to the fire.
+  - More land ideas are in [docs/lands.md](docs/lands.md).
 - **A miniature look.** The scene is drawn at about half resolution, then given an ordered dither, a depth-aware tilt-shift blur, a vignette and film grain.
 - **No asset files.** Every model, texture and sound is generated in code.
 - **Small comforts.** The first time each monster appears, a line says what it does. Tower menus show what the next level brings. The wave plate shows the gold for calling a wave early. Your best wave and your mute setting are remembered.
@@ -128,6 +132,8 @@ This joins `src/*.js` into `index.html` and inlines three.js from `vendor/`.
 | `src/40-fx.js`, `41-weather.js` | Lights, particles, lightning, decals, snow, ash, dust and fireflies |
 | `src/50-rig.js`, `51-bestiary.js` | Characters built from instanced parts, debris, the models of the later monsters |
 | `src/60-towers.js`, `61-monsters.js`, `62-game.js` | Towers, monsters and the crowd, waves and the AI commander |
+| `src/63-lands.js` | What only some lands have: the tide, the lighthouse beam, the crystals |
+| `docs/lands.md` | Ideas for new lands |
 | `src/70-pixelfont.js`, `72-ui.js` | Pixel font, HUD, menus, input |
 | `src/80-audio.js` | Synthesized sound |
 | `src/90-main.js` | Camera and main loop |
@@ -168,7 +174,8 @@ URL flags, for example `index.html#seed=4&fps=1`:
 | Flag | Effect |
 | --- | --- |
 | `seed=N` | Fix the battlefield and the run (starts in Ashen Pass) |
-| `biome=NAME` | Start in `ashen`, `frost`, `fen`, `ember` or `dunes` |
+| `campaign=deep` | Play the second campaign (Saltreach and Glimmerdeep) |
+| `biome=NAME` | Start in `ashen`, `frost`, `fen`, `ember` or `dunes`, or `salt` or `glim` (which also picks their campaign) |
 | `level=N`, `k=N` | Start at a later battlefield or wave |
 | `ff=S` | Fast-forward S seconds before the first frame |
 | `fps=1` | Show frame rate and draw calls |

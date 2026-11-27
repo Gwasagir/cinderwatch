@@ -6,15 +6,21 @@ Object.assign(G, {
 
 // Records kept across runs (best wave cleared, enemies slain, gold earned, lives lost) and the same for the current run.
 // A page opened at a later battlefield or wave (level=, k=, board=, ff=, manual=) is a test: its first run is not added to the records.
+// Each campaign keeps its own records (the first campaign under the original keys).
 const STATS = (() => {
   const zero = () => ({ cleared: 0, kills: 0, gold: 0, lives: 0 });
-  const S = { run: zero(), all: zero(), zero, test: !!(HASH.level || HASH.k || HASH.board || HASH.ff || HASH.manual), dirty: false };
-  try { const o = JSON.parse(localStorage.getItem('cinderwatch.stats') || 'null'); if (o) { for (const k in S.all) S.all[k] = Math.max(0, +o[k] || 0); } else S.all.cleared = Math.max(0, (+localStorage.getItem('cinderwatch.best') || 0) - 1); } catch (e) {}
-  return S;
+  return { run: zero(), all: zero(), zero, test: !!(HASH.level || HASH.k || HASH.board || HASH.ff || HASH.manual), dirty: false };
 })();
+function storeKey(name) { return 'cinderwatch.' + name + (BIOME.campaign === 'main' ? '' : '.' + BIOME.campaign); }
+function loadStats() {
+  try {
+    const o = JSON.parse(localStorage.getItem(storeKey('stats')) || 'null'); G.best = +localStorage.getItem(storeKey('best')) || 0;
+    if (o) { for (const k in STATS.all) STATS.all[k] = Math.max(0, +o[k] || 0); } else STATS.all.cleared = Math.max(0, G.best - 1);
+  } catch (e) {}
+}
 function stat(k, n) { if (!(n > 0)) return; STATS.run[k] += n; if (!STATS.test) { STATS.all[k] += n; STATS.dirty = true; } }
 function statWave(w) { if (w > STATS.run.cleared) STATS.run.cleared = w; if (!STATS.test && w > STATS.all.cleared) { STATS.all.cleared = w; STATS.dirty = true; } }
-function saveStats() { if (!STATS.dirty) return; STATS.dirty = false; try { localStorage.setItem('cinderwatch.stats', JSON.stringify(STATS.all)); } catch (e) {} }
+function saveStats() { if (!STATS.dirty) return; STATS.dirty = false; try { localStorage.setItem(storeKey('stats'), JSON.stringify(STATS.all)); } catch (e) {} }
 function resetStats() { STATS.all = STATS.zero(); STATS.run = STATS.zero(); STATS.dirty = true; saveStats(); }
 function waveNumber() { return G.level * 5 + (G.phase === 'rise' ? 1 : Math.max(1, G.k)); }
 const ROSTER = {
@@ -32,14 +38,18 @@ function waveMenu(k, level) {
   }
   return menu;
 }
-function bossType() { const b = G.B.bio.boss; return b[Math.floor(G.level / BIOMES.length) % b.length]; }
+function bossType() { const b = G.B.bio.boss; return b[Math.floor(G.level / BIOME.list.length) % b.length]; }
+// Difficulty of each campaign, so a new campaign can be tuned without changing the first one's balance.
+// hp and budget scale the regular waves (monster health, how many come), boss scales the boss's health, gold the starting gold.
+const CAMPAIGN_TUNE = { main: { hp: 1, budget: 1, boss: 1, gold: 1 }, deep: { hp: 1, budget: 1, boss: .85, gold: 1 } };
+function tune() { return CAMPAIGN_TUNE[BIOME.campaign] || CAMPAIGN_TUNE.main; }
 function buildWave(k, level) {
-  const q = [], boss = k === 5, lv = 1 + .25 * level;
-  let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1), heavy = 0, air = budget * .42;
-  const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press);
+  const q = [], boss = k === 5, lv = 1 + .25 * level, T = tune();
+  let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1) * T.budget, heavy = 0, air = budget * .42;
+  const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press) * T.hp;
   const menu = waveMenu(k, level), tot = menu.reduce((a, b) => a + b[1], 0);
   let t = .6;
-  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) });
+  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) * T.boss });
   while (budget > 0) {
     let r = rnd() * tot, type = 'skel'; for (const [ty, w] of menu) { r -= w; if (r <= 0) { type = ty; break; } }
     let R = ROSTER[type];
@@ -53,7 +63,7 @@ function buildWave(k, level) {
   return q;
 }
 function startWave() {
-  if (G.k > 0) statWave(waveNumber()); G.k = G.k % 5 + 1; G.queue = buildWave(G.k, G.level); if (waveNumber() > G.best) { G.best = waveNumber(); try { localStorage.setItem('cinderwatch.best', '' + G.best); } catch (e) {} } G.waveT = 0; G.spawning = true; G.bossWave = G.k === 5; G.waveKills = 0; G.waveLeaks = 0; G.bossDown = false; G.trickle = 6; G.trickleN = 0;
+  if (G.k > 0) statWave(waveNumber()); G.k = G.k % 5 + 1; G.queue = buildWave(G.k, G.level); if (waveNumber() > G.best) { G.best = waveNumber(); try { localStorage.setItem(storeKey('best'), '' + G.best); } catch (e) {} } G.waveT = 0; G.spawning = true; G.bossWave = G.k === 5; G.waveKills = 0; G.waveLeaks = 0; G.bossDown = false; G.trickle = 6; G.trickleN = 0;
   sfx(G.bossWave ? 'hornBoss' : 'horn', G.B.cave.x, G.B.cave.z, 1.1);
   UI.banner(G.bossWave ? 'Wave ' + waveNumber() + ' · ' + MON[bossType()].name : 'Wave ' + waveNumber(), G.bossWave ? 3.6 : 2.2, G.bossWave);
 }
@@ -202,7 +212,7 @@ function startRise() {
   sfx('rise', 0, 0, 1.2); UI.banner(B.bio.name, 3.6, false);
 }
 function activateBoard(B, lit) {
-  B.flames = [];
+  B.flames = []; landBoard(B);
   const b = B.beacon;
   B.beaconFlame = addFlame({ x: b.x, y: b.y - .12, z: b.z, size: 2.3, layers: 3, embers: 2.6, glow: 1.1, smoke: 5, on: lit ? 1 : 0 }); B.flames.push(B.beaconFlame);
   for (const f of B.fires) B.flames.push(addFlame(Object.assign({ x: f.x, y: f.y, z: f.z, size: f.size, embers: .5, glow: .8, on: lit ? 1 : 0 }, f.fx)));
@@ -212,7 +222,7 @@ function activateBoard(B, lit) {
 }
 function beginBattle(first) {
   const B = G.B;
-  G.lives = G.maxLives; G.gold = 300 + 80 * Math.min(G.level, 10) + 30 * Math.max(0, G.level - 10); G.bountyMul = 1 + .15 * Math.min(G.level, 9) + .06 * Math.max(0, G.level - 9); G.dmgMul = 1.55 + .2 * G.level; G.press = lerp(G.press, 1, .5); UI.goldShown = G.gold; G.k = 0; G.leaks = 0; G.leakTypes = {}; G.spawning = false; G.bossWave = false; G.nextIn = first ? .9 : 1.6; G.queue = []; AI.think = .15; AI.wait = 0;
+  G.lives = G.maxLives; G.gold = Math.round((300 + 80 * Math.min(G.level, 10) + 30 * Math.max(0, G.level - 10)) * tune().gold); G.bountyMul = 1 + .15 * Math.min(G.level, 9) + .06 * Math.max(0, G.level - 9); G.dmgMul = 1.55 + .2 * G.level; G.press = lerp(G.press, 1, .5); UI.goldShown = G.gold; G.k = 0; G.leaks = 0; G.leakTypes = {}; G.spawning = false; G.bossWave = false; G.nextIn = first ? .9 : 1.6; G.queue = []; AI.think = .15; AI.wait = 0;
   const n = 4 + Math.min(3, G.level);
   for (let i = 0; i < n; i++) spawnMonster(i === n - 1 && G.level > 0 ? 'knight' : 'skel', { s: B.cave.s + 2.2 + i * 1.15, lat: rr(-.7, .7), hpMul: 1 + .22 * G.level });
   G.phase = 'play'; G.phaseT = 0;

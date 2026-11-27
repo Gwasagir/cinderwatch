@@ -80,7 +80,7 @@ const UI = (() => {
     }, { passive: false });
     document.addEventListener('touchend', e => { audioGesture(); stop(e); if (!e.touches.length && U.ptrs.size) setTimeout(() => { if (U.ptrs.size) U.dropTouches(); }, 80); }, { passive: false });
     if (window.visualViewport) for (const ev of ['resize', 'scroll']) window.visualViewport.addEventListener(ev, fixPageZoom);
-    try { if (localStorage.getItem('cinderwatch.muted') === '1') AU.muted = true; G.best = +localStorage.getItem('cinderwatch.best') || 0; Object.assign(U.opts, JSON.parse(localStorage.getItem('cinderwatch.opts') || '{}')); } catch (e) {}
+    try { if (localStorage.getItem('cinderwatch.muted') === '1') AU.muted = true; Object.assign(U.opts, JSON.parse(localStorage.getItem('cinderwatch.opts') || '{}')); } catch (e) {}
     applyOpts(false);
     window.addEventListener('keyup', e => { U.keys.delete(e.code); });
     window.addEventListener('blur', () => U.keys.clear());
@@ -461,15 +461,15 @@ const UI = (() => {
     ];
     const recs = [['Waves cleared', N.cleared, A.cleared], ['Enemies slain', N.kills, A.kills], ['Gold earned', N.gold, A.gold], ['Lives lost', N.lives, A.lives]];
     const credits = ['Cinderwatch by kevintngo', 'Additions by Niko Keurulainen', 'Made with three.js · MIT license', 'All art and sound made in code'];
-    const note = STATS.test ? 'Started at a later wave: not recorded' : null;
+    const note = STATS.test ? 'Started at a later wave: not recorded' : null, camp = BIOME.campaign !== 'main' ? CAMPAIGN_NAMES[BIOME.campaign] : null;
     const rl = P.resetArm ? (tch ? 'Tap again to reset' : 'Click again to reset') : 'Reset records';
     const M = str => PX.measure(str);
     // the layout in font pixels, drawn at the largest scale k that fits the screen
     const bwU = Math.max(...opts.map(o => M(o[0])), M('Click again to reset') / 1.6) + 14, gridU = bwU * 2 + 3;
     const labU = Math.max(...recs.map(q => M(q[0]))), numU = Math.max(M('This run'), M('All time'), ...recs.map(q => Math.max(M(fmt(q[1])), M(fmt(q[2]))))), recU = labU + 2 * (numU + 8);
-    const credU = Math.max(...credits.map(M), note ? M(note) : 0), botU = Math.max(M(rl), M('Close')) * 2 + 30;
+    const credU = Math.max(...credits.map(M), note ? M(note) : 0, camp ? M(camp) : 0), botU = Math.max(M(rl), M('Close')) * 2 + 30;
     const innerU = Math.max(gridU, recU, credU, botU, M('Settings') * 2), LHU = PX.LINE;
-    const bhU = 14, rows = Math.ceil(opts.length / 2), hU = 6 + LHU * 2 + 4 + (bhU * rows + 3 * (rows - 1)) + 8 + LHU + 2 + LHU * 4 + (note ? LHU : 0) + 8 + LHU + 2 + LHU * 4 + 8 + bhU + 6;
+    const bhU = 14, rows = Math.ceil(opts.length / 2), hU = 6 + LHU * 2 + 4 + (bhU * rows + 3 * (rows - 1)) + 8 + LHU + 2 + LHU * 4 + (note ? LHU : 0) + (camp ? LHU : 0) + 8 + LHU + 2 + LHU * 4 + 8 + bhU + 6;
     let k = U.s; while (k > 1 && ((innerU + 12) * k > W - iL - iR - 6 * k || hU * k > H - iT - iB - 6 * k)) k--;
     const LH = LHU * k, mp = 6 * k, bh = Math.max(bhU * k, tch ? Math.round(36 * dpr) : 0), extra = (bh - bhU * k) * (rows + 1);
     const w = (innerU + 12) * k, h = hU * k + extra, x0 = Math.round((iL + W - iR - w) / 2), y0 = Math.round(Math.max(iT + 3 * k, (iT + H - iB - h) / 2));
@@ -490,6 +490,7 @@ const UI = (() => {
     y += rows * bh + (rows - 1) * 3 * k + 8 * k;
     const cx2 = xi + wi, cx1 = cx2 - (numU + 8) * k;
     T('Records', xi, y, COLR.amber); T('This run', cx1, y, COLR.dim, { align: 'r' }); T('All time', cx2, y, COLR.dim, { align: 'r' }); y += LH + 2 * k;
+    if (camp) { T(camp, xi, y, COLR.dim); y += LH; }
     for (const q of recs) { T(q[0], xi, y, COLR.tx); T(fmt(q[1]), cx1, y, COLR.tx, { align: 'r' }); T(fmt(q[2]), cx2, y, COLR.amber, { align: 'r' }); y += LH; }
     if (note) { T(note, xi, y, COLR.dim); y += LH; }
     y += 8 * k; T('Credits', xi, y, COLR.amber); y += LH + 2 * k;

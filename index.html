@@ -803,9 +803,41 @@ const BIOMES = [
     mobs: { mummy: 3, scarab: 2.4, spider: .6, bomber: 1.3, ghoul: 1.3, toad: 0, slime: .4, thief: 2.4 }, early: { mummy: 4, scarab: 2 }, boss: ['king'], tints: { golem: [1.5, 1.1, .72], wolf: [1.5, 1.2, .8], wisp: [1.4, 1.0, .4], gargoyle: [1.5, 1.2, .9], toad: [1.3, 1.1, .7] }, wispHex: 0xffc060,
     trees: [['palm', 9, 3.0, 4.6], ['tree', 2, 2.4, 3.4]], stumps: 2, rocks: 44, tufts: 150, webs: 0,
   },
+  // The second campaign (campaign: 'deep'). Its lands never join the first campaign's cycle.
+  {
+    key: 'salt', name: 'Saltreach', campaign: 'deep',
+    col: { stone: 0x4e5a5a, stoneD: 0x2c3434, stoneL: 0x74827e, earth: 0x2e2e2c, earthD: 0x1c1d1c, grass: 0x4a5442, grassD: 0x323a30, moss: 0x3a5446, road: 0x6c6c66, roadD: 0x48484a, mud: 0x1e2224, bark: 0x6a6258, tuftA: 0x5a6448, tuftB: 0x8a8a60, leaf: 0x243a30, leafL: 0x3a5644 },
+    strata: [0x3a4242, 0x252a2c, 0x56605c, 0x2e3434, 0x6a6a5e, 0x343c3a, 0x7a7e72, 0x2a3030],
+    hemi: [0x58a0a0, 0x141e1e, 1.1], moon: [0xbfe6e2, 1.4], fill: [0x2f7f7a, .32], moonPos: [12, 44, -34],
+    clear: [.003, .009, .01], mistAmb: [.05, .11, .11], mist: [-.2, .6, 1.25, .14], sky: [.016, .04, .045], lift: [.008, .02, .022], sat: .9, expo: 1.0, sprAmb: [.05, .09, .09],
+    cover: [.6, .7, 1.0, .5], coverCol: [.06, .1, .075], coverP: [.9, .4, .4, 0],
+    wat: [0, 1.3, 1.2, 0], watA: [.008, .032, .036], watB: [.22, .42, .42], fall: [0, 1.2, 1, 0], fallA: [.02, .05, .055], fallB: [.24, .4, .4], spray: 'water',
+    relief: [1.3, .35, 1.0, .25], puddles: 16, ponds: 4, sway: 1.3, wind: 1.35,
+    wx: { n: [.5, .08], velA: [.9, -11, .4], swayA: [.05, .3], sizeA: [.01, .018], colA: [.7, .86, .9, 1], alA: [.42, 0, 1.6], yA: [-2, 14], velB: [1.4, .12, .7], swayB: [.6, .5], sizeB: [.07, .12], colB: [.55, .75, .75, 1], alB: [.12, 0, 0], yB: [-.5, 3.5], amb: [.16, .26, .26] },
+    mobs: { toad: 2.2, slime: 2.0, wraith: 1.8, skel: 1.4, knight: 1.2, bat: .8, wolf: .3, mummy: .2, scarab: 0, golem: .5, spider: .4, brood: .3 }, early: { toad: 2, wraith: 3 }, boss: ['admiral'],
+    tints: { skel: [.6, .86, .78], knight: [.55, .78, .76], slime: [.4, 1.05, .95], slimelet: [.4, 1.05, .95], toad: [.66, 1.0, .92], wisp: [.5, 1.2, 1.2], golem: [.7, .9, .85], gargoyle: [.75, .9, .9] }, wispHex: 0x70e0e0,
+    trees: [['driftwood', 9, 2.0, 3.4]], stumps: 3, rocks: 72, tufts: 260, webs: 0,
+  },
+  {
+    key: 'glim', name: 'Glimmerdeep', campaign: 'deep',
+    col: { stone: 0x464256, stoneD: 0x26232f, stoneL: 0x66607a, earth: 0x2c2a34, earthD: 0x1a1920, grass: 0x2c3a40, grassD: 0x1e282c, moss: 0x2c4a4c, road: 0x5c5a68, roadD: 0x3c3a46, mud: 0x1a1920, bark: 0x2a2630, tuftA: 0x2a4a54, tuftB: 0x4a6a78, leaf: 0x2a3a4a, leafL: 0x3a5a6a },
+    strata: [0x3a3648, 0x201e28, 0x4e4462, 0x2a2834, 0x5a4e6e, 0x302c3c, 0x6a6080, 0x24222c],
+    hemi: [0x6a58a8, 0x120e18, .82], moon: [0xa898e0, .95], fill: [0x6a40b0, .26], moonPos: [6, 50, -14],
+    clear: [.002, .0015, .005], mistAmb: [.06, .035, .1], mist: [-.3, .55, .95, .12], sky: [.008, .005, .02], lift: [.012, .008, .022], sat: 1.04, expo: 1.06, sprAmb: [.06, .05, .1],
+    cover: [0, .55, .3, .5], coverCol: [1, 1, 1], coverP: [.7, .6, 0, 0],
+    wat: [0, .5, .8, 0], watA: [.01, .05, .075], watB: [.25, .6, .85], fall: [0, .9, 1, 0], fallA: [.04, .1, .14], fallB: [.35, .7, .9], spray: 'water',
+    relief: [1.6, .6, 1.3, 0], puddles: 5, ponds: 2, sway: .3, wind: .2, beacon: .92,
+    wx: { n: [.07, .05], velA: [.05, .14, .04], swayA: [.8, .4], sizeA: [.03, .06], colA: [.6, 1.3, 2.2, 0], alA: [.9, 1.1, 0], yA: [.2, 5], velB: [-.05, .1, .06], swayB: [.9, .35], sizeB: [.03, .055], colB: [2.0, .6, 1.8, 0], alB: [.8, .9, 0], yB: [.2, 6], amb: [.12, .1, .22] },
+    mobs: { spider: 2.4, golem: 1.8, bat: 2.0, scarab: 1.6, wisp: 1.8, brood: 1.2, gargoyle: 1.2, toad: 0, mummy: 0, wolf: .4, slime: .5 }, early: { spider: 2, bat: 2, golem: 6 }, boss: ['wyrm'],
+    tints: { golem: [.85, .75, 1.6], bat: [.8, .7, 1.25], spider: [.7, .62, 1.15], wisp: [1.2, .6, 1.6], scarab: [.8, .9, 1.7], gargoyle: [.9, .8, 1.4], brood: [.75, .6, 1.2] }, wispHex: 0xc080ff,
+    trees: [], stumps: 0, rocks: 96, tufts: 70, webs: 0,
+  },
 ];
-const BIOME = { start: 0 };
-function biomeFor(index) { return BIOMES[((BIOME.start + index) % BIOMES.length + BIOMES.length) % BIOMES.length]; }
+// Campaigns: lists of lands played in turn. The page picks one with #campaign= (main by default); later they unlock one after another.
+const CAMPAIGNS = { main: BIOMES.filter(b => !b.campaign), deep: BIOMES.filter(b => b.campaign === 'deep') };
+const CAMPAIGN_NAMES = { main: 'The Cinder Road', deep: 'The Drowned Deep' };
+const BIOME = { start: 0, list: CAMPAIGNS.main, campaign: 'main' };
+function biomeFor(index) { const L = BIOME.list; return L[((BIOME.start + index) % L.length + L.length) % L.length]; }
 function applyBiomePalette(b) { Object.assign(COL, COL0); for (const k in b.col) COL[k] = C(b.col[k]); }
 
 const LOOK = { cur: null, to: null, bio: null };
@@ -1421,7 +1453,7 @@ function finalizeBoard(B) {
   if (mir) {
     const sa = (a, b) => { for (let i = 0; i < a.length; i++) { const t = a[i]; a[i] = b[i]; b[i] = t; } };
     sa(B.px, B.pz); sa(B.tx, B.tz);
-    for (const p of B.pads) sw(p); for (const f of B.fires) sw(f); for (const g of B.glows) sw(g); for (const q of B.ponds) sw(q); for (const e of B.env) sw(e);
+    for (const p of B.pads) sw(p); for (const f of B.fires) sw(f); for (const g of B.glows) sw(g); for (const q of B.ponds) sw(q); for (const e of B.env) sw(e); for (const c of B.crystals || []) sw(c); if (B.lighthouse) sw(B.lighthouse);
     sw(B.beacon); sw(B.gate); sw(B.cave); if (B.fallAt) { sw(B.fallAt); const t = B.fallAt.ox; B.fallAt.ox = B.fallAt.oz; B.fallAt.oz = t; }
     const h0 = B.heightAt; B.heightAt = (x, z) => h0(z, x);
     const d0 = B.dRoadAt; B.dRoadAt = (x, z) => d0(z, x);
@@ -1808,6 +1840,8 @@ function scatterProps(B) {
   };
   const bio = B.bio;
   const at = (x, z, build, r, T0) => { if (Math.abs(x) > BH - .8 || Math.abs(z) > BH - .8) return; const T = T0 || new Soup(); if (!T0) build(T); B.put(T, x, z, { ry: rng() * TAU }); if (r) placed.push([x, z, r]); };
+  const X = { B, rng, drop, find, beside, free, at, H, placed, slope };
+  if (BIOME_FIRST[bio.key]) BIOME_FIRST[bio.key](X); // what a land needs room for goes down before the common props
   drop(T => PROP.towerRuin(T, rng), 2.9, { far: 3.6 });
   drop(T => PROP.well(T, rng), 1.3, { near: 5.5, far: 2.6 });
   drop(T => PROP.statue(T, rng), 1.2, { near: 6, far: 2.4 });
@@ -1836,7 +1870,7 @@ function scatterProps(B) {
   for (let k = 0; k < 6; k++) { const x = B.lay.cave.x + rng.range(1.8, 7), z = B.zc + rng.sign() * rng.range(1.9, 5); if (free(x, z, .4, .2)) drop(T => PROP.bones(T, rng, rng.int(4, 7)), .5, { at: [x, z], ao: null }); }
   for (let k = 0; k < 5; k++) drop(T => PROP.bones(T, rng, rng.int(3, 5)), .45, { ao: null });
   for (let k = 0; k < 3; k++) drop(T => PROP.cairn(T, rng), .5, {});
-  BIOME_DRESS[bio.key]({ B, rng, drop, find, beside, free, at, H, placed, slope });
+  BIOME_DRESS[bio.key](X);
   const trees = [];
   for (const [kind, cnt, h0, h1] of bio.trees) for (let k = 0; k < cnt; k++) { const h = rng.range(h0, h1), p = drop(T => PROP[kind](T, rng, h), kind === 'tree' || kind === 'charred' ? .55 : .8, { far: 1.0, water: kind === 'palm' && k < 6 ? 5.5 : 0 }); if (p && kind === 'tree') trees.push([p, h]); }
   for (let k = 0; k < bio.webs && k < trees.length; k++) {
@@ -1986,6 +2020,84 @@ Object.assign(PROP, {
   },
 });
 
+// Saltreach and Glimmerdeep props
+Object.assign(PROP, {
+  driftwood(S, rng, h) { PROP.tree(S, rng, h, { bark: mulC(C(0x8c867c), .7 + .35 * rng()) }); },
+  wreck(S, rng) {
+    const wd = mulC(C(0x5c5248), .75 + .3 * rng()), dk = mulC(wd, .7), L = rng.range(3.4, 4.6), lean = rng.range(-.25, .25);
+    S.seg([-L / 2, .02, 0], [L / 2, .3, 0], .15, .12, dk, { l: L_WOOD, n: 6 });
+    for (let k = 0; k < 7; k++) {
+      const x = -L / 2 + .3 + k * (L - .6) / 6, R = (.75 + .45 * Math.sin(k / 6 * PI)) * rng.range(.75, 1.05);
+      for (const sd of [-1, 1]) {
+        if (rng() < .22) continue; const N = 5, stop = rng() < .4 ? rng.int(2, 4) : N; let p = [x, .1, 0];
+        for (let j = 1; j <= stop; j++) { const a = j / N * 1.95, q = [x + lean * Math.sin(a) * .3, .1 + R * (1 - Math.cos(a)) * 1.15, sd * R * Math.sin(a)]; S.seg(p, q, .065, .055, j > 3 ? dk : wd, { l: L_WOOD, n: 5 }); p = q; }
+      }
+    }
+    for (let k = 0; k < 5; k++) { const x = rng.range(-L / 2 + .4, L / 2 - .4), y = rng.range(.2, .7); S.box(rng.range(.6, 1.3), .05, .2, x, y, -(.55 + y * .4), mulC(wd, .9 + .2 * rng()), { l: L_WOOD, r: [rng.range(-.5, -.2), 0, rng.range(-.15, .15)] }); }
+    const mx = rng.range(-.6, .6); S.seg([mx, .2, 0], [mx + 1.3, 2.7, .5], .09, .07, dk, { l: L_WOOD, n: 6 }); S.seg([mx + .75, 1.6, -.55], [mx + .95, 1.75, 1.15], .045, .04, dk, { l: L_WOOD, n: 4 });
+    for (let k = 0; k < 6; k++) S.rock(rng.range(.15, .3), rng.range(-L / 2, L / 2), .02, rng.range(-1, 1), mixC(COL.stoneD, COL.stone, rng()), { sq: .5 });
+  },
+  seawall(S, rng, len) {
+    const n = Math.max(2, Math.round(len / .72)), moss = C(0x3c5a44);
+    for (let k = 0; k < n; k++) {
+      const x = (k - (n - 1) / 2) * .72, c = mulC(mixC(COL.stoneD, COL.stone, rng()), .9 + .2 * rng());
+      if (rng() < .16) { S.box(.62, .5, .66, x + rng.range(-.2, .2), .2, rng.range(.5, .9), c, { l: L_ROCK, jit: .05, r: [rng.range(-.5, .5), rng(), rng.range(-.4, .4)] }); continue; }
+      const h = rng.range(.65, 1.35); S.box(.68, h, .74, x, h / 2 - .15, 0, c, { l: L_ROCK, jit: .04 });
+      S.box(.7, .07, .76, x, h - .13, 0, mulC(moss, .8 + .4 * rng()), { l: L_PLAIN, jit: .03 });
+      if (rng() < .5) for (let b = 0; b < 4; b++) S.ico(.035, x + rng.range(-.3, .3), rng.range(.05, .4), .38, C(0xb8b4a4), { d: 0, jit: .1 });
+    }
+  },
+  piles(S, rng, len) {
+    for (let x = -len / 2; x <= len / 2; x += rng.range(.45, .7)) { const h = rng.range(.4, 1.3), c = mulC(C(0x5a5046), .7 + .35 * rng()); S.cyl(.09, h, x, h / 2 - .2, rng.range(-.08, .08), c, { n: 6, l: L_WOOD, r: [rng.range(-.15, .15), 0, rng.range(-.15, .15)] }); S.cyl(.1, .1, x, rng.range(.05, .3), 0, C(0x2c4a3c), { n: 6 }); }
+  },
+  lighthouse(S, rng) {
+    const w = C(0xcfc8b8), r = C(0x8a3a32), base = mulC(COL.stoneD, 1.1), N = 6, H0 = .9;
+    for (let k = 0; k < 7; k++) { const a = k / 7 * TAU; S.rock(rng.range(.45, .7), Math.cos(a) * 1.1, .1, Math.sin(a) * 1.1, mixC(COL.stoneD, COL.stone, rng()), { sq: .7 }); }
+    S.cyl(1.0, H0, 0, H0 / 2 - .1, 0, base, { n: 10, l: L_ROCK, rt: .9 });
+    for (let k = 0; k < N; k++) { const y0 = H0 + k * .62, rb = .78 - k * .07, rt = .78 - (k + 1) * .07; S.cyl(rb, .62, 0, y0 + .31, 0, k & 1 ? r : w, { n: 10, l: L_PLAIN, rt: rt / rb, rough: .7 }); }
+    const yt = H0 + N * .62; S.cyl(.62, .08, 0, yt + .04, 0, COL.iron, { n: 12, l: L_METAL });
+    for (let k = 0; k < 10; k++) { const a = k / 10 * TAU; S.seg([Math.cos(a) * .58, yt + .08, Math.sin(a) * .58], [Math.cos(a) * .58, yt + .38, Math.sin(a) * .58], .015, .015, COL.iron, { l: L_METAL, n: 3 }); }
+    S.cyl(.36, .55, 0, yt + .36, 0, C(0xffe0a0), { n: 8, emis: .55, jit: 0 });
+    for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .4; S.box(.05, .55, .05, Math.cos(a) * .37, yt + .36, Math.sin(a) * .37, COL.iron, { l: L_METAL }); }
+    S.cone(.48, .42, 0, yt + .85, 0, r, { n: 8, l: L_METAL }); S.ico(.07, 0, yt + 1.1, 0, COL.iron, { d: 0 });
+    return yt + .38;
+  },
+  bigCrystal(S, rng, col) {
+    let top = 0;
+    for (let k = 0, n = rng.int(4, 7); k < n; k++) {
+      const hh = rng.range(.7, 1.5) * (k ? .7 : 1.25), a = rng() * TAU, d = k ? rng.range(.2, .55) : 0, tilt = k ? rng.range(.15, .5) : rng.range(0, .15);
+      S.add(gOct(), { s: [hh * .24, hh, hh * .24], p: [Math.cos(a) * d, hh * .45, Math.sin(a) * d], r: [Math.sin(a) * tilt, rng() * TAU, -Math.cos(a) * tilt], c: mulC(col, .75 + .35 * rng()), rough: .1, emis: .26 + .12 * rng() });
+      top = Math.max(top, hh * 1.4);
+    }
+    for (let k = 0; k < 5; k++) { const a = rng() * TAU; S.rock(rng.range(.2, .38), Math.cos(a) * .55, .05, Math.sin(a) * .55, mixC(COL.stoneD, COL.stone, rng()), { sq: .6 }); }
+    return top;
+  },
+  stalagmite(S, rng, hh) {
+    const c = mulC(mixC(COL.stoneD, COL.stoneL, rng() * .6), .85 + .3 * rng());
+    S.cone(hh * .2, hh, 0, hh / 2 - .1, 0, c, { n: 6, l: L_ROCK, jit: .08 });
+    for (let k = 0, n = rng.int(1, 3); k < n; k++) { const a = rng() * TAU, h2 = hh * rng.range(.3, .6); S.cone(h2 * .22, h2, Math.cos(a) * hh * .2, h2 / 2 - .1, Math.sin(a) * hh * .2, mulC(c, .9), { n: 5, l: L_ROCK, jit: .08 }); }
+  },
+});
+const GLIM_COLS = [[.62, .36, 1.0], [.3, .85, 1.0], [1.0, .4, .82]], GLIM_HEX = [0x9a5cff, 0x4cd8ff, 0xff66d0];
+
+const BIOME_FIRST = {
+  salt(X) {
+    const { B, rng, drop } = X;
+    let top = 0; const lp = drop(T => { top = PROP.lighthouse(T, rng); }, 1.5, { far: 3.4, steep: true }) || drop(T => { top = PROP.lighthouse(T, rng); }, 1.3, { far: 2.2, steep: true });
+    if (lp) { const y = X.H(lp[0], lp[1]) + top; B.lighthouse = { x: lp[0], y, z: lp[1] }; B.env.push({ x: lp[0], y: y + .3, z: lp[1], c: 0xffd890, I: 26, d: 11 }); }
+  },
+  glim(X) {
+    const { B, rng, drop } = X; B.crystals = [];
+    // the big crystals sit near the road, where the storm spires' lightning can reach them
+    for (let k = 0, made = 0; k < 400 && made < 7; k++) {
+      const i = rng.int(14, B.n - 14), side = rng.sign(), d = ROAD_HALF + rng.range(1.7, 3.8), x = B.px[i] - B.tz[i] * side * d, z = B.pz[i] + B.tx[i] * side * d;
+      if (!X.free(x, z, .8, .8) || B.crystals.some(c => dist2(c.x, c.z, x, z) < 20)) continue;
+      const ci = made % 3; let top = 0; drop(T => { top = PROP.bigCrystal(T, rng, GLIM_COLS[ci]); }, .9, { at: [x, z] });
+      B.crystals.push({ x, z, y: X.H(x, z) + top * .7, ci, cd: 0, flash: 0 }); made++;
+    }
+    for (let k = 0; k < Math.min(3, B.crystals.length); k++) { const c = B.crystals[k], e = { x: c.x, y: c.y + .4, z: c.z, c: GLIM_HEX[c.ci], I: 16, d: 8 }; c.env = e; c.I0 = e.I; B.env.push(e); }
+  },
+};
 const BIOME_DRESS = {
   ashen(X) { for (let k = 0; k < 3; k++) X.drop(T => PROP.log(T, X.rng), .9, { far: 1.2 }); },
   frost(X) {
@@ -2020,6 +2132,24 @@ const BIOME_DRESS = {
     B.env.push({ x: B.bridge.x, y: B.wlc + .55, z: B.bridge.z, c: 0xff5a1e, I: 44, d: 9, flick: 1 });
     if (B.ponds[0]) { const q = B.ponds[0]; B.env.push({ x: q.x, y: q.y + .7, z: q.z, c: 0xff5a1e, I: 40, d: 9, flick: 1 }); }
     if (B.fallAt) B.env.push({ x: B.fallAt.x - B.fallAt.ox * 1.2, y: B.fallAt.y + .6, z: B.fallAt.z - B.fallAt.oz * 1.2, c: 0xff5a1e, I: 36, d: 8, flick: 1 });
+  },
+  salt(X) {
+    const { B, rng, drop, beside } = X;
+    drop(T => PROP.wreck(T, rng), 2.4, { far: 2.6 });
+    if (rng() < .6) drop(T => PROP.wreck(T, rng), 2.4, { far: 2.6 });
+    for (let k = 0; k < 3; k++) { const len = rng.range(3, 5.5); drop(T => PROP.seawall(T, rng, len), len * .5, { far: 1.4 }); }
+    for (let k = 0; k < 3; k++) { const p = beside(8, B.L - 6, 1.1, .4); if (p) { const len = rng.range(1.6, 3); drop(T => PROP.piles(T, rng, len), .9, { at: p, ry: -p[2] }); } }
+    for (const q of B.ponds) for (let k = 0; k < 6; k++) { const a = rng() * TAU, d = q.r + rng.range(.4, 1.1), r = rng.range(.2, .45); X.at(q.x + Math.cos(a) * d, q.z + Math.sin(a) * d, T => { T.rock(r, 0, r * .25, 0, mixC(COL.stoneD, COL.stone, rng())); for (let b = 0; b < 5; b++) T.ico(.03, rng.range(-r, r) * .7, r * .5, rng.range(-r, r) * .7, C(0xb8b4a4), { d: 0 }); }, 0); }
+    for (let k = 0; k < 40; k++) drop(T => PROP.reeds(T, rng), .3, { water: 2.6, ao: null });
+    for (let k = 0; k < 4; k++) drop(T => PROP.log(T, rng), .9, { far: 1.2 });
+  },
+  glim(X) {
+    const { B, rng, drop } = X;
+    for (let k = 0; k < 22; k++) { const ci = rng.int(0, 2); drop(T => PROP.crystal(T, rng, GLIM_COLS[ci], .22), .45, { far: .8 }); }
+    for (let k = 0; k < 16; k++) { const hh = rng.range(1.2, 3.4); drop(T => PROP.stalagmite(T, rng, hh), hh * .25, { far: 1.3, steep: true }); }
+    const cols = [COL.stoneD, COL.stone, COL.stoneD, COL.stoneL];
+    for (let k = 0; k < 5; k++) { const hh = rng.range(2.4, 4.4); drop(T => PROP.spire(T, rng, hh, cols), hh * .28, { far: 1.8, steep: true }); }
+    for (let k = 0; k < 10; k++) drop(T => PROP.shroom(T, rng), .35, { ao: null });
   },
   dunes(X) {
     const { B, rng, drop } = X, cols = B.bio.strata.map(h => C(h));
@@ -2694,7 +2824,7 @@ function rigHuman(kit, sp, e) {
   if (e.helm) I.helm.put(M3, fl, null);
   if (e.plate) I.plate.put(M2, fl, null);
   if (e.hood) I.hood.put(M3, fl, null); if (e.ahood) I.ahood.put(M3, fl, null); if (e.sack) I.sack.put(M2, fl, null); if (e.robe) I.robe.put(M2, fl, null); if (e.drum) I.drum.put(M2, fl, null); if (e.standard) I.standard.put(M2, 0, null);
-  if (e.keg) I.keg.put(M2, fl, null); if (e.wraps) { I.wraps.put(M2, fl, null); I.wrapHead.put(M3, fl, null); } if (e.crown) I.crown.put(M3, fl, null);
+  if (e.keg) I.keg.put(M2, fl, null); if (e.wraps) { I.wraps.put(M2, fl, null); I.wrapHead.put(M3, fl, null); } if (e.crown) I.crown.put(M3, fl, null); if (e.tricorn) I.tricorn.put(M3, fl, null);
   const kL = Math.max(0, cw) * 1.0 * mv, kR = Math.max(0, -cw) * 1.0 * mv;
   const M10 = xf(_M[10], M1, sp.hipX, 0, 0, -sw - kL * .25, 0, 0), M11 = xf(_M[11], M10, 0, -sp.uLeg, 0, kL, 0, 0);
   const M12 = xf(_M[12], M1, -sp.hipX, 0, 0, sw - kR * .25, 0, 0), M13 = xf(_M[13], M12, 0, -sp.uLeg, 0, kR, 0, 0);
@@ -2868,6 +2998,34 @@ function initBestiary() {
     for (let a = 0; a < 5; a++) S.add(gOct(), { s: [.09, .25, .09], p: [Math.cos(a * 1.26) * .07, .6 + (a & 1) * .06, Math.sin(a * 1.26) * .07], r: [Math.sin(a * 1.26) * .5, a, -Math.cos(a * 1.26) * .5], c: COL.ice, rough: .15, emis: .05 });
   }, 2, { rad: .1, shadow: false });
 
+  // the Drowned Admiral's anchor and hat
+  I.anchor = new PartBatch(S => {
+    const ir = mulC(COL.iron, 1.1), rust = C(0x6a4a34);
+    S.seg([0, -.12, 0], [0, .95, 0], .04, .035, ir, { l: L_METAL, n: 6 }); S.box(.42, .05, .06, 0, .78, 0, rust, { l: L_WOOD });
+    S.add(gTorus(8, .2, 4), { s: .08, p: [0, 1.02, 0], c: ir, l: L_METAL });
+    let pL = [0, -.1, 0], pR = [0, -.1, 0];
+    for (let j = 1; j <= 4; j++) { const a = j / 4 * 1.5, q = [Math.sin(a) * .32, -.1 + (1 - Math.cos(a)) * .32, 0]; S.seg(pR, q, .035, .032, ir, { l: L_METAL, n: 5 }); const ql = [-q[0], q[1], 0]; S.seg(pL, ql, .035, .032, ir, { l: L_METAL, n: 5 }); pR = q; pL = ql; }
+    for (const sd of [-1, 1]) S.cone(.07, .14, sd * .33, .27, 0, ir, { n: 4, l: L_METAL, r: [0, 0, -sd * .5] });
+    for (let k = 0; k < 6; k++) S.ico(.03, h2(k, 1, 7) * .3 - .15, h2(k, 2, 7) * .8, .04, C(0xb8b4a4), { d: 0 });
+  }, 2, { rad: .2, shadow: false });
+  I.tricorn = new PartBatch(S => {
+    const hat = C(0x1c2230), trim = mulC(COL.gold, .8);
+    S.cyl(.27, .04, 0, .33, 0, hat, { n: 9, l: L_CLOTH }); S.add(gDome(8, 3), { s: [.17, .15, .18], p: [0, .34, 0], c: hat, l: L_CLOTH });
+    for (let k = 0; k < 3; k++) { const a = k / 3 * TAU + PI / 2; S.box(.34, .13, .03, Math.cos(a) * .2, .4, Math.sin(a) * .2, hat, { l: L_CLOTH, r: [0, -a + HPI, 0] }); S.box(.34, .025, .035, Math.cos(a) * .2, .465, Math.sin(a) * .2, trim, { l: L_METAL, r: [0, -a + HPI, 0], emis: .03 }); }
+  }, 2, N);
+  // the Crystal Wyrm: a head and a chain of crystal-backed body segments
+  { const body = C(0x5a4c78), belly = C(0x8a78a0), cr = [.7, .45, 1.1];
+    KIT.wyrm = {
+      head: new PartBatch(S => {
+        S.ico(.34, 0, .02, .08, body, { sc: [1, .72, 1.45], d: 1 }); S.box(.4, .09, .5, 0, -.16, .38, mulC(belly, .9), { jit: .04 });
+        for (const sd of [-1, 1]) { for (let t = 0; t < 4; t++) S.cone(.03, .1, sd * (.14 - t * .03), -.1, .2 + t * .1, C(0xd8d0e8), { n: 4, r: [PI, 0, 0] }); S.add(gOct(), { s: [.06, .3, .06], p: [sd * .2, .3, -.05], r: [-.6, 0, sd * .45], c: cr, rough: .1, emis: .35 }); }
+        for (let k = 0; k < 3; k++) S.add(gOct(), { s: [.05, .2, .05], p: [0, .28, -.1 - k * .14], r: [-.5, 0, 0], c: cr, rough: .1, emis: .35 });
+      }, 2, { rad: .4 }),
+      seg: new PartBatch(S => {
+        S.ico(.34, 0, 0, 0, body, { sc: [1, .82, 1.15], d: 1 }); S.box(.44, .1, .46, 0, -.22, 0, belly, { jit: .04 });
+        for (let k = 0; k < 2; k++) S.add(gOct(), { s: [.06, .26 - k * .06, .06], p: [k ? .1 : -.06, .28, k ? -.08 : .06], r: [-.3, k, k ? .3 : -.2], c: cr, rough: .1, emis: .32 });
+      }, 18, { rad: .3 }),
+    }; }
   KIT.spider = {
     body: new PartBatch(S => {
       const c = [.3, .27, .27], cd = [.19, .17, .18];
@@ -2930,6 +3088,17 @@ function initBestiary() {
   };
 }
 
+const _wp = { x: 0, y: 0, z: 0, tx: 0, tz: 0 };
+function rigWyrm(e) {
+  const K = KIT.wyrm, s = e.scale || 1, fl = e.flash || 0, ph = e.ph || 0, t = SH.uTime.value + (e.lseed || 0), B = G.B;
+  const M0 = xf(_M[0], null, e.x, e.y + (.6 + Math.sin(ph * 1.5) * .05) * s, e.z, -(e.flinch || 0) * .3 + Math.sin(t * 1.3) * .06, e.yaw, Math.sin(ph) * .06, s, s, s);
+  K.head.put(M0, fl, e.tint);
+  if (B && e.s !== undefined) for (let k = 1; k <= 8; k++) {
+    const p = pathAt(B, Math.max(.2, e.s - k * .4 * s), _wp), w = ph * .9 - k * .8, lat = (e.lat || 0) + Math.sin(w) * .22, sc = s * (1 - k * .07);
+    K.seg.put(xf(_M[k], null, p.x - p.tz * lat, p.y + (.45 - k * .02 + Math.abs(Math.sin(w)) * .1) * s, p.z + p.tx * lat, 0, Math.atan2(p.tx, p.tz), Math.sin(w) * .1, sc, sc, sc), fl, e.tint);
+  }
+  return M0;
+}
 function rigSpider(e) {
   const K = KIT.spider, s = e.scale || 1, fl = e.flash || 0, ph = e.ph, mv = e.mv, Z = [.15, .08, 0, -.08], A = [1.0, .4, -.3, -.9];
   const M0 = xf(_M[0], null, e.x, e.y + (.19 + Math.abs(Math.sin(ph * 2)) * .015 * mv) * s, e.z, -(e.flinch || 0) * .3, e.yaw, Math.sin(ph) * .04 * mv, s, s, s);
@@ -3475,6 +3644,7 @@ class Tower {
         for (const m of G.mons) { if (m.dead || m.hp <= 0 || !m.vis || hit.includes(m)) continue; const dd = dist2(cx, cz, m.x, m.z); if (dd < nd) { nd = dd; nb = m; } }
         cur = nb;
       }
+      crystalDischarge(this, hit, d.dmg[lvl]);
       lightFlash(tgt.x, tgt.y + 1.2, tgt.z, 0x9fd0ff, 520, .22, 16); lightFlash(cp.x, cp.y, cp.z, 0x9fd0ff, 300, .18, 12);
       sfx('zap', this.x, this.z, 1, lvl / 2); FX.shake = Math.min(1, FX.shake + .08);
     }
@@ -3672,6 +3842,8 @@ const MON = {
   jotun: { name: 'Frost Jotun', tip: 'Its stomp freezes nearby towers.', hp: 1150, spd: .8, rad: 1.0, mass: 46, bounty: 200, lives: 10, hitH: 1.9, top: 3.6, dmg: 52, atkT: 1.8, eye: [.8, 2.4, 4], scale: 2.75, boss: true, stomp: { every: 10, r: 5.2, stun: 1.8 }, death: 'flesh', blade: true, cat: 'armor', tint: [1.0, 1.25, 3.4] },
   queen: { name: 'Brood Queen', tip: 'Keeps hatching spiders.', hp: 1150, spd: .85, rad: 1.1, mass: 40, bounty: 200, lives: 10, hitH: 1.0, top: 2.0, dmg: 40, atkT: 1.5, eye: [3.8, .3, .9], scale: 4.2, boss: true, summon: { type: 'spider', n: 2, every: 8, max: 99, hp: 1 }, death: 'bug', cat: 'armor', tint: [.85, .55, 1.0] },
   colossus: { name: 'Magma Colossus', tip: 'Speeds up when it is nearly dead.', hp: 1250, spd: .7, rad: 1.05, mass: 60, bounty: 200, lives: 10, hitH: 2.2, top: 4.3, dmg: 60, atkT: 2.0, eye: [4, 1.6, .3], scale: 3.0, boss: true, armor: .85, slowRes: .3, enrage: [.3, 1.25], death: 'rock', cat: 'armor', tint: [1.5, .5, .26] },
+  admiral: { name: 'The Drowned Admiral', tip: 'Calls drowned sailors to his side. The tide does not slow him.', hp: 1200, spd: .84, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.3, dmg: 48, atkT: 1.7, eye: [.6, 3.2, 2.6], scale: 2.7, boss: true, summon: { type: 'skel', n: 2, every: 9, max: 99, hp: .7 }, noTide: true, death: 'bones', blade: true, cat: 'armor', tint: [.55, .82, .74] },
+  wyrm: { name: 'The Crystal Wyrm', tip: 'Burrows under the road and comes up closer to the fire.', hp: 1100, spd: .82, rad: 1.0, mass: 50, bounty: 200, lives: 10, hitH: 1.0, top: 2.2, dmg: 50, atkT: 1.6, eye: [2.6, 1.2, 3.8], scale: 2.4, boss: true, armor: .8, burrow: [14, 3.0, 1.6, 2.4, 1.6], death: 'rock', cat: 'armor' },
   king: { name: 'The Buried King', tip: 'Summons mummies to walk with him.', hp: 1250, spd: .86, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.2, dmg: 46, atkT: 1.7, eye: [.6, 3.0, 2.6], scale: 2.7, boss: true, summon: { type: 'mummy', n: 1, every: 9, max: 99, hp: .7 }, death: 'bones', blade: true, cat: 'armor', tint: [1.2, 1.0, .55] },
 };
 
@@ -3718,7 +3890,7 @@ function hitDome(w, dmg, x, y, z) {
   }
 }
 function hitMonster(m, dmg, kind, dx, dz, tower, pierce = 0) {
-  if (m.dead || m.hp <= 0) return false;
+  if (m.dead || m.hp <= 0 || m.burrowed > 0) return false;
   if ((kind === 'arrow' || kind === 'blast') && G.domes.length) { const w = domeOver(m); if (w) { hitDome(w, dmg, m.x, m.y + m.hitH, m.z); return null; } }
   if (m.eth) { if (kind === 'arrow' || kind === 'sword') { if (rnd() < .5) fxTimed(0, m.x + rr(-.2, .2), m.y + m.hitH + rr(-.2, .3), m.z + rr(-.2, .2), .5, .5, .5, .9, 1.8, .7, .18); return false; } dmg *= .5; }
   if (kind === 'arrow' && m.def.armor) { dmg *= lerp(m.def.armor, 1, pierce); if (rnd() < .6 - pierce * .5) { fxSparks(m.x, m.y + m.hitH, m.z, 3, 3, 2.4, 2.2, 1.6, { size: .05 }); } }
@@ -3805,6 +3977,8 @@ const RIGS = {
   drummer(m) { m.weapon = KIT.item.stick; m.drum = true; m.standard = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   bomber(m) { m.keg = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   mummy(m) { m.shamble = true; m.wraps = true; return rigHuman(KIT.skel, SPEC.skel, m); },
+  admiral(m) { m.weapon = KIT.item.anchor; m.wScale = 1.25; m.heavy = true; m.tricorn = true; return rigHuman(KIT.giant, SPEC.skel, m); },
+  wyrm: m => rigWyrm(m),
   king(m) { m.weapon = KIT.item.khopesh; m.wScale = 1.25; m.heavy = true; m.crown = true; m.wraps = true; return rigHuman(KIT.giant, SPEC.skel, m); },
   warden(m) { m.weapon = KIT.item.sword; m.wScale = 1.1; m.shield = KIT.item.towerShield; m.helm = true; m.plate = true; return rigHuman(KIT.skel, SPEC.skel, m); },
   hag(m) { m.weapon = KIT.item.lantern; m.staff = true; m.hood = true; m.robe = true; m.shamble = false; return rigHuman(KIT.skel, SPEC.skel, m); },
@@ -3816,11 +3990,12 @@ const RIGS = {
 function rigMonster(m) { return RIGS[m.type](m); }
 const EYES = {
   skel: SKEL_EYE, knight: SKEL_EYE, giant: [.058, .185, .152, .075], ogre: OGRE_EYE, rat: [.05, .03, .42, .05], bat: [.04, .03, .16, .05], slime: [.13, .2, .44, .08], slimelet: [.13, .2, .44, .08],
-  ghoul: OGRE_EYE, brute: OGRE_EYE, jotun: OGRE_EYE, golem: [.04, .1, .17, .05], colossus: [.04, .1, .17, .05], necro: SKEL_EYE, drummer: SKEL_EYE, bomber: SKEL_EYE, mummy: SKEL_EYE, king: [.058, .185, .152, .075],
+  ghoul: OGRE_EYE, brute: OGRE_EYE, jotun: OGRE_EYE, golem: [.04, .1, .17, .05], colossus: [.04, .1, .17, .05], necro: SKEL_EYE, drummer: SKEL_EYE, bomber: SKEL_EYE, mummy: SKEL_EYE, king: [.058, .185, .152, .075], admiral: [.058, .185, .152, .075], wyrm: [.13, .34, .5, .06],
   warden: SKEL_EYE, hag: SKEL_EYE, thief: OGRE_EYE, drake: [.05, .19, .58, .035],
   spider: BUG_EYE, scarab: BUG_EYE, brood: [.05, .055, .19, .022], queen: [.05, .055, .19, .016], wolf: [.05, .27, .63, .04], wraith: [.045, 1.04, .17, .055], toad: [.125, .345, .285, .035], gargoyle: [.045, .15, .28, .045], wisp: null,
 };
 function drawMonster(m, t) {
+  if (m.burrowed > 0) { if (rnd() < .7) fxDust(m.x + rr(-.6, .6), m.y + .05, m.z + rr(-.6, .6), 1, .8, { speed: 1.2, a: .5 }); if (rnd() < .3) FX.decals.add(G.B.heightAt, m.x, m.z, .5, .02, .017, .015, .5, 6); return; }
   const M = rigMonster(m), ey = EYES[m.type], c = m.def.eye, sc = m.scale, tw = .8 + .2 * Math.sin(t * 9 + m.lseed * 7), ty = m.type;
   if (ey) {
     for (const sg of [-1, 1]) { _tv.set(sg * ey[0], ey[1], ey[2]).applyMatrix4(M); FX.add.push(_tv.x, _tv.y, _tv.z, ey[3] * sc * 1.5, ey[3] * sc * 1.5, 0, 0, c[0], c[1], c[2], tw, 0, 0, 0, 0); }
@@ -3870,7 +4045,7 @@ function footmanThink(f, dt) {
   const B = G.B, tw = f.tower; f.age += dt;
   if (f.lvlUp) { f.lvlUp = false; const d = tw.def, r = f.hp / f.maxHp; f.maxHp = d.hp[tw.lvl]; f.hp = f.maxHp * Math.max(r, .6); f.dmg = d.dmg[tw.lvl]; footmanPath(f, tw); }
   if (!tw.alive) f.leave = true;
-  let gx, gz, face = null, speed = f.swift ? 3.4 : 2.1, fighting = false; const reachS = f.swift ? 3.6 : 2.5;
+  let gx, gz, face = null, speed = (f.swift ? 3.4 : 2.1) * (1 - tideSlow(f.y || 0)), fighting = false; const reachS = f.swift ? 3.6 : 2.5;
   const rally = slotPos(f, _fp), rs = tw.pad.s;
   if (f.leave) { f.gone = true; f.alive = false; if (f.flame) { removeFlame(f.flame); f.flame = null; } fxDust(f.x, f.y + .3, f.z, 4, .6); return; }
   let m = f.target;
@@ -3965,6 +4140,17 @@ function updateUnits(dt) {
     }
     if (m.fly) { updateBat(m, dt); continue; }
     const def = m.def, maxLat = Math.max(0, maxLatBase - m.rad * .7);
+    if (def.burrow && !m.dying) {
+      const [every, dur, , quake] = def.burrow; if (m.daze > 0) m.daze -= dt;
+      if (m.burrowed > 0) {
+        m.burrowed -= dt; m.foe = null;
+        if (m.burrowed <= 0) { // comes up: knocks footmen about and shakes the ground
+          m.vis = true; m.daze = def.burrow[4] || 0; FX.shake = Math.min(1.3, FX.shake + .9); sfx('bossStep', m.x, m.z, 1.3, .5); sfx('roar', m.x, m.z, .9, .6); fxDust(m.x, m.y + .1, m.z, 18, 2, { speed: 4 }); lightFlash(m.x, m.y + 1, m.z, 0xb090ff, 280, .4, 12);
+          for (const f of men) if (!f.dead && Math.hypot(f.x - m.x, f.z - m.z) < quake) { f.hp -= 40 * G.dmgMul; f.flash = 1; f.flinch = 1; if (f.hp <= 0) killFootman(f, (f.x - m.x) || .1, (f.z - m.z) || .1); }
+        }
+      } else if (m.vis && m.prog < .72) {
+        m.burT = (m.burT === undefined ? every * .6 : m.burT) - dt; if (m.burT <= 0) { m.burT = every; m.burrowed = dur; m.vis = false; m.foe = null; sfx('crumble', m.x, m.z, .8); fxDust(m.x, m.y + .1, m.z, 14, 1.6, { speed: 3 }); FX.shake = Math.min(1.2, FX.shake + .5); } }
+    }
     if (m.dying > 0) {
       m.dying -= dt; m.flinch = .5 + .5 * Math.sin(m.dying * 22); m.mv = 0; m.atk = -1; m.y -= dt * .12;
       if (rnd() < dt * 14) fxDust(m.x + rr(-.8, .8), m.y + rr(.4, 2.6), m.z + rr(-.8, .8), 1, .7, { a: .4 });
@@ -3991,13 +4177,14 @@ function updateUnits(dt) {
         for (const tw of G.towers) if (tw.alive && tw.state === 'active' && dist2(tw.x, tw.z, m.x, m.z) < sp.r * sp.r) { tw.stun = sp.stun; fxTimed(5, tw.x, tw.y + 2, tw.z, 3, 3, .6, 1.2, 2.4, .9, .3); }
       }
     }
-    let want = def.spd * m.spdMul * (1 - m.slowF) * (1 + m.haste), hopMul = 1;
+    let want = def.spd * m.spdMul * (1 - m.slowF) * (1 + m.haste) * (m.burrowed > 0 ? def.burrow[2] : m.daze > 0 ? .25 : 1) * (def.noTide ? 1 : 1 - tideSlow(m.y) * (def.boss ? .5 : 1)), hopMul = 1;
+    if (LAND.tideY > m.y && rnd() < dt * 2.5) fxPart(m.x + rr(-.2, .2), LAND.tideY + .02, m.z + rr(-.2, .2), rr(-.4, .4), rr(.6, 1.4), rr(-.4, .4), rr(.3, .5), .04, .6, .8, .85, { grav: 6 });
     if (def.frenzy) want *= 1 + def.frenzy * (1 - m.hp / m.maxHp);
     if (def.enrage && m.hp < m.maxHp * def.enrage[0]) { want *= def.enrage[1]; if (!m.rage) { m.rage = true; sfx('roar', m.x, m.z, 1, .9); fxEmbers(m.x, m.y + 2, m.z, 40, 1.2); FX.shake = Math.min(1.2, FX.shake + .6); } }
     if (def.hop) { if (!m.foe) m.hop = (m.hop + dt * def.hop[0] * (1 - m.slowF * .6)) % 1; hopMul = (m.hop > .22 && m.hop < .62) ? def.hop[1] : .1; }
     let v = want * hopMul, obstacle = null, og = 9;
     if (def.boss) {
-      if (!m.foe) for (const f of men) if (!f.dead && f.onRoad && f.s > m.s - .3 && f.s - m.s < 1.9 && Math.abs(f.lat - m.lat) < 1.4) { m.foe = f; break; }
+      if (!m.foe && !(m.burrowed > 0)) for (const f of men) if (!f.dead && f.onRoad && f.s > m.s - .3 && f.s - m.s < 1.9 && Math.abs(f.lat - m.lat) < 1.4) { m.foe = f; break; }
       if (m.foe) v *= .55;
     } else if (m.foe) v = 0;
     else if (!def.ghost) for (let j = 0; j < nu; j++) {
@@ -4051,7 +4238,7 @@ function updateUnits(dt) {
     const p = pathAt(B, m.s, _ap); m.x = p.x - p.tz * m.lat; m.z = p.z + p.tx * m.lat;
     let yaw = Math.atan2(p.tx, p.tz); if (m.foe) yaw = Math.atan2(m.foe.x - m.x, m.foe.z - m.z);
     m.yaw = angDamp(m.yaw, yaw, m.def.boss ? 4 : 9, dt);
-    m.prog = m.s / L; if (!m.vis && m.s > B.cave.s + 1.7) { m.vis = true; UI.sawMonster(m.type); }
+    m.prog = m.s / L; if (!m.vis && !(m.burrowed > 0) && m.s > B.cave.s + 1.7) { m.vis = true; UI.sawMonster(m.type); }
     if (m.pop > 0) m.pop = Math.max(0, m.pop - dt * 3);
   }
 }
@@ -4109,15 +4296,21 @@ Object.assign(G, {
 
 // Records kept across runs (best wave cleared, enemies slain, gold earned, lives lost) and the same for the current run.
 // A page opened at a later battlefield or wave (level=, k=, board=, ff=, manual=) is a test: its first run is not added to the records.
+// Each campaign keeps its own records (the first campaign under the original keys).
 const STATS = (() => {
   const zero = () => ({ cleared: 0, kills: 0, gold: 0, lives: 0 });
-  const S = { run: zero(), all: zero(), zero, test: !!(HASH.level || HASH.k || HASH.board || HASH.ff || HASH.manual), dirty: false };
-  try { const o = JSON.parse(localStorage.getItem('cinderwatch.stats') || 'null'); if (o) { for (const k in S.all) S.all[k] = Math.max(0, +o[k] || 0); } else S.all.cleared = Math.max(0, (+localStorage.getItem('cinderwatch.best') || 0) - 1); } catch (e) {}
-  return S;
+  return { run: zero(), all: zero(), zero, test: !!(HASH.level || HASH.k || HASH.board || HASH.ff || HASH.manual), dirty: false };
 })();
+function storeKey(name) { return 'cinderwatch.' + name + (BIOME.campaign === 'main' ? '' : '.' + BIOME.campaign); }
+function loadStats() {
+  try {
+    const o = JSON.parse(localStorage.getItem(storeKey('stats')) || 'null'); G.best = +localStorage.getItem(storeKey('best')) || 0;
+    if (o) { for (const k in STATS.all) STATS.all[k] = Math.max(0, +o[k] || 0); } else STATS.all.cleared = Math.max(0, G.best - 1);
+  } catch (e) {}
+}
 function stat(k, n) { if (!(n > 0)) return; STATS.run[k] += n; if (!STATS.test) { STATS.all[k] += n; STATS.dirty = true; } }
 function statWave(w) { if (w > STATS.run.cleared) STATS.run.cleared = w; if (!STATS.test && w > STATS.all.cleared) { STATS.all.cleared = w; STATS.dirty = true; } }
-function saveStats() { if (!STATS.dirty) return; STATS.dirty = false; try { localStorage.setItem('cinderwatch.stats', JSON.stringify(STATS.all)); } catch (e) {} }
+function saveStats() { if (!STATS.dirty) return; STATS.dirty = false; try { localStorage.setItem(storeKey('stats'), JSON.stringify(STATS.all)); } catch (e) {} }
 function resetStats() { STATS.all = STATS.zero(); STATS.run = STATS.zero(); STATS.dirty = true; saveStats(); }
 function waveNumber() { return G.level * 5 + (G.phase === 'rise' ? 1 : Math.max(1, G.k)); }
 const ROSTER = {
@@ -4135,14 +4328,18 @@ function waveMenu(k, level) {
   }
   return menu;
 }
-function bossType() { const b = G.B.bio.boss; return b[Math.floor(G.level / BIOMES.length) % b.length]; }
+function bossType() { const b = G.B.bio.boss; return b[Math.floor(G.level / BIOME.list.length) % b.length]; }
+// Difficulty of each campaign, so a new campaign can be tuned without changing the first one's balance.
+// hp and budget scale the regular waves (monster health, how many come), boss scales the boss's health, gold the starting gold.
+const CAMPAIGN_TUNE = { main: { hp: 1, budget: 1, boss: 1, gold: 1 }, deep: { hp: 1, budget: 1, boss: .85, gold: 1 } };
+function tune() { return CAMPAIGN_TUNE[BIOME.campaign] || CAMPAIGN_TUNE.main; }
 function buildWave(k, level) {
-  const q = [], boss = k === 5, lv = 1 + .25 * level;
-  let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1), heavy = 0, air = budget * .42;
-  const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press);
+  const q = [], boss = k === 5, lv = 1 + .25 * level, T = tune();
+  let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1) * T.budget, heavy = 0, air = budget * .42;
+  const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press) * T.hp;
   const menu = waveMenu(k, level), tot = menu.reduce((a, b) => a + b[1], 0);
   let t = .6;
-  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) });
+  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) * T.boss });
   while (budget > 0) {
     let r = rnd() * tot, type = 'skel'; for (const [ty, w] of menu) { r -= w; if (r <= 0) { type = ty; break; } }
     let R = ROSTER[type];
@@ -4156,7 +4353,7 @@ function buildWave(k, level) {
   return q;
 }
 function startWave() {
-  if (G.k > 0) statWave(waveNumber()); G.k = G.k % 5 + 1; G.queue = buildWave(G.k, G.level); if (waveNumber() > G.best) { G.best = waveNumber(); try { localStorage.setItem('cinderwatch.best', '' + G.best); } catch (e) {} } G.waveT = 0; G.spawning = true; G.bossWave = G.k === 5; G.waveKills = 0; G.waveLeaks = 0; G.bossDown = false; G.trickle = 6; G.trickleN = 0;
+  if (G.k > 0) statWave(waveNumber()); G.k = G.k % 5 + 1; G.queue = buildWave(G.k, G.level); if (waveNumber() > G.best) { G.best = waveNumber(); try { localStorage.setItem(storeKey('best'), '' + G.best); } catch (e) {} } G.waveT = 0; G.spawning = true; G.bossWave = G.k === 5; G.waveKills = 0; G.waveLeaks = 0; G.bossDown = false; G.trickle = 6; G.trickleN = 0;
   sfx(G.bossWave ? 'hornBoss' : 'horn', G.B.cave.x, G.B.cave.z, 1.1);
   UI.banner(G.bossWave ? 'Wave ' + waveNumber() + ' · ' + MON[bossType()].name : 'Wave ' + waveNumber(), G.bossWave ? 3.6 : 2.2, G.bossWave);
 }
@@ -4305,7 +4502,7 @@ function startRise() {
   sfx('rise', 0, 0, 1.2); UI.banner(B.bio.name, 3.6, false);
 }
 function activateBoard(B, lit) {
-  B.flames = [];
+  B.flames = []; landBoard(B);
   const b = B.beacon;
   B.beaconFlame = addFlame({ x: b.x, y: b.y - .12, z: b.z, size: 2.3, layers: 3, embers: 2.6, glow: 1.1, smoke: 5, on: lit ? 1 : 0 }); B.flames.push(B.beaconFlame);
   for (const f of B.fires) B.flames.push(addFlame(Object.assign({ x: f.x, y: f.y, z: f.z, size: f.size, embers: .5, glow: .8, on: lit ? 1 : 0 }, f.fx)));
@@ -4315,7 +4512,7 @@ function activateBoard(B, lit) {
 }
 function beginBattle(first) {
   const B = G.B;
-  G.lives = G.maxLives; G.gold = 300 + 80 * Math.min(G.level, 10) + 30 * Math.max(0, G.level - 10); G.bountyMul = 1 + .15 * Math.min(G.level, 9) + .06 * Math.max(0, G.level - 9); G.dmgMul = 1.55 + .2 * G.level; G.press = lerp(G.press, 1, .5); UI.goldShown = G.gold; G.k = 0; G.leaks = 0; G.leakTypes = {}; G.spawning = false; G.bossWave = false; G.nextIn = first ? .9 : 1.6; G.queue = []; AI.think = .15; AI.wait = 0;
+  G.lives = G.maxLives; G.gold = Math.round((300 + 80 * Math.min(G.level, 10) + 30 * Math.max(0, G.level - 10)) * tune().gold); G.bountyMul = 1 + .15 * Math.min(G.level, 9) + .06 * Math.max(0, G.level - 9); G.dmgMul = 1.55 + .2 * G.level; G.press = lerp(G.press, 1, .5); UI.goldShown = G.gold; G.k = 0; G.leaks = 0; G.leakTypes = {}; G.spawning = false; G.bossWave = false; G.nextIn = first ? .9 : 1.6; G.queue = []; AI.think = .15; AI.wait = 0;
   const n = 4 + Math.min(3, G.level);
   for (let i = 0; i < n; i++) spawnMonster(i === n - 1 && G.level > 0 ? 'knight' : 'skel', { s: B.cave.s + 2.2 + i * 1.15, lat: rr(-.7, .7), hpMul: 1 + .22 * G.level });
   G.phase = 'play'; G.phaseT = 0;
@@ -4356,6 +4553,77 @@ function updatePhase(dt) {
     if (done && !B.igniteAt) { B.igniteAt = t + .25; }
     if (B.igniteAt && t > B.igniteAt && !B.lit) { B.lit = true; sfx('ignite', B.beacon.x, B.beacon.z, 1.3, 1); lightFlash(B.beacon.x, B.beacon.y + 1, B.beacon.z, 0xffa050, 2600, .7, 60); fxEmbers(B.beacon.x, B.beacon.y, B.beacon.z, 50, .6); FX.shake = .5; }
     if (B.lit && t > B.igniteAt + .7) { setBoardCasting(B, false); beginBattle(false); }
+  }
+}
+
+// What only some lands have: Saltreach's tide and lighthouse, Glimmerdeep's crystals.
+const LAND = { t: 0, tideY: -99, tideK: 0, high: false };
+const TIDE = { cycle: 54, slow: .42, depth: .04, share: .32 }; // seconds per tide, slow once under water, depth (units) at which the slow is full, share of the road high tide covers
+
+function landBoard(B) {
+  LAND.t = 0; LAND.tideY = -99; LAND.tideK = 0; LAND.high = false;
+  if (B.bio.key === 'salt') buildTide(B);
+}
+
+// The tide: a sheet of water that rises over the low ground, highest at about the lowest third of the road.
+function buildTide(B) {
+  const n = B.n, ys = [];
+  for (let i = Math.floor(n * .08); i < n * .92; i++) ys.push(B.py[i]);
+  ys.sort((a, b) => a - b);
+  const lo = ys[0] - .55, hi = ys[Math.floor(ys.length * TIDE.share)] + .045; // the road surface sits .035 above the path height
+  const S = new Soup(), H = B.heightAt, st = .5, E = BH - 1.1;
+  for (let z = -E; z < E; z += st) for (let x = -E; x < E; x += st) {
+    if (Math.min(H(x, z), H(x + st, z), H(x, z + st), H(x + st, z + st)) > hi + .05) continue;
+    for (const [dx, dz] of [[0, 0], [0, st], [st, st], [0, 0], [st, st], [st, 0]]) S.v(x + dx, 0, z + dz, 0, 1, 0, 1, 1, 1, (x + dx) * .8, (z + dz) * .8, 0, .12, .25, 0);
+  }
+  B.tide = { lo, hi, mesh: null };
+  if (!S.verts) return;
+  const m = new THREE.Mesh(S.build(), MAT.water); m.receiveShadow = true; m.renderOrder = 1; m.position.y = lo; m.visible = false;
+  B.group.add(m); B.tide.mesh = m;
+}
+// How much the tide slows something standing at height y (0 when dry).
+function tideSlow(y) { return LAND.tideY > y ? TIDE.slow * sat((LAND.tideY - y) / TIDE.depth) : 0; }
+
+function updateLand(dt) {
+  const B = G.B; if (!B) return;
+  const play = G.phase === 'play';
+  if (play) LAND.t += dt;
+  if (B.tide && B.tide.mesh) {
+    const T = B.tide, ph = LAND.t / TIDE.cycle, f = sat(.5 - .95 * Math.cos(ph * TAU));
+    LAND.tideK = damp(LAND.tideK, play ? f : 0, play ? 1.2 : 3, dt);
+    const y = lerp(T.lo, T.hi, LAND.tideK); T.mesh.position.y = y;
+    T.mesh.visible = G.phase === 'play' || G.phase === 'defeat' || G.phase === 'clear';
+    LAND.tideY = play ? y : -99;
+    if (play && LAND.tideK > .65 && !LAND.high) { LAND.high = true; UI.banner('High tide floods the road', 2.4, false); }
+    if (LAND.tideK < .3) LAND.high = false;
+  }
+  const live = play || G.phase === 'defeat' || G.phase === 'clear';
+  if (B.lighthouse && live) {
+    const L = B.lighthouse, a = LAND.t * .55, cx = Math.cos(a), cz = Math.sin(a), on = LT.envK;
+    FX.add.push(L.x, L.y, L.z, 1.4, 1.4, 0, 0, 2.2, 1.9, 1.2, .8 * on, 0, 0, 0, 0);
+    for (let k = 1; k <= 12; k++) { const d = k * 1.7, w = .9 + k * .45; FX.add.push(L.x + cx * d, L.y - k * .16, L.z + cz * d, w, w, 0, 0, .9, .95, .75, .2 * (1 - k / 13) * on, 2, 0, 0, 0); }
+  }
+  if (B.crystals) for (const c of B.crystals) {
+    c.cd = Math.max(0, c.cd - dt); c.flash = Math.max(0, c.flash - dt * 2.2);
+    if (!live) continue;
+    const col = GLIM_COLS[c.ci], k = .5 + .5 * Math.sin(G.t * 1.3 + c.x), f = c.flash;
+    FX.add.push(c.x, c.y - .3, c.z, 2.4 + f * 2.5, 2.8 + f * 2.5, 0, 0, col[0] * (.5 + f * 2), col[1] * (.5 + f * 2), col[2] * (.5 + f * 2), (.16 + .06 * k) * LT.envK + .5 * f, 2, 0, 0, 0);
+    if (c.env) c.env.I = c.I0 * (1 + .15 * k + 2.5 * f);
+  }
+}
+
+// Glimmerdeep: chain lightning that hits a monster near a big crystal makes the crystal discharge at monsters around it.
+const CRYSTAL = { reach: 3.0, range: 4.2, n: 3, dmg: .7, cd: 1.4 };
+function crystalDischarge(tower, hit, dmg) {
+  const B = G.B; if (!B.crystals) return;
+  for (const c of B.crystals) {
+    if (c.cd > 0 || !hit.some(m => dist2(m.x, m.z, c.x, c.z) < CRYSTAL.reach * CRYSTAL.reach)) continue;
+    c.cd = CRYSTAL.cd; c.flash = 1;
+    const col = GLIM_COLS[c.ci], from = [c.x, c.y, c.z], r2 = CRYSTAL.range * CRYSTAL.range;
+    const tg = G.mons.filter(m => !m.dead && m.hp > 0 && m.vis && !hit.includes(m) && dist2(m.x, m.z, c.x, c.z) < r2).sort((a, b) => dist2(a.x, a.z, c.x, c.z) - dist2(b.x, b.z, c.x, c.z)).slice(0, CRYSTAL.n);
+    for (const m of tg) { const to = [m.x, m.y + m.hitH, m.z]; fxBolt(from, to, .2, [col[0] * 1.6, col[1] * 1.6, col[2] * 1.6], .08); fxSparks(to[0], to[1], to[2], 4, 3, 1.2, 2, 4, { grav: 3, size: .05 }); hitMonster(m, dmg * CRYSTAL.dmg, 'bolt', 0, 0, tower); }
+    for (let i = 0; i < 3; i++) { const a = rnd() * TAU; fxBolt(from, [c.x + Math.cos(a) * .9, c.y + rr(-.4, .6), c.z + Math.sin(a) * .9], .1, col, .04); }
+    lightFlash(c.x, c.y, c.z, GLIM_HEX[c.ci], 280, .22, 10); sfx('zap', c.x, c.z, .55, .9);
   }
 }
 
@@ -4906,7 +5174,7 @@ const UI = (() => {
     }, { passive: false });
     document.addEventListener('touchend', e => { audioGesture(); stop(e); if (!e.touches.length && U.ptrs.size) setTimeout(() => { if (U.ptrs.size) U.dropTouches(); }, 80); }, { passive: false });
     if (window.visualViewport) for (const ev of ['resize', 'scroll']) window.visualViewport.addEventListener(ev, fixPageZoom);
-    try { if (localStorage.getItem('cinderwatch.muted') === '1') AU.muted = true; G.best = +localStorage.getItem('cinderwatch.best') || 0; Object.assign(U.opts, JSON.parse(localStorage.getItem('cinderwatch.opts') || '{}')); } catch (e) {}
+    try { if (localStorage.getItem('cinderwatch.muted') === '1') AU.muted = true; Object.assign(U.opts, JSON.parse(localStorage.getItem('cinderwatch.opts') || '{}')); } catch (e) {}
     applyOpts(false);
     window.addEventListener('keyup', e => { U.keys.delete(e.code); });
     window.addEventListener('blur', () => U.keys.clear());
@@ -5287,15 +5555,15 @@ const UI = (() => {
     ];
     const recs = [['Waves cleared', N.cleared, A.cleared], ['Enemies slain', N.kills, A.kills], ['Gold earned', N.gold, A.gold], ['Lives lost', N.lives, A.lives]];
     const credits = ['Cinderwatch by kevintngo', 'Additions by Niko Keurulainen', 'Made with three.js · MIT license', 'All art and sound made in code'];
-    const note = STATS.test ? 'Started at a later wave: not recorded' : null;
+    const note = STATS.test ? 'Started at a later wave: not recorded' : null, camp = BIOME.campaign !== 'main' ? CAMPAIGN_NAMES[BIOME.campaign] : null;
     const rl = P.resetArm ? (tch ? 'Tap again to reset' : 'Click again to reset') : 'Reset records';
     const M = str => PX.measure(str);
     // the layout in font pixels, drawn at the largest scale k that fits the screen
     const bwU = Math.max(...opts.map(o => M(o[0])), M('Click again to reset') / 1.6) + 14, gridU = bwU * 2 + 3;
     const labU = Math.max(...recs.map(q => M(q[0]))), numU = Math.max(M('This run'), M('All time'), ...recs.map(q => Math.max(M(fmt(q[1])), M(fmt(q[2]))))), recU = labU + 2 * (numU + 8);
-    const credU = Math.max(...credits.map(M), note ? M(note) : 0), botU = Math.max(M(rl), M('Close')) * 2 + 30;
+    const credU = Math.max(...credits.map(M), note ? M(note) : 0, camp ? M(camp) : 0), botU = Math.max(M(rl), M('Close')) * 2 + 30;
     const innerU = Math.max(gridU, recU, credU, botU, M('Settings') * 2), LHU = PX.LINE;
-    const bhU = 14, rows = Math.ceil(opts.length / 2), hU = 6 + LHU * 2 + 4 + (bhU * rows + 3 * (rows - 1)) + 8 + LHU + 2 + LHU * 4 + (note ? LHU : 0) + 8 + LHU + 2 + LHU * 4 + 8 + bhU + 6;
+    const bhU = 14, rows = Math.ceil(opts.length / 2), hU = 6 + LHU * 2 + 4 + (bhU * rows + 3 * (rows - 1)) + 8 + LHU + 2 + LHU * 4 + (note ? LHU : 0) + (camp ? LHU : 0) + 8 + LHU + 2 + LHU * 4 + 8 + bhU + 6;
     let k = U.s; while (k > 1 && ((innerU + 12) * k > W - iL - iR - 6 * k || hU * k > H - iT - iB - 6 * k)) k--;
     const LH = LHU * k, mp = 6 * k, bh = Math.max(bhU * k, tch ? Math.round(36 * dpr) : 0), extra = (bh - bhU * k) * (rows + 1);
     const w = (innerU + 12) * k, h = hU * k + extra, x0 = Math.round((iL + W - iR - w) / 2), y0 = Math.round(Math.max(iT + 3 * k, (iT + H - iB - h) / 2));
@@ -5316,6 +5584,7 @@ const UI = (() => {
     y += rows * bh + (rows - 1) * 3 * k + 8 * k;
     const cx2 = xi + wi, cx1 = cx2 - (numU + 8) * k;
     T('Records', xi, y, COLR.amber); T('This run', cx1, y, COLR.dim, { align: 'r' }); T('All time', cx2, y, COLR.dim, { align: 'r' }); y += LH + 2 * k;
+    if (camp) { T(camp, xi, y, COLR.dim); y += LH; }
     for (const q of recs) { T(q[0], xi, y, COLR.tx); T(fmt(q[1]), cx1, y, COLR.tx, { align: 'r' }); T(fmt(q[2]), cx2, y, COLR.amber, { align: 'r' }); y += LH; }
     if (note) { T(note, xi, y, COLR.dim); y += LH; }
     y += 8 * k; T('Credits', xi, y, COLR.amber); y += LH + 2 * k;
@@ -6052,7 +6321,7 @@ function step(rdt) {
   G.t += dt; SH.uTime.value = G.t;
   const B = G.B;
   beginParts(); G.hbars.length = 0;
-  updateFX(dt, G.t);
+  updateFX(dt, G.t); updateLand(dt);
   const live = G.phase === 'play' || G.phase === 'defeat' || G.phase === 'clear';
   if (live) {
     updateWaves(dt); aiThink(dt);
@@ -6134,7 +6403,10 @@ function boot() {
   }, 14, { rad: .1 });
   G.boardSeed = HASH.seed ? +HASH.seed : 1 + Math.floor(Math.random() * 9000);
   G.boardIndex = +(HASH.board || 0); G.level = +(HASH.level || 0);
-  { const bi = HASH.biome === undefined ? -1 : BIOMES.findIndex(b => b.key === HASH.biome || b.name.toLowerCase() === String(HASH.biome).toLowerCase()); BIOME.start = (bi >= 0 ? bi : HASH.biome !== undefined && isFinite(+HASH.biome) ? +HASH.biome : HASH.seed ? 0 : Math.floor(Math.random() * BIOMES.length)) - G.boardIndex; }
+  { const want = HASH.biome === undefined ? null : BIOMES.find(b => b.key === HASH.biome || b.name.toLowerCase() === String(HASH.biome).toLowerCase());
+    BIOME.campaign = (want && want.campaign) || (CAMPAIGNS[HASH.campaign] ? HASH.campaign : 'main'); BIOME.list = CAMPAIGNS[BIOME.campaign]; loadStats();
+    const L = BIOME.list, bi = want ? L.indexOf(want) : -1;
+    BIOME.start = (bi >= 0 ? bi : HASH.biome !== undefined && isFinite(+HASH.biome) ? +HASH.biome : HASH.seed ? 0 : Math.floor(Math.random() * L.length)) - G.boardIndex; }
   const B = G.B = buildBoard(G.boardSeed++, G.boardIndex++);
   R.scene.add(B.group); activateBoard(B, true);
   beginBattle(true);
@@ -6147,7 +6419,7 @@ function boot() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveStats(); AU.setPaused(document.hidden); UI.dropTouches(); if (!document.hidden) { _last = performance.now(); UI.keepAwake(); } });
   window.addEventListener('blur', () => UI.dropTouches());
   for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => setTimeout(resizeRenderer, 60));
-  window.__cw = { G, R, CAM, UI, LT, FX, AI, PX, MON, STATS: () => STATS, step, setPhase, spawnMonster, hitMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl, pi) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t, false, l === 2 ? (pi || 0) : undefined); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
+  window.__cw = { G, R, CAM, UI, LT, FX, AI, PX, MON, STATS: () => STATS, LAND: () => LAND, step, setPhase, spawnMonster, hitMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl, pi) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t, false, l === 2 ? (pi || 0) : undefined); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
   if (HASH.k) G.k = +HASH.k;
   if (HASH.ff) { const n = Math.round(+HASH.ff * 30); for (let i = 0; i < n; i++) step(1 / 30); CAM.sx = CAM.fx; CAM.sz = CAM.fz; R.fade = 1; }
   if (HASH.phase) setPhase(HASH.phase);

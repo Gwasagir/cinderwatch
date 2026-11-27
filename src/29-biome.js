@@ -65,9 +65,41 @@ const BIOMES = [
     mobs: { mummy: 3, scarab: 2.4, spider: .6, bomber: 1.3, ghoul: 1.3, toad: 0, slime: .4, thief: 2.4 }, early: { mummy: 4, scarab: 2 }, boss: ['king'], tints: { golem: [1.5, 1.1, .72], wolf: [1.5, 1.2, .8], wisp: [1.4, 1.0, .4], gargoyle: [1.5, 1.2, .9], toad: [1.3, 1.1, .7] }, wispHex: 0xffc060,
     trees: [['palm', 9, 3.0, 4.6], ['tree', 2, 2.4, 3.4]], stumps: 2, rocks: 44, tufts: 150, webs: 0,
   },
+  // The second campaign (campaign: 'deep'). Its lands never join the first campaign's cycle.
+  {
+    key: 'salt', name: 'Saltreach', campaign: 'deep',
+    col: { stone: 0x4e5a5a, stoneD: 0x2c3434, stoneL: 0x74827e, earth: 0x2e2e2c, earthD: 0x1c1d1c, grass: 0x4a5442, grassD: 0x323a30, moss: 0x3a5446, road: 0x6c6c66, roadD: 0x48484a, mud: 0x1e2224, bark: 0x6a6258, tuftA: 0x5a6448, tuftB: 0x8a8a60, leaf: 0x243a30, leafL: 0x3a5644 },
+    strata: [0x3a4242, 0x252a2c, 0x56605c, 0x2e3434, 0x6a6a5e, 0x343c3a, 0x7a7e72, 0x2a3030],
+    hemi: [0x58a0a0, 0x141e1e, 1.1], moon: [0xbfe6e2, 1.4], fill: [0x2f7f7a, .32], moonPos: [12, 44, -34],
+    clear: [.003, .009, .01], mistAmb: [.05, .11, .11], mist: [-.2, .6, 1.25, .14], sky: [.016, .04, .045], lift: [.008, .02, .022], sat: .9, expo: 1.0, sprAmb: [.05, .09, .09],
+    cover: [.6, .7, 1.0, .5], coverCol: [.06, .1, .075], coverP: [.9, .4, .4, 0],
+    wat: [0, 1.3, 1.2, 0], watA: [.008, .032, .036], watB: [.22, .42, .42], fall: [0, 1.2, 1, 0], fallA: [.02, .05, .055], fallB: [.24, .4, .4], spray: 'water',
+    relief: [1.3, .35, 1.0, .25], puddles: 16, ponds: 4, sway: 1.3, wind: 1.35,
+    wx: { n: [.5, .08], velA: [.9, -11, .4], swayA: [.05, .3], sizeA: [.01, .018], colA: [.7, .86, .9, 1], alA: [.42, 0, 1.6], yA: [-2, 14], velB: [1.4, .12, .7], swayB: [.6, .5], sizeB: [.07, .12], colB: [.55, .75, .75, 1], alB: [.12, 0, 0], yB: [-.5, 3.5], amb: [.16, .26, .26] },
+    mobs: { toad: 2.2, slime: 2.0, wraith: 1.8, skel: 1.4, knight: 1.2, bat: .8, wolf: .3, mummy: .2, scarab: 0, golem: .5, spider: .4, brood: .3 }, early: { toad: 2, wraith: 3 }, boss: ['admiral'],
+    tints: { skel: [.6, .86, .78], knight: [.55, .78, .76], slime: [.4, 1.05, .95], slimelet: [.4, 1.05, .95], toad: [.66, 1.0, .92], wisp: [.5, 1.2, 1.2], golem: [.7, .9, .85], gargoyle: [.75, .9, .9] }, wispHex: 0x70e0e0,
+    trees: [['driftwood', 9, 2.0, 3.4]], stumps: 3, rocks: 72, tufts: 260, webs: 0,
+  },
+  {
+    key: 'glim', name: 'Glimmerdeep', campaign: 'deep',
+    col: { stone: 0x464256, stoneD: 0x26232f, stoneL: 0x66607a, earth: 0x2c2a34, earthD: 0x1a1920, grass: 0x2c3a40, grassD: 0x1e282c, moss: 0x2c4a4c, road: 0x5c5a68, roadD: 0x3c3a46, mud: 0x1a1920, bark: 0x2a2630, tuftA: 0x2a4a54, tuftB: 0x4a6a78, leaf: 0x2a3a4a, leafL: 0x3a5a6a },
+    strata: [0x3a3648, 0x201e28, 0x4e4462, 0x2a2834, 0x5a4e6e, 0x302c3c, 0x6a6080, 0x24222c],
+    hemi: [0x6a58a8, 0x120e18, .82], moon: [0xa898e0, .95], fill: [0x6a40b0, .26], moonPos: [6, 50, -14],
+    clear: [.002, .0015, .005], mistAmb: [.06, .035, .1], mist: [-.3, .55, .95, .12], sky: [.008, .005, .02], lift: [.012, .008, .022], sat: 1.04, expo: 1.06, sprAmb: [.06, .05, .1],
+    cover: [0, .55, .3, .5], coverCol: [1, 1, 1], coverP: [.7, .6, 0, 0],
+    wat: [0, .5, .8, 0], watA: [.01, .05, .075], watB: [.25, .6, .85], fall: [0, .9, 1, 0], fallA: [.04, .1, .14], fallB: [.35, .7, .9], spray: 'water',
+    relief: [1.6, .6, 1.3, 0], puddles: 5, ponds: 2, sway: .3, wind: .2, beacon: .92,
+    wx: { n: [.07, .05], velA: [.05, .14, .04], swayA: [.8, .4], sizeA: [.03, .06], colA: [.6, 1.3, 2.2, 0], alA: [.9, 1.1, 0], yA: [.2, 5], velB: [-.05, .1, .06], swayB: [.9, .35], sizeB: [.03, .055], colB: [2.0, .6, 1.8, 0], alB: [.8, .9, 0], yB: [.2, 6], amb: [.12, .1, .22] },
+    mobs: { spider: 2.4, golem: 1.8, bat: 2.0, scarab: 1.6, wisp: 1.8, brood: 1.2, gargoyle: 1.2, toad: 0, mummy: 0, wolf: .4, slime: .5 }, early: { spider: 2, bat: 2, golem: 6 }, boss: ['wyrm'],
+    tints: { golem: [.85, .75, 1.6], bat: [.8, .7, 1.25], spider: [.7, .62, 1.15], wisp: [1.2, .6, 1.6], scarab: [.8, .9, 1.7], gargoyle: [.9, .8, 1.4], brood: [.75, .6, 1.2] }, wispHex: 0xc080ff,
+    trees: [], stumps: 0, rocks: 96, tufts: 70, webs: 0,
+  },
 ];
-const BIOME = { start: 0 };
-function biomeFor(index) { return BIOMES[((BIOME.start + index) % BIOMES.length + BIOMES.length) % BIOMES.length]; }
+// Campaigns: lists of lands played in turn. The page picks one with #campaign= (main by default); later they unlock one after another.
+const CAMPAIGNS = { main: BIOMES.filter(b => !b.campaign), deep: BIOMES.filter(b => b.campaign === 'deep') };
+const CAMPAIGN_NAMES = { main: 'The Cinder Road', deep: 'The Drowned Deep' };
+const BIOME = { start: 0, list: CAMPAIGNS.main, campaign: 'main' };
+function biomeFor(index) { const L = BIOME.list; return L[((BIOME.start + index) % L.length + L.length) % L.length]; }
 function applyBiomePalette(b) { Object.assign(COL, COL0); for (const k in b.col) COL[k] = C(b.col[k]); }
 
 const LOOK = { cur: null, to: null, bio: null };

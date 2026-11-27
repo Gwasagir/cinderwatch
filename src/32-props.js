@@ -354,6 +354,8 @@ function scatterProps(B) {
   };
   const bio = B.bio;
   const at = (x, z, build, r, T0) => { if (Math.abs(x) > BH - .8 || Math.abs(z) > BH - .8) return; const T = T0 || new Soup(); if (!T0) build(T); B.put(T, x, z, { ry: rng() * TAU }); if (r) placed.push([x, z, r]); };
+  const X = { B, rng, drop, find, beside, free, at, H, placed, slope };
+  if (BIOME_FIRST[bio.key]) BIOME_FIRST[bio.key](X); // what a land needs room for goes down before the common props
   drop(T => PROP.towerRuin(T, rng), 2.9, { far: 3.6 });
   drop(T => PROP.well(T, rng), 1.3, { near: 5.5, far: 2.6 });
   drop(T => PROP.statue(T, rng), 1.2, { near: 6, far: 2.4 });
@@ -382,7 +384,7 @@ function scatterProps(B) {
   for (let k = 0; k < 6; k++) { const x = B.lay.cave.x + rng.range(1.8, 7), z = B.zc + rng.sign() * rng.range(1.9, 5); if (free(x, z, .4, .2)) drop(T => PROP.bones(T, rng, rng.int(4, 7)), .5, { at: [x, z], ao: null }); }
   for (let k = 0; k < 5; k++) drop(T => PROP.bones(T, rng, rng.int(3, 5)), .45, { ao: null });
   for (let k = 0; k < 3; k++) drop(T => PROP.cairn(T, rng), .5, {});
-  BIOME_DRESS[bio.key]({ B, rng, drop, find, beside, free, at, H, placed, slope });
+  BIOME_DRESS[bio.key](X);
   const trees = [];
   for (const [kind, cnt, h0, h1] of bio.trees) for (let k = 0; k < cnt; k++) { const h = rng.range(h0, h1), p = drop(T => PROP[kind](T, rng, h), kind === 'tree' || kind === 'charred' ? .55 : .8, { far: 1.0, water: kind === 'palm' && k < 6 ? 5.5 : 0 }); if (p && kind === 'tree') trees.push([p, h]); }
   for (let k = 0; k < bio.webs && k < trees.length; k++) {

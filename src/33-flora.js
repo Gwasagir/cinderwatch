@@ -125,6 +125,84 @@ Object.assign(PROP, {
   },
 });
 
+// Saltreach and Glimmerdeep props
+Object.assign(PROP, {
+  driftwood(S, rng, h) { PROP.tree(S, rng, h, { bark: mulC(C(0x8c867c), .7 + .35 * rng()) }); },
+  wreck(S, rng) {
+    const wd = mulC(C(0x5c5248), .75 + .3 * rng()), dk = mulC(wd, .7), L = rng.range(3.4, 4.6), lean = rng.range(-.25, .25);
+    S.seg([-L / 2, .02, 0], [L / 2, .3, 0], .15, .12, dk, { l: L_WOOD, n: 6 });
+    for (let k = 0; k < 7; k++) {
+      const x = -L / 2 + .3 + k * (L - .6) / 6, R = (.75 + .45 * Math.sin(k / 6 * PI)) * rng.range(.75, 1.05);
+      for (const sd of [-1, 1]) {
+        if (rng() < .22) continue; const N = 5, stop = rng() < .4 ? rng.int(2, 4) : N; let p = [x, .1, 0];
+        for (let j = 1; j <= stop; j++) { const a = j / N * 1.95, q = [x + lean * Math.sin(a) * .3, .1 + R * (1 - Math.cos(a)) * 1.15, sd * R * Math.sin(a)]; S.seg(p, q, .065, .055, j > 3 ? dk : wd, { l: L_WOOD, n: 5 }); p = q; }
+      }
+    }
+    for (let k = 0; k < 5; k++) { const x = rng.range(-L / 2 + .4, L / 2 - .4), y = rng.range(.2, .7); S.box(rng.range(.6, 1.3), .05, .2, x, y, -(.55 + y * .4), mulC(wd, .9 + .2 * rng()), { l: L_WOOD, r: [rng.range(-.5, -.2), 0, rng.range(-.15, .15)] }); }
+    const mx = rng.range(-.6, .6); S.seg([mx, .2, 0], [mx + 1.3, 2.7, .5], .09, .07, dk, { l: L_WOOD, n: 6 }); S.seg([mx + .75, 1.6, -.55], [mx + .95, 1.75, 1.15], .045, .04, dk, { l: L_WOOD, n: 4 });
+    for (let k = 0; k < 6; k++) S.rock(rng.range(.15, .3), rng.range(-L / 2, L / 2), .02, rng.range(-1, 1), mixC(COL.stoneD, COL.stone, rng()), { sq: .5 });
+  },
+  seawall(S, rng, len) {
+    const n = Math.max(2, Math.round(len / .72)), moss = C(0x3c5a44);
+    for (let k = 0; k < n; k++) {
+      const x = (k - (n - 1) / 2) * .72, c = mulC(mixC(COL.stoneD, COL.stone, rng()), .9 + .2 * rng());
+      if (rng() < .16) { S.box(.62, .5, .66, x + rng.range(-.2, .2), .2, rng.range(.5, .9), c, { l: L_ROCK, jit: .05, r: [rng.range(-.5, .5), rng(), rng.range(-.4, .4)] }); continue; }
+      const h = rng.range(.65, 1.35); S.box(.68, h, .74, x, h / 2 - .15, 0, c, { l: L_ROCK, jit: .04 });
+      S.box(.7, .07, .76, x, h - .13, 0, mulC(moss, .8 + .4 * rng()), { l: L_PLAIN, jit: .03 });
+      if (rng() < .5) for (let b = 0; b < 4; b++) S.ico(.035, x + rng.range(-.3, .3), rng.range(.05, .4), .38, C(0xb8b4a4), { d: 0, jit: .1 });
+    }
+  },
+  piles(S, rng, len) {
+    for (let x = -len / 2; x <= len / 2; x += rng.range(.45, .7)) { const h = rng.range(.4, 1.3), c = mulC(C(0x5a5046), .7 + .35 * rng()); S.cyl(.09, h, x, h / 2 - .2, rng.range(-.08, .08), c, { n: 6, l: L_WOOD, r: [rng.range(-.15, .15), 0, rng.range(-.15, .15)] }); S.cyl(.1, .1, x, rng.range(.05, .3), 0, C(0x2c4a3c), { n: 6 }); }
+  },
+  lighthouse(S, rng) {
+    const w = C(0xcfc8b8), r = C(0x8a3a32), base = mulC(COL.stoneD, 1.1), N = 6, H0 = .9;
+    for (let k = 0; k < 7; k++) { const a = k / 7 * TAU; S.rock(rng.range(.45, .7), Math.cos(a) * 1.1, .1, Math.sin(a) * 1.1, mixC(COL.stoneD, COL.stone, rng()), { sq: .7 }); }
+    S.cyl(1.0, H0, 0, H0 / 2 - .1, 0, base, { n: 10, l: L_ROCK, rt: .9 });
+    for (let k = 0; k < N; k++) { const y0 = H0 + k * .62, rb = .78 - k * .07, rt = .78 - (k + 1) * .07; S.cyl(rb, .62, 0, y0 + .31, 0, k & 1 ? r : w, { n: 10, l: L_PLAIN, rt: rt / rb, rough: .7 }); }
+    const yt = H0 + N * .62; S.cyl(.62, .08, 0, yt + .04, 0, COL.iron, { n: 12, l: L_METAL });
+    for (let k = 0; k < 10; k++) { const a = k / 10 * TAU; S.seg([Math.cos(a) * .58, yt + .08, Math.sin(a) * .58], [Math.cos(a) * .58, yt + .38, Math.sin(a) * .58], .015, .015, COL.iron, { l: L_METAL, n: 3 }); }
+    S.cyl(.36, .55, 0, yt + .36, 0, C(0xffe0a0), { n: 8, emis: .55, jit: 0 });
+    for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .4; S.box(.05, .55, .05, Math.cos(a) * .37, yt + .36, Math.sin(a) * .37, COL.iron, { l: L_METAL }); }
+    S.cone(.48, .42, 0, yt + .85, 0, r, { n: 8, l: L_METAL }); S.ico(.07, 0, yt + 1.1, 0, COL.iron, { d: 0 });
+    return yt + .38;
+  },
+  bigCrystal(S, rng, col) {
+    let top = 0;
+    for (let k = 0, n = rng.int(4, 7); k < n; k++) {
+      const hh = rng.range(.7, 1.5) * (k ? .7 : 1.25), a = rng() * TAU, d = k ? rng.range(.2, .55) : 0, tilt = k ? rng.range(.15, .5) : rng.range(0, .15);
+      S.add(gOct(), { s: [hh * .24, hh, hh * .24], p: [Math.cos(a) * d, hh * .45, Math.sin(a) * d], r: [Math.sin(a) * tilt, rng() * TAU, -Math.cos(a) * tilt], c: mulC(col, .75 + .35 * rng()), rough: .1, emis: .26 + .12 * rng() });
+      top = Math.max(top, hh * 1.4);
+    }
+    for (let k = 0; k < 5; k++) { const a = rng() * TAU; S.rock(rng.range(.2, .38), Math.cos(a) * .55, .05, Math.sin(a) * .55, mixC(COL.stoneD, COL.stone, rng()), { sq: .6 }); }
+    return top;
+  },
+  stalagmite(S, rng, hh) {
+    const c = mulC(mixC(COL.stoneD, COL.stoneL, rng() * .6), .85 + .3 * rng());
+    S.cone(hh * .2, hh, 0, hh / 2 - .1, 0, c, { n: 6, l: L_ROCK, jit: .08 });
+    for (let k = 0, n = rng.int(1, 3); k < n; k++) { const a = rng() * TAU, h2 = hh * rng.range(.3, .6); S.cone(h2 * .22, h2, Math.cos(a) * hh * .2, h2 / 2 - .1, Math.sin(a) * hh * .2, mulC(c, .9), { n: 5, l: L_ROCK, jit: .08 }); }
+  },
+});
+const GLIM_COLS = [[.62, .36, 1.0], [.3, .85, 1.0], [1.0, .4, .82]], GLIM_HEX = [0x9a5cff, 0x4cd8ff, 0xff66d0];
+
+const BIOME_FIRST = {
+  salt(X) {
+    const { B, rng, drop } = X;
+    let top = 0; const lp = drop(T => { top = PROP.lighthouse(T, rng); }, 1.5, { far: 3.4, steep: true }) || drop(T => { top = PROP.lighthouse(T, rng); }, 1.3, { far: 2.2, steep: true });
+    if (lp) { const y = X.H(lp[0], lp[1]) + top; B.lighthouse = { x: lp[0], y, z: lp[1] }; B.env.push({ x: lp[0], y: y + .3, z: lp[1], c: 0xffd890, I: 26, d: 11 }); }
+  },
+  glim(X) {
+    const { B, rng, drop } = X; B.crystals = [];
+    // the big crystals sit near the road, where the storm spires' lightning can reach them
+    for (let k = 0, made = 0; k < 400 && made < 7; k++) {
+      const i = rng.int(14, B.n - 14), side = rng.sign(), d = ROAD_HALF + rng.range(1.7, 3.8), x = B.px[i] - B.tz[i] * side * d, z = B.pz[i] + B.tx[i] * side * d;
+      if (!X.free(x, z, .8, .8) || B.crystals.some(c => dist2(c.x, c.z, x, z) < 20)) continue;
+      const ci = made % 3; let top = 0; drop(T => { top = PROP.bigCrystal(T, rng, GLIM_COLS[ci]); }, .9, { at: [x, z] });
+      B.crystals.push({ x, z, y: X.H(x, z) + top * .7, ci, cd: 0, flash: 0 }); made++;
+    }
+    for (let k = 0; k < Math.min(3, B.crystals.length); k++) { const c = B.crystals[k], e = { x: c.x, y: c.y + .4, z: c.z, c: GLIM_HEX[c.ci], I: 16, d: 8 }; c.env = e; c.I0 = e.I; B.env.push(e); }
+  },
+};
 const BIOME_DRESS = {
   ashen(X) { for (let k = 0; k < 3; k++) X.drop(T => PROP.log(T, X.rng), .9, { far: 1.2 }); },
   frost(X) {
@@ -159,6 +237,24 @@ const BIOME_DRESS = {
     B.env.push({ x: B.bridge.x, y: B.wlc + .55, z: B.bridge.z, c: 0xff5a1e, I: 44, d: 9, flick: 1 });
     if (B.ponds[0]) { const q = B.ponds[0]; B.env.push({ x: q.x, y: q.y + .7, z: q.z, c: 0xff5a1e, I: 40, d: 9, flick: 1 }); }
     if (B.fallAt) B.env.push({ x: B.fallAt.x - B.fallAt.ox * 1.2, y: B.fallAt.y + .6, z: B.fallAt.z - B.fallAt.oz * 1.2, c: 0xff5a1e, I: 36, d: 8, flick: 1 });
+  },
+  salt(X) {
+    const { B, rng, drop, beside } = X;
+    drop(T => PROP.wreck(T, rng), 2.4, { far: 2.6 });
+    if (rng() < .6) drop(T => PROP.wreck(T, rng), 2.4, { far: 2.6 });
+    for (let k = 0; k < 3; k++) { const len = rng.range(3, 5.5); drop(T => PROP.seawall(T, rng, len), len * .5, { far: 1.4 }); }
+    for (let k = 0; k < 3; k++) { const p = beside(8, B.L - 6, 1.1, .4); if (p) { const len = rng.range(1.6, 3); drop(T => PROP.piles(T, rng, len), .9, { at: p, ry: -p[2] }); } }
+    for (const q of B.ponds) for (let k = 0; k < 6; k++) { const a = rng() * TAU, d = q.r + rng.range(.4, 1.1), r = rng.range(.2, .45); X.at(q.x + Math.cos(a) * d, q.z + Math.sin(a) * d, T => { T.rock(r, 0, r * .25, 0, mixC(COL.stoneD, COL.stone, rng())); for (let b = 0; b < 5; b++) T.ico(.03, rng.range(-r, r) * .7, r * .5, rng.range(-r, r) * .7, C(0xb8b4a4), { d: 0 }); }, 0); }
+    for (let k = 0; k < 40; k++) drop(T => PROP.reeds(T, rng), .3, { water: 2.6, ao: null });
+    for (let k = 0; k < 4; k++) drop(T => PROP.log(T, rng), .9, { far: 1.2 });
+  },
+  glim(X) {
+    const { B, rng, drop } = X;
+    for (let k = 0; k < 22; k++) { const ci = rng.int(0, 2); drop(T => PROP.crystal(T, rng, GLIM_COLS[ci], .22), .45, { far: .8 }); }
+    for (let k = 0; k < 16; k++) { const hh = rng.range(1.2, 3.4); drop(T => PROP.stalagmite(T, rng, hh), hh * .25, { far: 1.3, steep: true }); }
+    const cols = [COL.stoneD, COL.stone, COL.stoneD, COL.stoneL];
+    for (let k = 0; k < 5; k++) { const hh = rng.range(2.4, 4.4); drop(T => PROP.spire(T, rng, hh, cols), hh * .28, { far: 1.8, steep: true }); }
+    for (let k = 0; k < 10; k++) drop(T => PROP.shroom(T, rng), .35, { ao: null });
   },
   dunes(X) {
     const { B, rng, drop } = X, cols = B.bio.strata.map(h => C(h));
