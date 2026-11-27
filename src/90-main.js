@@ -134,7 +134,7 @@ function frame(now) {
   _acc += raw; _frames++;
   if (_acc >= 2) {
     const ms = _acc / _frames * 1000;
-    R.fpsText = (1000 / ms).toFixed(0) + ' fps  ' + R.iw + 'x' + R.ih + '  calls ' + R.renderer.info.render.calls + '  mons ' + G.mons.length;
+    R.fpsText = (1000 / ms).toFixed(0) + ' fps  ' + R.iw + 'x' + R.ih + (R.lite ? '  lite' : '') + '  calls ' + R.renderer.info.render.calls + '  mons ' + G.mons.length;
     if (ms > 22.5) { _slow++; _fast = 0; } else { _slow = 0; _fast = ms < 18.6 ? _fast + 1 : 0; }
     _hold -= _acc;
     if (!HASH.noscale) {
