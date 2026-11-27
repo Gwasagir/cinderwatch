@@ -157,6 +157,7 @@ function initKits() {
   KIT.rubble = new PartBatch(S => { S.rock(.14, 0, 0, 0, COL.stone, {}); }, 160, { rad: .1 });
   KIT.plank = new PartBatch(S => { S.box(.12, .6, .05, 0, 0, 0, COL.wood, { l: L_WOOD }); }, 100, { rad: .08 });
   initBestiary();
+  { const keep = soupRng; soupRng = makeRng(4242); initFoeKits(); soupRng = keep; } // own random stream, so the older models keep their look
 }
 
 const SPEC = {
@@ -216,8 +217,8 @@ function rigHuman(kit, sp, e) {
   kit.uLeg.put(M10, fl, tint); kit.lLeg.put(M11, fl, tint); kit.uLeg.put(M12, fl, tint); kit.lLeg.put(M13, fl, tint);
   return M3;
 }
-function rigRat(e) {
-  const K = KIT.rat, ph = e.ph, s = e.scale || 1, fl = e.flash || 0, mv = e.mv;
+function rigRat(e, K = KIT.rat) {
+  const ph = e.ph, s = e.scale || 1, fl = e.flash || 0, mv = e.mv;
   const M0 = xf(_M[0], null, e.x, e.y + (.2 + Math.abs(Math.sin(ph * 2)) * .035 * mv) * s, e.z, Math.sin(ph * 2) * .07 * mv - (e.flinch || 0) * .5, e.yaw, 0, s, s, s);
   K.body.put(M0, fl, e.tint);
   for (let i = 0; i < 4; i++) {

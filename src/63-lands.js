@@ -5,6 +5,7 @@ const TIDE = { cycle: 54, slow: .42, depth: .04, share: .32 }; // seconds per ti
 function landBoard(B) {
   LAND.t = 0; LAND.tideY = -99; LAND.tideK = 0; LAND.high = false; LAND.toll = 0; LAND.tolls = 0; LAND.bellT = BELL.first; LAND.strikeT = STRIKE.first; LAND.strikes.length = 0; LAND.skyT = 3;
   if (B.bio.key === 'salt') buildTide(B);
+  foesBoard(B);
 }
 
 // The tide: a sheet of water that rises over the low ground, highest at about the lowest third of the road.
@@ -58,7 +59,7 @@ function updateLand(dt) {
 
 // Hollowmere: the cathedral bell tolls now and then, and for a few seconds every undead monster hurries.
 const BELL = { first: 16, every: [26, 34], haste: .4, dur: 4.5 };
-const isUndead = def => !def.boss && (def.death === 'bones' || def.death === 'ghost' || def === MON.ghoul);
+const isUndead = def => !def.boss && (def.undead || def.death === 'bones' || def.death === 'ghost' || def === MON.ghoul);
 function updateBell(dt, B) {
   LAND.toll = Math.max(0, LAND.toll - dt); LAND.bellT -= dt;
   if (LAND.bellT > 0) return;

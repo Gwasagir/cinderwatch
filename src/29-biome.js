@@ -76,7 +76,9 @@ const BIOMES = [
     wat: [0, 1.3, 1.2, 0], watA: [.008, .032, .036], watB: [.22, .42, .42], fall: [0, 1.2, 1, 0], fallA: [.02, .05, .055], fallB: [.24, .4, .4], spray: 'water',
     relief: [1.3, .35, 1.0, .25], puddles: 16, ponds: 4, sway: 1.3, wind: 1.35,
     wx: { n: [.5, .08], velA: [.9, -11, .4], swayA: [.05, .3], sizeA: [.01, .018], colA: [.7, .86, .9, 1], alA: [.42, 0, 1.6], yA: [-2, 14], velB: [1.4, .12, .7], swayB: [.6, .5], sizeB: [.07, .12], colB: [.55, .75, .75, 1], alB: [.12, 0, 0], yB: [-.5, 3.5], amb: [.16, .26, .26] },
-    mobs: { toad: 2.2, slime: 2.0, wraith: 1.8, skel: 1.4, knight: 1.2, bat: .8, wolf: .3, mummy: .2, scarab: 0, golem: .5, spider: .4, brood: .3 }, early: { toad: 2, wraith: 3 }, boss: ['admiral'],
+    own: true, filler: 'orc', // sea raiders, shore beasts and the drowned
+    mobs: { orc: 2.4, gull: 2.0, crab: 1.8, eel: 1.5, zombie: 1.0, siren: .8, shellback: .8, shaman: .6, warchief: .5, skel: 1.0, knight: .8, toad: 1.0, slime: 1.0, wraith: 1.0, bomber: .6, drummer: .4, golem: .4, brute: .4, thief: .4, hag: .4, warden: .3 },
+    early: { gull: 1, crab: 2, eel: 3, toad: 2, wraith: 3 }, boss: ['admiral'],
     tints: { skel: [.6, .86, .78], knight: [.55, .78, .76], slime: [.4, 1.05, .95], slimelet: [.4, 1.05, .95], toad: [.66, 1.0, .92], wisp: [.5, 1.2, 1.2], golem: [.7, .9, .85], gargoyle: [.75, .9, .9] }, wispHex: 0x70e0e0,
     trees: [['driftwood', 9, 2.0, 3.4]], stumps: 3, rocks: 72, tufts: 260, webs: 0,
   },
@@ -90,7 +92,9 @@ const BIOMES = [
     wat: [0, .5, .8, 0], watA: [.01, .05, .075], watB: [.25, .6, .85], fall: [0, .9, 1, 0], fallA: [.04, .1, .14], fallB: [.35, .7, .9], spray: 'water',
     relief: [1.6, .6, 1.3, 0], puddles: 5, ponds: 2, sway: .3, wind: .2, beacon: .92,
     wx: { n: [.07, .05], velA: [.05, .14, .04], swayA: [.8, .4], sizeA: [.03, .06], colA: [.6, 1.3, 2.2, 0], alA: [.9, 1.1, 0], yA: [.2, 5], velB: [-.05, .1, .06], swayB: [.9, .35], sizeB: [.03, .055], colB: [2.0, .6, 1.8, 0], alB: [.8, .9, 0], yB: [.2, 6], amb: [.12, .1, .22] },
-    mobs: { spider: 2.4, golem: 1.8, bat: 2.0, scarab: 1.6, wisp: 1.8, brood: 1.2, gargoyle: 1.2, toad: 0, mummy: 0, wolf: .4, slime: .5 }, early: { spider: 2, bat: 2, golem: 6 }, boss: ['wyrm'],
+    own: true, filler: 'kobold', // miners, crystal things and cave beasts
+    mobs: { kobold: 2.4, mite: 2.0, goblin: 1.8, mole: 1.4, shard: 1.2, slinger: 1.2, geode: .9, spider: 1.6, bat: 1.6, wisp: 1.2, golem: 1.2, brood: .7, gargoyle: .8, slime: .5, bomber: .6, thief: .4, hag: .3, warden: .3 },
+    early: { mite: 2, bat: 2, spider: 2, mole: 3, golem: 6 }, boss: ['wyrm'],
     tints: { golem: [.85, .75, 1.6], bat: [.8, .7, 1.25], spider: [.7, .62, 1.15], wisp: [1.2, .6, 1.6], scarab: [.8, .9, 1.7], gargoyle: [.9, .8, 1.4], brood: [.75, .6, 1.2] }, wispHex: 0xc080ff,
     trees: [], stumps: 0, rocks: 96, tufts: 70, webs: 0,
   },
@@ -104,7 +108,9 @@ const BIOMES = [
     wat: [0, 1, 1, 0], watA: [.01, .015, .03], watB: [.25, .3, .42], fall: [0, 1, 1, 0], fallA: [.022, .03, .05], fallB: [.2, .25, .35], spray: 'water',
     relief: [1.2, .35, .9, 0], puddles: 14, ponds: 1, sway: .8, wind: .9,
     wx: { n: [.12, .05], velA: [.5, -.7, .3], swayA: [.9, .9], sizeA: [.04, .07], colA: [.7, .38, .12, 1], alA: [.9, 0, 0], yA: [-1, 9], velB: [.2, -.2, .1], swayB: [.4, .3], sizeB: [.02, .035], colB: [.6, .6, .65, 1], alB: [.3, 0, 0], yB: [-1, 8], amb: [.18, .18, .26] },
-    mobs: { skel: 1.6, knight: 1.6, wraith: 1.6, necro: 1.8, ghoul: 1.6, mummy: .6, drummer: 1.3, bat: 1.0, toad: 0, scarab: 0, slime: .4, hag: 1.0, thief: .8, spider: .5 }, early: { necro: 4, knight: 3, wraith: 3 }, boss: ['lich'],
+    own: true, filler: 'zombie', // the dead and those who tend them
+    mobs: { zombie: 2.4, crow: 2.0, skel: 1.4, knight: 1.4, ghoul: 1.2, wraith: 1.4, necro: 1.4, banshee: 1.2, keeper: 1.0, cart: .8, drummer: .6, mummy: .4, bat: .6, hag: .8, thief: .6, spider: .4, slime: .3, warden: .3, brute: .3 },
+    early: { knight: 3, wraith: 3, necro: 4, banshee: 5 }, boss: ['lich'],
     tints: { skel: [.85, .88, 1.0], ghoul: [.9, .95, 1.25], wisp: [.7, .8, 1.4], golem: [.8, .85, 1.0], gargoyle: [.8, .85, 1.0] }, wispHex: 0x9fb8ff,
     trees: [['tree', 9, 2.6, 4.4]], stumps: 4, rocks: 50, tufts: 200, webs: 3,
   },
@@ -118,7 +124,9 @@ const BIOMES = [
     wat: [0, 1.4, 1.2, 0], watA: [.02, .04, .06], watB: [.35, .45, .55], fall: [0, 1.3, 1, 0], fallA: [.03, .06, .08], fallB: [.35, .45, .55], spray: 'water',
     relief: [2.0, .55, 1.3, 0], puddles: 6, ponds: 1, sway: 1.6, wind: 1.6, beacon: .9,
     wx: { n: [.6, .1], velA: [3.5, -12, 1.5], swayA: [.05, .3], sizeA: [.01, .018], colA: [.75, .8, .9, 1], alA: [.4, 0, 1.6], yA: [-2, 14], velB: [5, .2, 2.2], swayB: [.6, .5], sizeB: [.08, .16], colB: [.7, .75, .8, 1], alB: [.1, 0, .8], yB: [-1, 6], amb: [.3, .32, .4] },
-    mobs: { gargoyle: 2.2, bat: 2.0, wisp: 1.6, drake: 1.8, wolf: 1.4, golem: 1.0, knight: .8, toad: 0, mummy: 0, scarab: 0, slime: .4, spider: .5 }, early: { gargoyle: 4, bat: 1, wisp: 3 }, boss: ['roc'],
+    own: true, filler: 'goblin', // hill tribes, mountain beasts and the storm's own
+    mobs: { goblin: 2.2, orc: 1.6, vulture: 1.8, goat: 1.8, kite: 1.4, sprite: 1.4, slinger: 1.0, shaman: .7, warchief: .6, hillgiant: .8, gargoyle: 1.4, bat: 1.0, wisp: 1.0, drake: 1.0, wolf: 1.0, golem: .6, knight: .5, warden: .3, bomber: .4 },
+    early: { vulture: 2, goat: 2, sprite: 3, kite: 4, gargoyle: 4 }, boss: ['roc'],
     tints: { gargoyle: [.85, .9, 1.1], wolf: [1.2, 1.2, 1.3], golem: [.9, .95, 1.1], wisp: [.8, 1.0, 1.6] }, wispHex: 0xa0c8ff,
     trees: [['windpine', 14, 2.6, 4.6]], stumps: 3, rocks: 90, tufts: 160, webs: 0,
   },

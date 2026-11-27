@@ -83,8 +83,12 @@ function hitMonster(m, dmg, kind, dx, dz, tower, pierce = 0) {
   if (m.dead || m.hp <= 0 || m.burrowed > 0) return false;
   if ((kind === 'arrow' || kind === 'blast') && G.domes.length) { const w = domeOver(m); if (w) { hitDome(w, dmg, m.x, m.y + m.hitH, m.z); return null; } }
   if (m.eth) { if (kind === 'arrow' || kind === 'sword') { if (rnd() < .5) fxTimed(0, m.x + rr(-.2, .2), m.y + m.hitH + rr(-.2, .3), m.z + rr(-.2, .2), .5, .5, .5, .9, 1.8, .7, .18); return false; } dmg *= .5; }
-  if (kind === 'arrow' && m.def.armor) { dmg *= lerp(m.def.armor, 1, pierce); if (rnd() < .6 - pierce * .5) { fxSparks(m.x, m.y + m.hitH, m.z, 3, 3, 2.4, 2.2, 1.6, { size: .05 }); } }
+  if (m.def.noBolt && kind === 'bolt') { fxSparks(m.x, m.y + m.hitH, m.z, 4, 2.4, .8, 1.4, 2.6, { size: .05, grav: 3 }); return false; }
+  if (m.def.shell) dmg = shellHit(m, dmg, kind);
+  if (kind === 'arrow' && m.def.armor && !m.cracked) { dmg *= lerp(m.def.armor, 1, pierce); if (rnd() < .6 - pierce * .5) { fxSparks(m.x, m.y + m.hitH, m.z, 3, 3, 2.4, 2.2, 1.6, { size: .05 }); } }
+  if (m.guard) dmg *= 1 - m.guard;
   m.hp -= dmg; m.flash = 1; m.flinch = m.def.boss ? Math.max(m.flinch, .25) : 1; m.hitAt = G.t;
+  if (m.def.crack && !m.cracked && m.hp > 0 && m.hp < m.maxHp * m.def.crack[0]) crackFoe(m);
   const kb = (kind === 'blast' ? 2.6 : kind === 'sword' ? 1.3 : kind === 'arrow' ? .7 : .2) / Math.sqrt(m.mass);
   if (!m.fly && (dx || dz)) { const p = pathAt(G.B, m.s, _ap); m.ks += (dx * p.tx + dz * p.tz) * kb; m.kl += (-dx * p.tz + dz * p.tx) * kb; }
   if (tower) { tower.dealt += dmg; tower.recent += dmg; }
@@ -93,6 +97,7 @@ function hitMonster(m, dmg, kind, dx, dz, tower, pierce = 0) {
 }
 function burnMonster(m, dmg, tower, kind) {
   if (m.dead || m.hp <= 0 || m.dying) return;
+  if (m.def.noBolt && kind === 'shock') return; if (m.def.shell && !(m.flipT > 0)) dmg *= 1 - m.def.shell[0]; if (m.guard) dmg *= 1 - m.guard;
   m.hp -= dmg; m.hitAt = G.t; m.flash = Math.max(m.flash, .3); if (tower) { tower.dealt += dmg; tower.recent += dmg; }
   if (m.hp <= 0) killMonster(m, kind, 0, 0, tower);
 }
@@ -132,6 +137,7 @@ function killMonster(m, kind, dx, dz, tower) {
     for (let i = 0; i < 5; i++) { _tm.compose(_tv.set(m.x + rr(-.3, .3) * sc, m.y + rr(.2, 1) * sc, m.z + rr(-.3, .3) * sc), _tq.identity(), _ts.setScalar(rr(.6, 1.2))); addDebris(KIT.rubble, _tm, m.tint, rr(-2.5, 2.5) + ix, rr(2, 4.5), rr(-2.5, 2.5) + iz, rr(3, 9), rr(2.5, 4)); }
   }
   else if (dth === 'ghost') { shatter(e => rigMonster(e), m, [ix * .4, 2.2, iz * .4], { spread: .8, life: .45 }); sfx('batScreech', m.x, m.z, .45, .1); fxTimed(5, m.x, m.y + .8, m.z, 2.4, 2.4, .5, 1.1, 2.2, .9, .3); for (let i = 0; i < 6; i++) fxSmoke(m.x + rr(-.2, .2), m.y + rr(.2, 1.2), m.z + rr(-.2, .2), rr(-.5, .5), rr(.6, 1.6), rr(-.5, .5), rr(.6, 1.1), .4, .7, .3, .42, .6, .4, { drag: 1.5, rise: .3 }); }
+  else if (dth === 'wood') { shatter(e => rigMonster(e), m, [ix, 1.6 * up, iz], { spread: 1.8, life: .9 }); sfx('crumble', m.x, m.z, .9, .4); sfx('hammer', m.x, m.z, .6, rnd()); fxDust(m.x, m.y + .2, m.z, 8, 1.1, { speed: 2.4 }); for (let i = 0; i < 5; i++) { _tm.compose(_tv.set(m.x + rr(-.4, .4), m.y + rr(.3, .8), m.z + rr(-.4, .4)), _tq.set(rr(-1, 1), rr(-1, 1), rr(-1, 1), 1).normalize(), _ts.setScalar(rr(.7, 1.2))); addDebris(KIT.plank, _tm, null, rr(-2.5, 2.5) + ix, rr(2, 4.5), rr(-2.5, 2.5) + iz, rr(3, 9), rr(2.5, 4)); } }
   else if (dth === 'wisp') { const c = m.tint || [1, 1, 1]; fxTimed(5, m.x, m.y, m.z, 1.5, 1.5, c[0] * 2, c[1] * 2, c[2] * 2, .9, .22); fxSparks(m.x, m.y, m.z, 7, 3.2, c[0] * 2.4, c[1] * 2.4, c[2] * 2.4, { size: .05, grav: 2 }); sfx('ignite', m.x, m.z, .35, rnd()); }
   else {
     const big = t === 'slime', n = big ? 14 : 7;
@@ -193,7 +199,7 @@ const EYES = {
   spider: BUG_EYE, scarab: BUG_EYE, brood: [.05, .055, .19, .022], queen: [.05, .055, .19, .016], wolf: [.05, .27, .63, .04], wraith: [.045, 1.04, .17, .055], toad: [.125, .345, .285, .035], gargoyle: [.045, .15, .28, .045], wisp: null,
 };
 function drawMonster(m, t) {
-  if (m.burrowed > 0) { if (rnd() < .7) fxDust(m.x + rr(-.6, .6), m.y + .05, m.z + rr(-.6, .6), 1, .8, { speed: 1.2, a: .5 }); if (rnd() < .3) FX.decals.add(G.B.heightAt, m.x, m.z, .5, .02, .017, .015, .5, 6); return; }
+  if (m.burrowed > 0) { if (rnd() < .7) fxDust(m.x + rr(-.6, .6), m.y + .05, m.z + rr(-.6, .6), 1, .8, { speed: 1.2, a: .5 }); if (rnd() < (m.def.boss ? .3 : .04)) FX.decals.add(G.B.heightAt, m.x, m.z, .5, .02, .017, .015, .5, 6); return; }
   const M = rigMonster(m), ey = EYES[m.type], c = m.def.eye, sc = m.scale, tw = .8 + .2 * Math.sin(t * 9 + m.lseed * 7), ty = m.type;
   if (ey) {
     for (const sg of [-1, 1]) { _tv.set(sg * ey[0], ey[1], ey[2]).applyMatrix4(M); FX.add.push(_tv.x, _tv.y, _tv.z, ey[3] * sc * 1.5, ey[3] * sc * 1.5, 0, 0, c[0], c[1], c[2], tw, 0, 0, 0, 0); }
@@ -207,6 +213,7 @@ function drawMonster(m, t) {
   else if (ty === 'hag') { m.lx = RIGOUT.tip.x; m.ly = RIGOUT.tip.y; m.lz = RIGOUT.tip.z; FX.add.push(m.lx, m.ly, m.lz, .5, .5, 0, 0, 3, 1.4, .4, tw, 0, 0, 0, 0); FX.add.push(m.lx, m.ly, m.lz, 2, 2, 0, 0, 1, .45, .12, .25 * tw, 2, 0, 0, 0); }
   else if (ty === 'drake') { m.lx = m.x; m.ly = m.y - .2; m.lz = m.z; FX.add.push(m.x, m.y - .1, m.z, 1.6, 1.6, 0, 0, 1, .4, .1, .25 * tw, 2, 0, 0, 0); if (rnd() < .3) fxPart(m.x + rr(-.3, .3), m.y - .2, m.z + rr(-.3, .3), rr(-.2, .2), rr(-.5, .2), rr(-.2, .2), rr(.4, .8), rr(.04, .07), 2.6, 1, .2, { drag: .5, wob: 1 }); }
   else if (ty === 'thief' && m.hidden && rnd() < .25) fxSmoke(m.x + rr(-.15, .15), m.y + rr(.1, .5), m.z + rr(-.15, .15), rr(-.1, .1), rr(.1, .4), rr(-.1, .1), rr(.5, 1), .18, .3, .12, .12, .13, .35, { drag: 1 });
+  if (m.def.fx) m.def.fx(m, t, M);
   if (m.torch && m.flame) { const p = RIGOUT.torch; m.flame.x = p.x; m.flame.y = p.y; m.flame.z = p.z; m.lx = p.x; m.ly = p.y + .2; m.lz = p.z; }
   if (m.slowT > 0 && rnd() < .2) { const a = rnd() * TAU; fxBolt([m.x, m.y + m.hitH, m.z], [m.x + Math.cos(a) * m.rad * 1.4, m.y + m.hitH + rr(-.3, .4), m.z + Math.sin(a) * m.rad * 1.4], .08, [.4, .65, 1.3], .028); }
   if ((m.vis || m.fly) && !m.hidden) G.hbars.push({ x: m.x, y: m.y + m.def.top * sc / m.def.scale + .22, z: m.z, f: sat(m.hp / m.maxHp), boss: !!m.def.boss, man: false, name: m.def.boss ? m.def.name : null });
@@ -243,7 +250,8 @@ function footmanThink(f, dt) {
   const B = G.B, tw = f.tower; f.age += dt;
   if (f.lvlUp) { f.lvlUp = false; const d = tw.def, r = f.hp / f.maxHp; f.maxHp = d.hp[tw.lvl]; f.hp = f.maxHp * Math.max(r, .6); f.dmg = d.dmg[tw.lvl]; footmanPath(f, tw); }
   if (!tw.alive) f.leave = true;
-  let gx, gz, face = null, speed = (f.swift ? 3.4 : 2.1) * (1 - tideSlow(f.y || 0)), fighting = false; const reachS = f.swift ? 3.6 : 2.5;
+  const stun = f.stun > 0; if (stun) f.stun -= dt;
+  let gx, gz, face = null, speed = (f.swift ? 3.4 : 2.1) * (1 - tideSlow(f.y || 0)) * (stun ? 0 : 1), fighting = false; const reachS = f.swift ? 3.6 : 2.5;
   const rally = slotPos(f, _fp), rs = tw.pad.s;
   if (f.leave) { f.gone = true; f.alive = false; if (f.flame) { removeFlame(f.flame); f.flame = null; } fxDust(f.x, f.y + .3, f.z, 4, .6); return; }
   let m = f.target;
@@ -269,7 +277,7 @@ function footmanThink(f, dt) {
     f.atk += dt / (f.swift ? .36 : .58);
     if (f.atk >= .5 && !f.struck) { f.struck = true; if (m && !m.dead && Math.hypot(m.x - f.x, m.z - f.z) < m.rad + f.rad + .75) strike(f, m, f.dmg, true); }
     if (f.atk >= 1) { f.atk = -1; f.cd = f.swift ? rr(.1, .2) : rr(.3, .5); }
-  } else if (fighting && f.cd <= 0) { f.atk = 0; f.struck = false; }
+  } else if (fighting && f.cd <= 0 && !stun) { f.atk = 0; f.struck = false; }
   f.flash = Math.max(0, f.flash - dt * 7); f.flinch = Math.max(0, f.flinch - dt * 4.5);
   const q = pathNear(B, f.x, f.z, f.s, 20); f.s = q.s; f.lat = q.lat; f.onRoad = Math.abs(q.lat) < ROAD_HALF + .3;
   f.y = f.onRoad ? B.py[q.i] + .03 : B.heightAt(f.x, f.z);
@@ -311,7 +319,7 @@ function updateUnits(dt) {
   const B = G.B, mons = G.mons, men = G.men, L = B.L, maxLatBase = ROAD_HALF + .04;
   for (let i = men.length - 1; i >= 0; i--) { const f = men[i]; if (f.gone) { swapRemove(men, i); continue; } footmanThink(f, dt); if (f.gone) swapRemove(men, i); }
   _units.length = 0; G.domes.length = 0;
-  for (const m of mons) { m.haste = LAND.toll > 0 && isUndead(m.def) ? BELL.haste : 0; if (!m.dead && !m.fly && !m.def.ghost) _units.push(m); if (!m.dead && m.def.dome && m.domeHp > 0 && m.vis && !m.dying) G.domes.push(m); }
+  for (const m of mons) { m.haste = LAND.toll > 0 && isUndead(m.def) ? BELL.haste : 0; if (!m.dead && !m.fly && !m.def.ghost && !(m.burrowed > 0)) _units.push(m); if (!m.dead && m.def.dome && m.domeHp > 0 && m.vis && !m.dying) G.domes.push(m); }
   for (const m of mons) {
     const def = m.def; if (m.dead) continue;
     if (def.stealth) { const r2 = def.stealth * def.stealth; m.hidden = !G.towers.some(t => t.alive && t.state === 'active' && dist2(t.x, t.z, m.x, m.z) < r2); }
@@ -321,10 +329,11 @@ function updateUnits(dt) {
       for (const t of G.towers) if (t.alive && t.state === 'active' && dist2(t.x, t.z, m.x, m.z) < r * r) { t.rustT = .4; t.rustF = f; }
       for (const o of mons) if (o.poisonT > 0 && dist2(o.x, o.z, m.x, m.z) < rc * rc) { o.poisonT = 0; fxTimed(2, o.x, o.y + o.hitH, o.z, .8, .8, 1.6, .9, .4, .6, .2); }
       for (const fl of G.fields) if (dist2(fl.x, fl.z, m.x, m.z) < rc * rc) fl.t = Math.min(fl.t, .15);
-      m.beat += dt * 2.2; if (Math.floor(m.beat / TAU) !== Math.floor((m.beat - dt * 2.2) / TAU)) fxTimed(4, m.x, m.y + .08, m.z, r * 2, r * 2, 1.6, .7, .25, .25, .9, { ground: true });
+      m.beat += dt * 2.2; if (Math.floor(m.beat / TAU) !== Math.floor((m.beat - dt * 2.2) / TAU)) { const c = def.rustCol || [1.6, .7, .25]; fxTimed(4, m.x, m.y + .08, m.z, r * 2, r * 2, c[0], c[1], c[2], .25, .9, { ground: true }); }
     }
   }
-  for (const d of mons) if (!d.dead && d.def.aura && d.vis && !d.dying) for (const m of mons) if (m !== d && !m.dead && !m.fly && !m.def.boss && Math.abs(m.s - d.s) < d.def.aura[0]) m.haste = d.def.aura[1];
+  for (const d of mons) if (!d.dead && d.def.aura && d.vis && !d.dying) for (const m of mons) if (m !== d && !m.dead && !m.fly && !m.def.boss && Math.abs(m.s - d.s) < d.def.aura[0] && (!d.def.undeadOnly || isUndead(m.def))) m.haste = d.def.aura[1];
+  if (FOES.on) updateFoes(dt);
   for (const f of men) if (!f.dead && f.onRoad) _units.push(f);
   const U = _units, nu = U.length;
   for (const m of mons) {
@@ -343,12 +352,13 @@ function updateUnits(dt) {
       const [every, dur, , quake] = def.burrow; if (m.daze > 0) m.daze -= dt;
       if (m.burrowed > 0) {
         m.burrowed -= dt; m.foe = null;
-        if (m.burrowed <= 0) { // comes up: knocks footmen about and shakes the ground
+        if (m.burrowed <= 0 && !def.boss) { m.vis = true; m.daze = def.burrow[4] || 0; sfx('crumble', m.x, m.z, .5, .6); fxDust(m.x, m.y + .1, m.z, 6, .8, { speed: 2 }); }
+        else if (m.burrowed <= 0) { // comes up: knocks footmen about and shakes the ground
           m.vis = true; m.daze = def.burrow[4] || 0; FX.shake = Math.min(1.3, FX.shake + .9); sfx('bossStep', m.x, m.z, 1.3, .5); sfx('roar', m.x, m.z, .9, .6); fxDust(m.x, m.y + .1, m.z, 18, 2, { speed: 4 }); lightFlash(m.x, m.y + 1, m.z, 0xb090ff, 280, .4, 12);
           for (const f of men) if (!f.dead && Math.hypot(f.x - m.x, f.z - m.z) < quake) { f.hp -= 40 * G.dmgMul; f.flash = 1; f.flinch = 1; if (f.hp <= 0) killFootman(f, (f.x - m.x) || .1, (f.z - m.z) || .1); }
         }
       } else if (m.vis && m.prog < .72) {
-        m.burT = (m.burT === undefined ? every * .6 : m.burT) - dt; if (m.burT <= 0) { m.burT = every; m.burrowed = dur; m.vis = false; m.foe = null; sfx('crumble', m.x, m.z, .8); fxDust(m.x, m.y + .1, m.z, 14, 1.6, { speed: 3 }); FX.shake = Math.min(1.2, FX.shake + .5); } }
+        m.burT = (m.burT === undefined ? every * .6 : m.burT) - dt; if (m.burT <= 0) { m.burT = every; m.burrowed = dur; m.vis = false; m.foe = null; sfx('crumble', m.x, m.z, def.boss ? .8 : .4); fxDust(m.x, m.y + .1, m.z, def.boss ? 14 : 5, def.boss ? 1.6 : .7, { speed: 3 }); if (def.boss) FX.shake = Math.min(1.2, FX.shake + .5); } }
     }
     if (m.dying > 0) {
       m.dying -= dt; m.flinch = .5 + .5 * Math.sin(m.dying * 22); m.mv = 0; m.atk = -1; m.y -= dt * .12;
@@ -376,7 +386,7 @@ function updateUnits(dt) {
         for (const tw of G.towers) if (tw.alive && tw.state === 'active' && dist2(tw.x, tw.z, m.x, m.z) < sp.r * sp.r) { tw.stun = sp.stun; fxTimed(5, tw.x, tw.y + 2, tw.z, 3, 3, .6, 1.2, 2.4, .9, .3); }
       }
     }
-    let want = def.spd * m.spdMul * (1 - m.slowF) * (1 + m.haste) * (m.burrowed > 0 ? def.burrow[2] : m.daze > 0 ? .25 : 1) * (def.noTide ? 1 : 1 - tideSlow(m.y) * (def.boss ? .5 : 1)), hopMul = 1;
+    let want = def.spd * m.spdMul * (1 - m.slowF) * (1 + m.haste) * (m.burrowed > 0 ? def.burrow[2] : m.daze > 0 ? .25 : 1) * (def.noTide ? 1 : def.tideFast ? 1 + tideSlow(m.y) * def.tideFast : 1 - tideSlow(m.y) * (def.boss ? .5 : 1)) * (m.fk === undefined ? 1 : m.fk), hopMul = 1;
     if (LAND.tideY > m.y && rnd() < dt * 2.5) fxPart(m.x + rr(-.2, .2), LAND.tideY + .02, m.z + rr(-.2, .2), rr(-.4, .4), rr(.6, 1.4), rr(-.4, .4), rr(.3, .5), .04, .6, .8, .85, { grav: 6 });
     if (def.frenzy) want *= 1 + def.frenzy * (1 - m.hp / m.maxHp);
     if (def.enrage && m.hp < m.maxHp * def.enrage[0]) { want *= def.enrage[1]; if (!m.rage) { m.rage = true; sfx('roar', m.x, m.z, 1, .9); fxEmbers(m.x, m.y + 2, m.z, 40, 1.2); FX.shake = Math.min(1.2, FX.shake + .6); } }
@@ -386,7 +396,7 @@ function updateUnits(dt) {
       if (!m.foe && !(m.burrowed > 0)) for (const f of men) if (!f.dead && f.onRoad && f.s > m.s - .3 && f.s - m.s < 1.9 && Math.abs(f.lat - m.lat) < 1.4) { m.foe = f; break; }
       if (m.foe) v *= .55;
     } else if (m.foe) v = 0;
-    else if (!def.ghost) for (let j = 0; j < nu; j++) {
+    else if (!def.ghost && !(m.burrowed > 0)) for (let j = 0; j < nu; j++) {
       const o = U[j]; if (o === m || (def.slip && o.isMan)) continue; const ds = o.s - m.s; if (ds <= 0 || ds > 1.7 + m.rad + o.rad) continue;
       if (Math.abs(o.lat - m.lat) > (m.rad + o.rad) * .92) continue;
       const gap = ds - (m.rad + o.rad), lim = Math.max(0, (o.vf || 0) + gap * 2.6);
@@ -420,7 +430,7 @@ function updateUnits(dt) {
   }
   for (const u of U) if (u.isMan) u.foes = 0;
   for (const m of mons) if (!m.dead && m.foe) m.foe.foes++;
-  for (const m of mons) { if (m.dead || m.fly) continue; const p = pathAt(B, m.s, _ap); m.x = p.x - p.tz * m.lat; m.z = p.z + p.tx * m.lat; m.y = p.y + .02 - (m.dying > 0 ? (1.9 - m.dying) * .15 : 0); m._tx = p.tx; m._tz = p.tz; m._x0 = m.x; m._z0 = m.z; }
+  for (const m of mons) { if (m.dead || m.fly) continue; const p = pathAt(B, m.s, _ap); m.x = p.x - p.tz * m.lat; m.z = p.z + p.tx * m.lat; m.y = p.y + .02 - (m.dying > 0 ? (1.9 - m.dying) * .15 : 0) + (m.landY || 0); m._tx = p.tx; m._tz = p.tz; m._x0 = m.x; m._z0 = m.z; }
   for (let i = 0; i < nu; i++) {
     const a = U[i]; if (a.dead) continue;
     for (let j = i + 1; j < nu; j++) {

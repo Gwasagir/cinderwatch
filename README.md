@@ -32,6 +32,7 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
   - **Hollowmere**, a ruined gothic city under a big pale moon: a broken cathedral with stained glass, street lamps, graves and fallen leaves. Every half minute the cathedral bell tolls and, for a few seconds, every skeleton, ghoul and wraith hurries. Its boss is the Bell Lich, who raises the fallen near him as skeletons.
   - **Stormcrown**, a stormy mountain pass with wind-bent pines, prayer flags and a white shrine. Lightning strikes the road every ten seconds or so; a glowing ring marks the spot a moment before, and the bolt hurts everything there, footmen too. Its boss is the Storm Roc, the first flying boss: only archers and spires reach it, and its own lightning stuns towers.
   - **Road shapes of their own.** The first campaign's roads wind from the cave to the keep at random. In the second campaign each visit to a land brings the next of three shapes: a **switchback** of three long lanes stacked across the board, where a tower between two lanes covers both; a **horseshoe** that runs out to the front and back in one big U, often with a wide bulb, with pads inside reaching both legs; and a **ring road** that circles a small castle in the middle of the board before turning in at its gate, the beacon burning on its central tower.
+  - **Enemies of its own**, 25 of them, each land with its own crowd and its own filler: orc raiders, gulls, shore crabs, moray eels that race through the tide, drowned sirens whose song slows towers and shellbacks only an explosion can flip in Saltreach; kobold miners, crystal mites, burrowing moles, shard golems and geode beetles in Glimmerdeep; zombies, crows, banshees that stun footmen, gravekeepers and corpse carts in Hollowmere; goblins, goats, kite riders that glide in and land, spark sprites lightning can't touch, orc shamans and warchiefs and boulder-throwing hill giants in Stormcrown. The full list is in [docs/enemies.md](docs/enemies.md).
   - More land ideas are in [docs/lands.md](docs/lands.md).
 - **A miniature look.** The scene is drawn at about half resolution, then given an ordered dither, a depth-aware tilt-shift blur, a vignette and film grain.
 - **No asset files.** Every model, texture and sound is generated in code.
@@ -135,8 +136,10 @@ This joins `src/*.js` into `index.html` and inlines three.js from `vendor/`.
 | `src/40-fx.js`, `41-weather.js` | Lights, particles, lightning, decals, snow, ash, dust and fireflies |
 | `src/50-rig.js`, `51-bestiary.js` | Characters built from instanced parts, debris, the models of the later monsters |
 | `src/60-towers.js`, `61-monsters.js`, `62-game.js` | Towers, monsters and the crowd, waves and the AI commander |
-| `src/63-lands.js` | What only some lands have: the tide, the lighthouse beam, the crystals |
+| `src/63-lands.js` | What only some lands have: the tide, the lighthouse beam, the crystals, the bell, the lightning |
+| `src/64-foes.js` | The second campaign's own enemies: stats, models and abilities |
 | `docs/lands.md` | Ideas for new lands |
+| `docs/enemies.md` | Every enemy, which lands send it, and how to add one |
 | `src/70-pixelfont.js`, `72-ui.js` | Pixel font, HUD, menus, input |
 | `src/80-audio.js` | Synthesized sound |
 | `src/90-main.js` | Camera and main loop |

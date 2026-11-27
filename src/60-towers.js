@@ -495,7 +495,7 @@ class Tower {
         hit.push(cur); const to = [cur.x, cur.y + cur.hitH, cur.z];
         fxBolt(from, to, .26 - j * .015, [.5, .78, 1.6], .1 - j * .008);
         fxSparks(to[0], to[1], to[2], 5, 3.5, 1.2, 2, 4, { grav: 3, size: .06 }); fxTimed(2, to[0], to[1], to[2], 1.6, 1.6, .5, .9, 2, .7, .16);
-        const cx = cur.x, cz = cur.z; slowMonster(cur, d.slow[lvl], d.slowT[lvl]); hitMonster(cur, dmg, 'bolt', 0, 0, this);
+        const cx = cur.x, cz = cur.z; if (!cur.def.noBolt) slowMonster(cur, d.slow[lvl], d.slowT[lvl]); hitMonster(cur, dmg, 'bolt', 0, 0, this);
         if (d.roots && j < 4 && !cur.fly) addField(cx, cz, d.roots, this);
         dmg *= .86; from = to; let nb = null, nd = (d.roots ? 3.4 : 3.0) ** 2;
         for (const m of G.mons) { if (m.dead || m.hp <= 0 || !m.vis || hit.includes(m)) continue; const dd = dist2(cx, cz, m.x, m.z); if (dd < nd) { nd = dd; nb = m; } }

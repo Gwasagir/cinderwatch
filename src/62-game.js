@@ -23,17 +23,20 @@ function statWave(w) { if (w > STATS.run.cleared) STATS.run.cleared = w; if (!ST
 function saveStats() { if (!STATS.dirty) return; STATS.dirty = false; try { localStorage.setItem(storeKey('stats'), JSON.stringify(STATS.all)); } catch (e) {} }
 function resetStats() { STATS.all = STATS.zero(); STATS.run = STATS.zero(); STATS.dirty = true; saveStats(); }
 function waveNumber() { return G.level * 5 + (G.phase === 'rise' ? 1 : Math.max(1, G.k)); }
+// How each enemy comes in waves: cost (from the wave's budget; 30 or more counts as heavy), group size min-max, seconds between
+// members of a group, the first wave it can come in, and how often it is picked (w, scaled by each land's mobs).
+const RO = (cost, min, max, gap, from, w) => ({ cost, min, max, gap, from, w });
 const ROSTER = {
-  skel: [4, 3, 6, .5, 1, 5], rat: [1.7, 5, 9, .2, 2, 3], bat: [4.2, 3, 5, .35, 2, 1.3], ghoul: [5.5, 2, 4, .4, 2, 2],
-  slime: [9.5, 1, 3, .9, 3, 2], spider: [3, 3, 6, .25, 3, 2], scarab: [1.9, 5, 8, .18, 2, 0], knight: [12.5, 1, 3, .5, 4, 2], wolf: [5.5, 2, 4, .35, 4, 1.6], bomber: [6, 1, 2, .8, 4, 1.2],
-  wraith: [9, 1, 3, .7, 5, 1.4], toad: [8, 1, 3, .7, 5, .7], wisp: [2.6, 4, 7, .22, 5, .8], drummer: [13, 1, 1, 1, 6, .9], gargoyle: [11, 1, 3, .6, 6, .9],
-  necro: [18, 1, 1, 1.2, 7, .9], mummy: [15, 1, 2, .9, 7, .9], brute: [32, 1, 1, 2, 8, .7], golem: [40, 1, 1, 2, 8, .7], brood: [30, 1, 1, 2, 9, .6],
-  thief: [9, 1, 3, .5, 26, .6], hag: [22, 1, 1, 1, 31, .7], warden: [30, 1, 1, 1.5, 36, .6], drake: [34, 1, 1, 2, 41, .4],
+  skel: RO(4, 3, 6, .5, 1, 5), rat: RO(1.7, 5, 9, .2, 2, 3), bat: RO(4.2, 3, 5, .35, 2, 1.3), ghoul: RO(5.5, 2, 4, .4, 2, 2), slime: RO(9.5, 1, 3, .9, 3, 2),
+  spider: RO(3, 3, 6, .25, 3, 2), scarab: RO(1.9, 5, 8, .18, 2, 0), knight: RO(12.5, 1, 3, .5, 4, 2), wolf: RO(5.5, 2, 4, .35, 4, 1.6), bomber: RO(6, 1, 2, .8, 4, 1.2),
+  wraith: RO(9, 1, 3, .7, 5, 1.4), toad: RO(8, 1, 3, .7, 5, .7), wisp: RO(2.6, 4, 7, .22, 5, .8), drummer: RO(13, 1, 1, 1, 6, .9), gargoyle: RO(11, 1, 3, .6, 6, .9),
+  necro: RO(18, 1, 1, 1.2, 7, .9), mummy: RO(15, 1, 2, .9, 7, .9), brute: RO(32, 1, 1, 2, 8, .7), golem: RO(40, 1, 1, 2, 8, .7), brood: RO(30, 1, 1, 2, 9, .6),
+  thief: RO(9, 1, 3, .5, 26, .6), hag: RO(22, 1, 1, 1, 31, .7), warden: RO(30, 1, 1, 1.5, 36, .6), drake: RO(34, 1, 1, 2, 41, .4),
 };
 function waveMenu(k, level) {
   const w = level * 5 + k, bio = G.B.bio, menu = [];
   for (const ty in ROSTER) {
-    const r = ROSTER[ty], mul = bio.mobs[ty] === undefined ? 1 : bio.mobs[ty], un = Math.min(r[4], bio.early[ty] || 99), wt = r[5] ? r[5] * mul : (bio.mobs[ty] || 0);
+    const r = ROSTER[ty], mul = bio.mobs[ty] === undefined ? (bio.own ? 0 : 1) : bio.mobs[ty], un = Math.min(r.from, bio.early[ty] || 99), wt = r.w && !bio.own ? r.w * mul : (bio.mobs[ty] || 0);
     if (w >= un && wt > 0) menu.push([ty, wt * (w === un && w > 1 ? 2.2 : 1)]);
   }
   return menu;
@@ -48,16 +51,16 @@ function buildWave(k, level) {
   const q = [], boss = k === 5, lv = 1 + .25 * level, T = tune(), shp = (ROAD_SHAPES[G.B.lay.shape] || {}).hp || 1;
   let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1) * T.budget, heavy = 0, air = budget * .42;
   const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press) * T.hp * shp;
-  const menu = waveMenu(k, level), tot = menu.reduce((a, b) => a + b[1], 0);
+  const menu = waveMenu(k, level), tot = menu.reduce((a, b) => a + b[1], 0), fill = G.B.bio.filler || 'skel'; // the filler comes when the pick is too dear
   let t = .6;
   if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) * T.boss * (level < 2 ? T.bossEarly || 1 : 1) });
   while (budget > 0) {
-    let r = rnd() * tot, type = 'skel'; for (const [ty, w] of menu) { r -= w; if (r <= 0) { type = ty; break; } }
-    let R = ROSTER[type];
-    if (R[0] > budget + 5 || (R[0] >= 30 && heavy >= 1 + (level >> 1)) || (MON[type].fly && air <= 0)) { type = 'skel'; R = ROSTER.skel; }
-    if (R[0] >= 30) heavy++;
-    const n = Math.floor(rr(R[1], R[2] + .999)), gap = R[3];
-    for (let i = 0; i < n && budget > 0; i++) { q.push({ t, type, hpMul }); t += gap * rr(.8, 1.25); budget -= R[0]; if (MON[type].fly) air -= R[0]; }
+    let r = rnd() * tot, type = fill; for (const [ty, w] of menu) { r -= w; if (r <= 0) { type = ty; break; } }
+    let E = ROSTER[type];
+    if (E.cost > budget + 5 || (E.cost >= 30 && heavy >= 1 + (level >> 1)) || (MON[type].fly && air <= 0)) { type = fill; E = ROSTER[fill]; }
+    if (E.cost >= 30) heavy++;
+    const n = Math.floor(rr(E.min, E.max + .999)), gap = E.gap;
+    for (let i = 0; i < n && budget > 0; i++) { q.push({ t, type, hpMul }); t += gap * rr(.8, 1.25); budget -= E.cost; if (MON[type].fly) air -= E.cost; }
     t += rr(1.1, 2.3) * (boss ? 1.5 : 1);
   }
   q.sort((a, b) => a.t - b.t);
@@ -88,7 +91,7 @@ function updateWaves(dt) {
       G.bossAlive = G.mons.some(m => m.def.boss && !m.dead);
       if (G.bossWave && G.bossAlive) {
         G.trickle -= dt;
-        if (G.trickle <= 0 && G.trickleN < 9) { G.trickleN++; G.trickle = rr(3.2, 4.6); const tm = waveMenu(5, G.level).filter(e => ROSTER[e[0]][0] < 13), ty = tm[Math.floor(rnd() * tm.length)][0], n = Math.max(1, Math.min(5, Math.round(8 / ROSTER[ty][0]))), hpMul = (1 + .5) * (1 + .22 * G.level); for (let i = 0; i < n; i++) G.queue.push({ t: G.waveT + i * .4, type: ty, hpMul }); }
+        if (G.trickle <= 0 && G.trickleN < 9) { G.trickleN++; G.trickle = rr(3.2, 4.6); const tm = waveMenu(5, G.level).filter(e => ROSTER[e[0]].cost < 13), ty = tm[Math.floor(rnd() * tm.length)][0], n = Math.max(1, Math.min(5, Math.round(8 / ROSTER[ty].cost))), hpMul = (1 + .5) * (1 + .22 * G.level); for (let i = 0; i < n; i++) G.queue.push({ t: G.waveT + i * .4, type: ty, hpMul }); }
       } else { G.spawning = false; endWave(); G.nextIn = G.bossWave ? -1 : 6.5; G.clearT = 0; }
     }
   } else if (G.bossWave) {
