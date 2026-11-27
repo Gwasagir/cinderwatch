@@ -4,7 +4,7 @@ const UI = (() => {
     ctx: null, s: 3, insetTop: 0, goldShown: 0, hurt: 0, coins: [], msg: null, hover: null, menu: null, armed: null, idle: 99, mx: -1, my: -1, inside: false,
     btns: [], hotBtn: null, press: null, gp: { sel: -1, t: 0, prev: [] , active: false }, goldBump: 0, deny: 0, hintT: 0, titleT: 0, rangeMesh: null, padMesh: null, soundRect: null, cmdRect: null, manual: false, moved: 99, focus: 0, slainBump: 0, lastSlain: 0,
     touch: false, ptrs: new Map(), gest: null, lastTap: { t: -9, x: 0, y: 0 }, waveRect: null, followRect: null, menuRect: null, wake: null, panning: false,
-    hud: [], tips: [], tip: null, keys: new Set(), sndArmed: false, vvT: 0, vvN: 0, panel: null, panelRect: null, pbtns: [], saveT: 0, opts: { blur: true, shake: true, help: true },
+    hud: [], tips: [], tip: null, keys: new Set(), sndArmed: false, vvT: 0, vvN: 0, panel: null, panelRect: null, pbtns: [], saveT: 0, opts: { blur: true, shake: true, help: true, gfx: 'auto' },
   };
   const COLR = { bg: 'rgba(9,11,17,0.86)', bg2: 'rgba(24,27,38,0.94)', bd: '#5d4c35', bdHi: '#e8b04a', tx: '#efe4cd', dim: '#a79e8a', amber: '#e8b04a', ember: '#ff8a3c', cold: '#8fc7ff', red: '#e5553c', dark: '#0b0d14', ok: '#9fd08a' };
   const _pv = new THREE.Vector3(), _o = new THREE.Vector3(), _d = new THREE.Vector3();
@@ -457,6 +457,7 @@ const UI = (() => {
       ['Speed: ' + G.speed + 'x', () => { G.speed = G.speed % 3 + 1; sfx('uiClick', CAM.x, CAM.z, .6); }, G.speed > 1],
       [U.opts.blur ? 'Blur: on' : 'Blur: off', () => { U.opts.blur = !U.opts.blur; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.blur],
       [U.opts.shake ? 'Shake: on' : 'Shake: off', () => { U.opts.shake = !U.opts.shake; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.shake],
+      [U.opts.gfx === 'fast' ? 'Graphics: fast' : 'Graphics: auto', () => { U.opts.gfx = U.opts.gfx === 'fast' ? 'auto' : 'fast'; applyOpts(true); const fast = U.opts.gfx === 'fast'; setGraphicsLite(fast); R.quality = fast ? .55 : (U.touch ? .85 : 1); resizeRenderer(); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.gfx === 'fast'],
       [U.opts.help ? 'Help: waves 1-5' : 'Help: off', () => { U.opts.help = !U.opts.help; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.help],
     ];
     const recs = [['Waves cleared', N.cleared, A.cleared], ['Enemies slain', N.kills, A.kills], ['Gold earned', N.gold, A.gold], ['Lives lost', N.lives, A.lives]];

@@ -486,7 +486,7 @@ const COL = {
 
 const R = {
   renderer: null, scene: null, cam: null, canvas: null,
-  dw: 2, dh: 2, iw: 2, ih: 2, maxIH: 620, maxPix: 690000, quality: 1, cssW: 2, cssH: 2, safe: [0, 0, 0, 0], lite: 0, opt: !HASH.noopt,
+  dw: 2, dh: 2, iw: 2, ih: 2, maxIH: 620, maxPix: 690000, quality: 1, tier: HASH.tier || 'full', cssW: 2, cssH: 2, safe: [0, 0, 0, 0], lite: 0, opt: !HASH.noopt,
   viewH: 27, fitW: 45, fitTall: 33, shiftY: 0, px: 0.04,
   sub: new THREE.Vector2(), ditherOfs: new THREE.Vector2(),
   focusZ: 60, fade: 0, exposure: 1.0,
@@ -667,7 +667,8 @@ void main(){
 }
 
 function resizeRenderer() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  // Two device pixels per CSS pixel at most: on a 3x phone that is 2.3 million fewer pixels to upscale, grain and composite every frame.
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const dw = Math.max(8, Math.floor(window.innerWidth * dpr)), dh = Math.max(8, Math.floor(window.innerHeight * dpr));
   R.dw = dw; R.dh = dh; R.dpr = dpr; R.cssW = dw / dpr; R.cssH = dh / dpr;
   { const el = document.getElementById('safe'), cs = el ? getComputedStyle(el) : null, v = k => cs ? Math.round((parseFloat(cs[k]) || 0) * dpr) : 0; R.safe = [v('paddingLeft'), v('paddingTop'), v('paddingRight'), v('paddingBottom')]; }
@@ -705,7 +706,7 @@ function renderFrame() {
   const r = R.renderer, M = R.mats, T = R.rt, cam = R.cam;
   r.info.reset();
   scheduleShadows(G.phase === 'crumble' || G.phase === 'rise');
-  r.setRenderTarget(T.scene); r.render(R.scene, cam);
+  r.setRenderTarget(T.scene); r.render(R.scene, cam); if (R.probe) R.probe('scene');
   const px = M.atmo.uniforms.uPx.value.set(1 / R.iw, 1 / R.ih);
   let u = M.atmo.uniforms;
   u.tColor.value = T.scene.texture; u.tDepth.value = T.scene.depthTexture;
@@ -713,14 +714,14 @@ function renderFrame() {
   cam.getWorldDirection(u.uCamDir.value);
   u.uAO.value.y = 0.85 / R.px;
   u.uWind.value.set(SH.uTime.value * 0.05, SH.uTime.value * 0.021);
-  fsPass(M.atmo, T.atmo);
+  fsPass(M.atmo, T.atmo); if (R.probe) R.probe('fog');
   u = M.dof.uniforms; u.tColor.value = T.atmo.texture; u.tDepth.value = T.scene.depthTexture; u.uPx.value.copy(px);
   const zr = cam.far - cam.near;
   const dsc = R.dofScale || 1;
   u.uDof.value.set((R.focusZ - cam.near) / zr, 3.2 * dsc / zr, 11.5 * dsc / zr, HASH.nodof || R.nodof || R.lite ? 0.6 : Math.max(2, Math.min(R.ih, R.iw * 1.6) * 0.0145));
   const nd = R.dofD || 20;
   u.uNear.value.set(Math.max(4 * dsc, 0.55 * nd) / zr, Math.max(6, nd) / zr, 0.6, R.opt ? 0.25 : -1);
-  fsPass(M.dof, T.dof);
+  fsPass(M.dof, T.dof); if (R.probe) R.probe('blur');
   u = M.bright.uniforms; u.tColor.value = T.dof.texture; u.uPx.value.copy(px); fsPass(M.bright, T.bA);
   u = M.blur.uniforms;
   u.tColor.value = T.bA.texture; u.uDir.value.set(1 / T.bA.width, 0); fsPass(M.blur, T.bA2);
@@ -728,12 +729,12 @@ function renderFrame() {
   u.tColor.value = T.bA.texture; u.uDir.value.set(1 / T.bB.width, 0); fsPass(M.blur, T.bB2);
   u.tColor.value = T.bB2.texture; u.uDir.value.set(0, 1 / T.bB.height); fsPass(M.blur, T.bB);
   u.tColor.value = T.bB.texture; u.uDir.value.set(1.6 / T.bB.width, 0); fsPass(M.blur, T.bB2);
-  u.tColor.value = T.bB2.texture; u.uDir.value.set(0, 1.6 / T.bB.height); fsPass(M.blur, T.bB);
+  u.tColor.value = T.bB2.texture; u.uDir.value.set(0, 1.6 / T.bB.height); fsPass(M.blur, T.bB); if (R.probe) R.probe('glow');
   u = M.comp.uniforms; u.tColor.value = T.dof.texture; u.tBloomA.value = T.bA.texture; u.tBloomB.value = T.bB.texture;
   u.uGrade.value.x = R.exposure; u.uGrade.value.w = R.fade; u.uRes.value.set(R.iw, R.ih);
-  fsPass(M.comp, T.final);
+  fsPass(M.comp, T.final); if (R.probe) R.probe('grade');
   u = M.up.uniforms; u.tColor.value = T.final.texture; u.uTex.value.set(R.iw, R.ih); u.uOut.value.set(R.dw, R.dh); u.uSeed.value = (SH.uTime.value * 60 % 1000) * 7.13;
-  fsPass(M.up, null);
+  fsPass(M.up, null); if (R.probe) R.probe('upscale');
 }
 
 
@@ -2284,33 +2285,45 @@ const LT = {
   hemi: null, moon: null, fill: null, beacon: null, spots: [], towers: [], flashes: [], torches: [], env: [], envSrc: [], envK: 0,
   beaconBase: 1500, beaconMul: 1, beaconLevel: 1, bp: new THREE.Vector3(), tick: 0, shadowsAt: -1, beaconGutter: 0, beaconOn: 1, cold: 0, emitters: [], spotTimer: 0,
 };
+// How many of each light the scene has. Every pixel of the 3D scene is lit by every light, so on a phone this is the main cost.
+// 'lite' halves it: the nearest towers get the tower lights, and one spotlight casts shadows instead of three.
+const LIGHT_TIERS = { full: { spots: 3, towers: 12, flashes: 4, torches: 5, env: 3 }, lite: { spots: 1, towers: 6, flashes: 2, torches: 3, env: 2 } };
 function initLights() {
   const S = R.scene;
   LT.hemi = new THREE.HemisphereLight(0x6d83bd, 0x1c1f2a, 1.15); S.add(LT.hemi);
   const sm = window.matchMedia && matchMedia('(pointer: coarse)').matches ? .75 : 1;
-  const moon = LT.moon = new THREE.DirectionalLight(0xa9c0f6, 1.55); moon.castShadow = true; moon.shadow.mapSize.set(2048 * sm, 2048 * sm);
+  const moon = LT.moon = new THREE.DirectionalLight(0xa9c0f6, 1.55); moon.castShadow = true; moon.shadow.mapSize.set(R.lite ? 1024 : 2048 * sm, R.lite ? 1024 : 2048 * sm);
   const sc = moon.shadow.camera; sc.left = -31; sc.right = 31; sc.top = 31; sc.bottom = -31; sc.near = 5; sc.far = 130; moon.shadow.bias = -0.0005; moon.shadow.normalBias = 0.06;
   S.add(moon); S.add(moon.target);
   LT.fill = new THREE.DirectionalLight(0x4a5f96, 0.3); LT.fill.position.set(30, 14, 34); S.add(LT.fill);
   const b = LT.beacon = new THREE.PointLight(0xff8a3a, 0, 80, 2); b.castShadow = true; b.shadow.mapSize.set(1024 * sm, 1024 * sm);
   b.shadow.camera.near = .5; b.shadow.camera.far = 80; b.shadow.bias = -0.004; b.shadow.normalBias = 0.05; S.add(b);
-  for (let i = 0; i < 3; i++) {
+  setLightTier(R.tier);
+}
+// Builds the spot, tower, flash, torch and land lights for a tier. Changing the count makes three.js recompile its shaders once.
+function setLightTier(tier) {
+  const S = R.scene, LB = LIGHT_TIERS[tier] || LIGHT_TIERS.full, sm = window.matchMedia && matchMedia('(pointer: coarse)').matches ? .75 : 1; R.tier = tier;
+  for (const s of LT.spots) { S.remove(s.l); S.remove(s.l.target); if (s.l.shadow.map) s.l.shadow.map.dispose(); }
+  for (const l of LT.towers) S.remove(l); for (const f of LT.flashes) S.remove(f.l); for (const t of LT.torches) S.remove(t.l); for (const l of LT.env) S.remove(l);
+  LT.spots.length = LT.towers.length = LT.flashes.length = LT.torches.length = LT.env.length = 0;
+  for (let i = 0; i < LB.spots; i++) {
     const s = new THREE.SpotLight(0xff9646, 0, 17, 1.12, .85, 2); s.castShadow = true; s.shadow.mapSize.set(1024 * sm, 1024 * sm);
     s.shadow.camera.near = .4; s.shadow.camera.far = 18; s.shadow.bias = -0.0025; s.shadow.normalBias = 0.04;
     s.position.set(0, 4, 0); S.add(s); S.add(s.target); LT.spots.push({ l: s, owner: null, fade: 0, want: null });
   }
-  for (let i = 0; i < 12; i++) { const l = new THREE.PointLight(0xff9646, 0, 11, 2); S.add(l); LT.towers.push(l); }
-  for (let i = 0; i < 4; i++) { const l = new THREE.PointLight(0xffc070, 0, 22, 2); S.add(l); LT.flashes.push({ l, t: 1, dur: 1, i0: 0 }); }
-  for (let i = 0; i < 5; i++) { const l = new THREE.PointLight(0xff9a50, 0, 7, 2); S.add(l); LT.torches.push({ l, owner: null, cur: 0 }); }
-  for (let i = 0; i < 3; i++) { const l = new THREE.PointLight(0xff5a1e, 0, 9, 2); S.add(l); LT.env.push(l); }
+  for (let i = 0; i < LB.towers; i++) { const l = new THREE.PointLight(0xff9646, 0, 11, 2); S.add(l); LT.towers.push(l); }
+  for (let i = 0; i < LB.flashes; i++) { const l = new THREE.PointLight(0xffc070, 0, 22, 2); S.add(l); LT.flashes.push({ l, t: 1, dur: 1, i0: 0 }); }
+  for (let i = 0; i < LB.torches; i++) { const l = new THREE.PointLight(0xff9a50, 0, 7, 2); S.add(l); LT.torches.push({ l, owner: null, cur: 0 }); }
+  for (let i = 0; i < LB.env; i++) { const l = new THREE.PointLight(0xff5a1e, 0, 9, 2); S.add(l); LT.env.push(l); }
 }
 function scheduleShadows(busy) {
+  if (R.noShadowUpdate) { for (const l of [LT.moon, LT.beacon].concat(LT.spots.map(s => s.l))) { l.shadow.autoUpdate = false; l.shadow.needsUpdate = false; } return; }
   const f = LT.tick = (LT.tick + 1) % 3, all = LT.shadowsAt < 0 || !R.opt; LT.shadowsAt = 0;
   const set = (l, on) => { l.shadow.autoUpdate = false; l.shadow.needsUpdate = (on || all) && l.intensity > 0; };
   set(LT.moon, busy || f === 0);
   if (f === 1 || all) LT.beacon.position.copy(LT.bp);
   set(LT.beacon, f === 1);
-  set(LT.spots[0].l, f === 0); set(LT.spots[1].l, f === 2); set(LT.spots[2].l, f === 2);
+  LT.spots.forEach((s, i) => set(s.l, f === (i ? 2 : 0)));
 }
 function lightFlash(x, y, z, color, intensity, dur, range = 24) {
   let best = LT.flashes[0];
@@ -2330,7 +2343,7 @@ function updateLights(dt, t, focusX, focusZ) {
     const lit = LT.emitters.filter(e => e && e.alive && e.on > .5 && e.spot);
     const key = e => dist2(e.x, e.z, focusX, focusZ) - (e._spot > .2 ? 12 : 0);
     lit.sort((a, b) => key(a) - key(b));
-    const want = lit.slice(0, 3);
+    const want = lit.slice(0, LT.spots.length);
     for (const s of LT.spots) s.want = (s.owner && want.includes(s.owner)) ? s.owner : null;
     for (const e of want) if (!LT.spots.some(s => s.want === e)) { const s = LT.spots.find(s => !s.want); if (s) s.want = e; }
   }
@@ -2350,8 +2363,10 @@ function updateLights(dt, t, focusX, focusZ) {
     const l = LT.env[i], e = LT.envSrc[i];
     if (e && LT.envK > .01) { l.position.set(e.x, e.y, e.z); l.color.setHex(e.c); l.distance = e.d; l.intensity = e.I * LT.envK * (e.flick ? .82 + .18 * n1(t * 1.7 + i * 5, i + 11) : 1); } else l.intensity = 0;
   }
+  let em = LT.emitters;
+  if (LT.towers.length < LT.emitters.length) { em = LT.emitters.filter(e => e && e.alive); if (em.length > LT.towers.length) em.sort((a, b) => dist2(a.x, a.z, focusX, focusZ) - dist2(b.x, b.z, focusX, focusZ)); }
   for (let i = 0; i < LT.towers.length; i++) {
-    const l = LT.towers[i], e = LT.emitters[i];
+    const l = LT.towers[i], e = em[i];
     if (e && e.alive) {
       e.fl = .86 + .1 * n1(t * 7 + e.seed, e.seed) + .05 * n1(t * 19 + e.seed, e.seed + 1);
       l.position.set(e.x, e.y, e.z); l.color.setRGB(e.r, e.g, e.b); l.distance = e.range;
@@ -2364,7 +2379,7 @@ function updateTorchLights(dt, cands, focusX, focusZ) {
   cands.sort((a, b) => b._ls - a._ls);
   const top = cands.slice(0, 9);
   for (const s of LT.torches) if (s.owner && (!s.owner.alive || !top.includes(s.owner))) s.releasing = true;
-  for (let i = 0; i < Math.min(5, top.length); i++) {
+  for (let i = 0; i < Math.min(LT.torches.length, top.length); i++) {
     const c = top[i]; if (LT.torches.some(s => s.owner === c)) continue;
     const s = LT.torches.find(s => !s.owner); if (s) { s.owner = c; s.releasing = false; s.cur = 0; }
   }
@@ -5210,7 +5225,7 @@ const UI = (() => {
     ctx: null, s: 3, insetTop: 0, goldShown: 0, hurt: 0, coins: [], msg: null, hover: null, menu: null, armed: null, idle: 99, mx: -1, my: -1, inside: false,
     btns: [], hotBtn: null, press: null, gp: { sel: -1, t: 0, prev: [] , active: false }, goldBump: 0, deny: 0, hintT: 0, titleT: 0, rangeMesh: null, padMesh: null, soundRect: null, cmdRect: null, manual: false, moved: 99, focus: 0, slainBump: 0, lastSlain: 0,
     touch: false, ptrs: new Map(), gest: null, lastTap: { t: -9, x: 0, y: 0 }, waveRect: null, followRect: null, menuRect: null, wake: null, panning: false,
-    hud: [], tips: [], tip: null, keys: new Set(), sndArmed: false, vvT: 0, vvN: 0, panel: null, panelRect: null, pbtns: [], saveT: 0, opts: { blur: true, shake: true, help: true },
+    hud: [], tips: [], tip: null, keys: new Set(), sndArmed: false, vvT: 0, vvN: 0, panel: null, panelRect: null, pbtns: [], saveT: 0, opts: { blur: true, shake: true, help: true, gfx: 'auto' },
   };
   const COLR = { bg: 'rgba(9,11,17,0.86)', bg2: 'rgba(24,27,38,0.94)', bd: '#5d4c35', bdHi: '#e8b04a', tx: '#efe4cd', dim: '#a79e8a', amber: '#e8b04a', ember: '#ff8a3c', cold: '#8fc7ff', red: '#e5553c', dark: '#0b0d14', ok: '#9fd08a' };
   const _pv = new THREE.Vector3(), _o = new THREE.Vector3(), _d = new THREE.Vector3();
@@ -5663,6 +5678,7 @@ const UI = (() => {
       ['Speed: ' + G.speed + 'x', () => { G.speed = G.speed % 3 + 1; sfx('uiClick', CAM.x, CAM.z, .6); }, G.speed > 1],
       [U.opts.blur ? 'Blur: on' : 'Blur: off', () => { U.opts.blur = !U.opts.blur; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.blur],
       [U.opts.shake ? 'Shake: on' : 'Shake: off', () => { U.opts.shake = !U.opts.shake; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.shake],
+      [U.opts.gfx === 'fast' ? 'Graphics: fast' : 'Graphics: auto', () => { U.opts.gfx = U.opts.gfx === 'fast' ? 'auto' : 'fast'; applyOpts(true); const fast = U.opts.gfx === 'fast'; setGraphicsLite(fast); R.quality = fast ? .55 : (U.touch ? .85 : 1); resizeRenderer(); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.gfx === 'fast'],
       [U.opts.help ? 'Help: waves 1-5' : 'Help: off', () => { U.opts.help = !U.opts.help; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.help],
     ];
     const recs = [['Waves cleared', N.cleared, A.cleared], ['Enemies slain', N.kills, A.kills], ['Gold earned', N.gold, A.gold], ['Lives lost', N.lives, A.lives]];
@@ -6495,16 +6511,25 @@ function frame(now) {
     if (ms > 22.5) { _slow++; _fast = 0; } else { _slow = 0; _fast = ms < 18.6 ? _fast + 1 : 0; }
     _hold -= _acc;
     if (!HASH.noscale) {
-      if (_slow >= 3 && R.quality <= .55 && !R.lite) { R.lite = 1; _slow = 0; LT.moon.shadow.mapSize.set(1024, 1024); if (LT.moon.shadow.map) { LT.moon.shadow.map.dispose(); LT.moon.shadow.map = null; } }
-      if (_slow >= 2 && R.quality > .55) { R.quality = Math.max(.55, R.quality - .15); resizeRenderer(); _slow = 0; _hold = _back; _back = Math.min(480, _back * 2); }
+      // Too slow: lower the resolution to .55, then switch to the lite lights and smaller shadows, then lower the resolution to .4.
+      if (_slow >= 3 && R.quality <= .56 && !R.lite) { setGraphicsLite(true); _slow = 0; }
+      if (_slow >= 2 && R.quality > (R.lite ? .41 : .56)) { R.quality = Math.max(R.lite ? .4 : .55, R.quality - .15); resizeRenderer(); _slow = 0; _hold = _back; _back = Math.min(480, _back * 2); }
       else if (_fast >= 3 && R.quality < 1 && _hold <= 0) { R.quality = Math.min(1, R.quality + .15); resizeRenderer(); _fast = 0; }
     }
     _acc = 0; _frames = 0;
   }
 }
 
+// The cheap graphics: the lite lights, smaller moon shadows and no tilt-shift blur. Used when frames stay slow, or chosen in the settings.
+function setGraphicsLite(on) {
+  R.lite = on ? 1 : 0; setLightTier(on ? 'lite' : (HASH.tier || 'full'));
+  const sm = window.matchMedia && matchMedia('(pointer: coarse)').matches ? .75 : 1, ms = on ? 1024 : 2048 * sm;
+  LT.moon.shadow.mapSize.set(ms, ms); if (LT.moon.shadow.map) { LT.moon.shadow.map.dispose(); LT.moon.shadow.map = null; }
+}
 function boot() {
   if (window.matchMedia && matchMedia('(pointer: coarse)').matches && !HASH.noscale) R.quality = .85;
+  try { if (JSON.parse(localStorage.getItem('cinderwatch.opts') || '{}').gfx === 'fast') { R.lite = 1; R.tier = 'lite'; R.quality = .55; } } catch (e) {}
+  if (HASH.q) R.quality = clamp(+HASH.q, .3, 1); // for testing a fixed render resolution
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) FX.shakeK = .25;
   initRenderer(); initMaterials(); resizeRenderer(); initLights(); initFX(); initWeather(); initKits(); UI.init();
   KIT.marker = new PartBatch(S => {
@@ -6531,7 +6556,24 @@ function boot() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveStats(); AU.setPaused(document.hidden); UI.dropTouches(); if (!document.hidden) { _last = performance.now(); UI.keepAwake(); } });
   window.addEventListener('blur', () => UI.dropTouches());
   for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => setTimeout(resizeRenderer, 60));
-  window.__cw = { G, R, CAM, UI, LT, FX, AI, PX, MON, STATS: () => STATS, LAND: () => LAND, step, setPhase, spawnMonster, hitMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl, pi) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t, false, l === 2 ? (pi || 0) : undefined); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
+  window.__cw = { G, R, CAM, UI, LT, FX, AI, PX, MON, STATS: () => STATS, LAND: () => LAND, step,
+    // Frame profile for tools/perf.js: milliseconds per frame for the simulation, preparing the 3D render, the HUD, and waiting for the GPU to finish.
+    perf(n = 60, dt = 1 / 60) {
+      const gl = R.renderer.getContext(), px = new Uint8Array(4), T = [0, 0, 0, 0], now = () => performance.now();
+      for (let i = 0; i < n; i++) {
+        const t0 = now(); R.frameDt = dt; step(dt); const t1 = now(); applyCamera(); renderFrame(); const t2 = now(); UI.draw(); const t3 = now();
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t4 = now(); T[0] += t1 - t0; T[1] += t2 - t1; T[2] += t3 - t2; T[3] += t4 - t3;
+      }
+      const inf = R.renderer.info.render; let lights = 0; R.scene.traverse(o => { if (o.isLight && o.intensity > 0) lights++; });
+      // GPU time of each pass: wait for the GPU after every pass (slower overall, but it shows where the time goes),
+      // then the same with the shadow maps left as they are, which shows what redrawing them costs
+      const f4 = new Float32Array(4), sync = () => { const rt = R.renderer.getRenderTarget(); if (rt && rt.texture.type === THREE.HalfFloatType) gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, f4); else gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
+      const passes = () => { const P = {}; let last = 0; R.probe = name => { sync(); const t = now(); P[name] = (P[name] || 0) + (t - last) / n; last = t; };
+        for (let i = 0; i < n; i++) { step(dt); applyCamera(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); last = now(); renderFrame(); }
+        R.probe = null; return P; };
+      const P = passes(); R.noShadowUpdate = true; P.sceneNoShadow = passes().scene; R.noShadowUpdate = false;
+      return { pass: P, sim: T[0] / n, render: T[1] / n, hud: T[2] / n, gpu: T[3] / n, calls: inf.calls, tris: inf.triangles, lights, iw: R.iw, ih: R.ih, dw: R.dw, dh: R.dh, mons: G.mons.length, towers: G.towers.length, lite: R.lite, q: R.quality };
+    }, setPhase, spawnMonster, hitMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl, pi) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t, false, l === 2 ? (pi || 0) : undefined); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
   if (HASH.k) G.k = +HASH.k;
   if (HASH.ff) { const n = Math.round(+HASH.ff * 30); for (let i = 0; i < n; i++) step(1 / 30); CAM.sx = CAM.fx; CAM.sz = CAM.fz; R.fade = 1; }
   if (HASH.phase) setPhase(HASH.phase);

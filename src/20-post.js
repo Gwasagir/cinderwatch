@@ -1,7 +1,7 @@
 
 const R = {
   renderer: null, scene: null, cam: null, canvas: null,
-  dw: 2, dh: 2, iw: 2, ih: 2, maxIH: 620, maxPix: 690000, quality: 1, cssW: 2, cssH: 2, safe: [0, 0, 0, 0], lite: 0, opt: !HASH.noopt,
+  dw: 2, dh: 2, iw: 2, ih: 2, maxIH: 620, maxPix: 690000, quality: 1, tier: HASH.tier || 'full', cssW: 2, cssH: 2, safe: [0, 0, 0, 0], lite: 0, opt: !HASH.noopt,
   viewH: 27, fitW: 45, fitTall: 33, shiftY: 0, px: 0.04,
   sub: new THREE.Vector2(), ditherOfs: new THREE.Vector2(),
   focusZ: 60, fade: 0, exposure: 1.0,
@@ -182,7 +182,8 @@ void main(){
 }
 
 function resizeRenderer() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  // Two device pixels per CSS pixel at most: on a 3x phone that is 2.3 million fewer pixels to upscale, grain and composite every frame.
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const dw = Math.max(8, Math.floor(window.innerWidth * dpr)), dh = Math.max(8, Math.floor(window.innerHeight * dpr));
   R.dw = dw; R.dh = dh; R.dpr = dpr; R.cssW = dw / dpr; R.cssH = dh / dpr;
   { const el = document.getElementById('safe'), cs = el ? getComputedStyle(el) : null, v = k => cs ? Math.round((parseFloat(cs[k]) || 0) * dpr) : 0; R.safe = [v('paddingLeft'), v('paddingTop'), v('paddingRight'), v('paddingBottom')]; }
@@ -220,7 +221,7 @@ function renderFrame() {
   const r = R.renderer, M = R.mats, T = R.rt, cam = R.cam;
   r.info.reset();
   scheduleShadows(G.phase === 'crumble' || G.phase === 'rise');
-  r.setRenderTarget(T.scene); r.render(R.scene, cam);
+  r.setRenderTarget(T.scene); r.render(R.scene, cam); if (R.probe) R.probe('scene');
   const px = M.atmo.uniforms.uPx.value.set(1 / R.iw, 1 / R.ih);
   let u = M.atmo.uniforms;
   u.tColor.value = T.scene.texture; u.tDepth.value = T.scene.depthTexture;
@@ -228,14 +229,14 @@ function renderFrame() {
   cam.getWorldDirection(u.uCamDir.value);
   u.uAO.value.y = 0.85 / R.px;
   u.uWind.value.set(SH.uTime.value * 0.05, SH.uTime.value * 0.021);
-  fsPass(M.atmo, T.atmo);
+  fsPass(M.atmo, T.atmo); if (R.probe) R.probe('fog');
   u = M.dof.uniforms; u.tColor.value = T.atmo.texture; u.tDepth.value = T.scene.depthTexture; u.uPx.value.copy(px);
   const zr = cam.far - cam.near;
   const dsc = R.dofScale || 1;
   u.uDof.value.set((R.focusZ - cam.near) / zr, 3.2 * dsc / zr, 11.5 * dsc / zr, HASH.nodof || R.nodof || R.lite ? 0.6 : Math.max(2, Math.min(R.ih, R.iw * 1.6) * 0.0145));
   const nd = R.dofD || 20;
   u.uNear.value.set(Math.max(4 * dsc, 0.55 * nd) / zr, Math.max(6, nd) / zr, 0.6, R.opt ? 0.25 : -1);
-  fsPass(M.dof, T.dof);
+  fsPass(M.dof, T.dof); if (R.probe) R.probe('blur');
   u = M.bright.uniforms; u.tColor.value = T.dof.texture; u.uPx.value.copy(px); fsPass(M.bright, T.bA);
   u = M.blur.uniforms;
   u.tColor.value = T.bA.texture; u.uDir.value.set(1 / T.bA.width, 0); fsPass(M.blur, T.bA2);
@@ -243,10 +244,10 @@ function renderFrame() {
   u.tColor.value = T.bA.texture; u.uDir.value.set(1 / T.bB.width, 0); fsPass(M.blur, T.bB2);
   u.tColor.value = T.bB2.texture; u.uDir.value.set(0, 1 / T.bB.height); fsPass(M.blur, T.bB);
   u.tColor.value = T.bB.texture; u.uDir.value.set(1.6 / T.bB.width, 0); fsPass(M.blur, T.bB2);
-  u.tColor.value = T.bB2.texture; u.uDir.value.set(0, 1.6 / T.bB.height); fsPass(M.blur, T.bB);
+  u.tColor.value = T.bB2.texture; u.uDir.value.set(0, 1.6 / T.bB.height); fsPass(M.blur, T.bB); if (R.probe) R.probe('glow');
   u = M.comp.uniforms; u.tColor.value = T.dof.texture; u.tBloomA.value = T.bA.texture; u.tBloomB.value = T.bB.texture;
   u.uGrade.value.x = R.exposure; u.uGrade.value.w = R.fade; u.uRes.value.set(R.iw, R.ih);
-  fsPass(M.comp, T.final);
+  fsPass(M.comp, T.final); if (R.probe) R.probe('grade');
   u = M.up.uniforms; u.tColor.value = T.final.texture; u.uTex.value.set(R.iw, R.ih); u.uOut.value.set(R.dw, R.dh); u.uSeed.value = (SH.uTime.value * 60 % 1000) * 7.13;
-  fsPass(M.up, null);
+  fsPass(M.up, null); if (R.probe) R.probe('upscale');
 }

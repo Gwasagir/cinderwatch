@@ -34,7 +34,7 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
 - **A miniature look.** The scene is drawn at about half resolution, then given an ordered dither, a depth-aware tilt-shift blur, a vignette and film grain.
 - **No asset files.** Every model, texture and sound is generated in code.
 - **Small comforts.** The first time each monster appears, a line says what it does. Tower menus show what the next level brings. The wave plate shows the gold for calling a wave early. Your best wave and your mute setting are remembered.
-- **Settings and records.** The gear button next to the zoom buttons (or `O`) pauses the game and opens a panel with sound, speed, blur, screen shake and help (the controls hint at the bottom, shown during the first five waves of a run unless switched off), your records for this run and for all runs (best wave cleared, enemies slain, gold earned, lives lost) and the credits. A page opened with `level=`, `k=` or `ff=` is a test, so its first run is not added to the records.
+- **Settings and records.** The gear button next to the zoom buttons (or `O`) pauses the game and opens a panel with sound, speed, blur, screen shake, graphics (auto, or fast for slow phones) and help (the controls hint at the bottom, shown during the first five waves of a run unless switched off), your records for this run and for all runs (best wave cleared, enemies slain, gold earned, lives lost) and the credits. A page opened with `level=`, `k=` or `ff=` is a test, so its first run is not added to the records.
 
 ![Frostfall, Mirefen, Emberscar and Duskmesa](media/biomes.jpg)
 
@@ -170,6 +170,14 @@ node tools/balance.js 1-8 60 level=5
 
 `balance.js` lets the AI commander play each seed headless, without drawing, until its first defeat or the time limit in game minutes (90 minutes takes well under a minute per seed). It reports the wave each seed reached, how much damage each tower deals at level 3 and on each level 4 path, and for every battlefield the lives lost to regular waves and to the boss, how often the boss got through, and the unspent gold at the start of waves 2 to 4 and before the boss. Seeds run in parallel; by default about half the CPU is used (one seed per two cores), and `JOBS=n` sets how many run at once. `B=1` adds a line per battlefield, `V=1` a line per wave, `FILE=other.html` tests another build, and `LCAP=14` splits the later battlefields further. On Linux it uses software WebGL, so Chrome for Testing's `chrome-headless-shell` works as `CHROME`. With a fixed seed the game starts in Ashen Pass, so `level=5` and `level=10` keep each battlefield in its usual land and boss; other values pair them differently from a real run.
 
+```bash
+node tools/perf.js "seed=4&level=4" 40
+```
+
+`perf.js` plays a seed headless to a busy moment, then reports milliseconds per frame for the simulation, preparing the 3D render, the HUD and the GPU (split into the scene, shadow maps and each post-processing pass), at a desktop size and at a phone size (390x844 at 3x), with JavaScript at full speed and slowed down 4x the way Chrome DevTools does. On Linux the GPU is software (SwiftShader), so compare its numbers between builds rather than with a real phone. `PROFILES=phone:1,phone:6` picks the profiles; `tier=lite` and `q=0.55` in the flags force the cheap lights and a render resolution.
+
+**Performance.** Nearly all of a frame's cost is the GPU: every pixel of the 3D scene is lit by every light (about 30). The game watches its frame rate and steps down when frames stay slow: the render resolution first, then the lite lights (half the point lights, one shadowed spotlight instead of three), smaller moon shadows and no tilt-shift blur, then a lower resolution still. *Graphics: fast* in the settings starts at that cheap level. The screen is drawn at two device pixels per CSS pixel at most, which spares a 3x phone 2.3 million pixels a frame.
+
 URL flags, for example `index.html#seed=4&fps=1`:
 
 | Flag | Effect |
@@ -183,6 +191,7 @@ URL flags, for example `index.html#seed=4&fps=1`:
 | `fps=1` | Show frame rate and draw calls |
 | `nodof=1` | Turn off the tilt-shift blur |
 | `noscale=1` | Turn off automatic resolution scaling |
+| `tier=lite`, `q=N` | Use the lite lights, or a fixed render resolution (0.3 to 1), for measuring |
 | `noopt=1` | Refresh every shadow map every frame and blur every pixel, for comparing speed |
 | `manual=1` | Do not start the loop (used by `record.js`) |
 

@@ -3,33 +3,45 @@ const LT = {
   hemi: null, moon: null, fill: null, beacon: null, spots: [], towers: [], flashes: [], torches: [], env: [], envSrc: [], envK: 0,
   beaconBase: 1500, beaconMul: 1, beaconLevel: 1, bp: new THREE.Vector3(), tick: 0, shadowsAt: -1, beaconGutter: 0, beaconOn: 1, cold: 0, emitters: [], spotTimer: 0,
 };
+// How many of each light the scene has. Every pixel of the 3D scene is lit by every light, so on a phone this is the main cost.
+// 'lite' halves it: the nearest towers get the tower lights, and one spotlight casts shadows instead of three.
+const LIGHT_TIERS = { full: { spots: 3, towers: 12, flashes: 4, torches: 5, env: 3 }, lite: { spots: 1, towers: 6, flashes: 2, torches: 3, env: 2 } };
 function initLights() {
   const S = R.scene;
   LT.hemi = new THREE.HemisphereLight(0x6d83bd, 0x1c1f2a, 1.15); S.add(LT.hemi);
   const sm = window.matchMedia && matchMedia('(pointer: coarse)').matches ? .75 : 1;
-  const moon = LT.moon = new THREE.DirectionalLight(0xa9c0f6, 1.55); moon.castShadow = true; moon.shadow.mapSize.set(2048 * sm, 2048 * sm);
+  const moon = LT.moon = new THREE.DirectionalLight(0xa9c0f6, 1.55); moon.castShadow = true; moon.shadow.mapSize.set(R.lite ? 1024 : 2048 * sm, R.lite ? 1024 : 2048 * sm);
   const sc = moon.shadow.camera; sc.left = -31; sc.right = 31; sc.top = 31; sc.bottom = -31; sc.near = 5; sc.far = 130; moon.shadow.bias = -0.0005; moon.shadow.normalBias = 0.06;
   S.add(moon); S.add(moon.target);
   LT.fill = new THREE.DirectionalLight(0x4a5f96, 0.3); LT.fill.position.set(30, 14, 34); S.add(LT.fill);
   const b = LT.beacon = new THREE.PointLight(0xff8a3a, 0, 80, 2); b.castShadow = true; b.shadow.mapSize.set(1024 * sm, 1024 * sm);
   b.shadow.camera.near = .5; b.shadow.camera.far = 80; b.shadow.bias = -0.004; b.shadow.normalBias = 0.05; S.add(b);
-  for (let i = 0; i < 3; i++) {
+  setLightTier(R.tier);
+}
+// Builds the spot, tower, flash, torch and land lights for a tier. Changing the count makes three.js recompile its shaders once.
+function setLightTier(tier) {
+  const S = R.scene, LB = LIGHT_TIERS[tier] || LIGHT_TIERS.full, sm = window.matchMedia && matchMedia('(pointer: coarse)').matches ? .75 : 1; R.tier = tier;
+  for (const s of LT.spots) { S.remove(s.l); S.remove(s.l.target); if (s.l.shadow.map) s.l.shadow.map.dispose(); }
+  for (const l of LT.towers) S.remove(l); for (const f of LT.flashes) S.remove(f.l); for (const t of LT.torches) S.remove(t.l); for (const l of LT.env) S.remove(l);
+  LT.spots.length = LT.towers.length = LT.flashes.length = LT.torches.length = LT.env.length = 0;
+  for (let i = 0; i < LB.spots; i++) {
     const s = new THREE.SpotLight(0xff9646, 0, 17, 1.12, .85, 2); s.castShadow = true; s.shadow.mapSize.set(1024 * sm, 1024 * sm);
     s.shadow.camera.near = .4; s.shadow.camera.far = 18; s.shadow.bias = -0.0025; s.shadow.normalBias = 0.04;
     s.position.set(0, 4, 0); S.add(s); S.add(s.target); LT.spots.push({ l: s, owner: null, fade: 0, want: null });
   }
-  for (let i = 0; i < 12; i++) { const l = new THREE.PointLight(0xff9646, 0, 11, 2); S.add(l); LT.towers.push(l); }
-  for (let i = 0; i < 4; i++) { const l = new THREE.PointLight(0xffc070, 0, 22, 2); S.add(l); LT.flashes.push({ l, t: 1, dur: 1, i0: 0 }); }
-  for (let i = 0; i < 5; i++) { const l = new THREE.PointLight(0xff9a50, 0, 7, 2); S.add(l); LT.torches.push({ l, owner: null, cur: 0 }); }
-  for (let i = 0; i < 3; i++) { const l = new THREE.PointLight(0xff5a1e, 0, 9, 2); S.add(l); LT.env.push(l); }
+  for (let i = 0; i < LB.towers; i++) { const l = new THREE.PointLight(0xff9646, 0, 11, 2); S.add(l); LT.towers.push(l); }
+  for (let i = 0; i < LB.flashes; i++) { const l = new THREE.PointLight(0xffc070, 0, 22, 2); S.add(l); LT.flashes.push({ l, t: 1, dur: 1, i0: 0 }); }
+  for (let i = 0; i < LB.torches; i++) { const l = new THREE.PointLight(0xff9a50, 0, 7, 2); S.add(l); LT.torches.push({ l, owner: null, cur: 0 }); }
+  for (let i = 0; i < LB.env; i++) { const l = new THREE.PointLight(0xff5a1e, 0, 9, 2); S.add(l); LT.env.push(l); }
 }
 function scheduleShadows(busy) {
+  if (R.noShadowUpdate) { for (const l of [LT.moon, LT.beacon].concat(LT.spots.map(s => s.l))) { l.shadow.autoUpdate = false; l.shadow.needsUpdate = false; } return; }
   const f = LT.tick = (LT.tick + 1) % 3, all = LT.shadowsAt < 0 || !R.opt; LT.shadowsAt = 0;
   const set = (l, on) => { l.shadow.autoUpdate = false; l.shadow.needsUpdate = (on || all) && l.intensity > 0; };
   set(LT.moon, busy || f === 0);
   if (f === 1 || all) LT.beacon.position.copy(LT.bp);
   set(LT.beacon, f === 1);
-  set(LT.spots[0].l, f === 0); set(LT.spots[1].l, f === 2); set(LT.spots[2].l, f === 2);
+  LT.spots.forEach((s, i) => set(s.l, f === (i ? 2 : 0)));
 }
 function lightFlash(x, y, z, color, intensity, dur, range = 24) {
   let best = LT.flashes[0];
@@ -49,7 +61,7 @@ function updateLights(dt, t, focusX, focusZ) {
     const lit = LT.emitters.filter(e => e && e.alive && e.on > .5 && e.spot);
     const key = e => dist2(e.x, e.z, focusX, focusZ) - (e._spot > .2 ? 12 : 0);
     lit.sort((a, b) => key(a) - key(b));
-    const want = lit.slice(0, 3);
+    const want = lit.slice(0, LT.spots.length);
     for (const s of LT.spots) s.want = (s.owner && want.includes(s.owner)) ? s.owner : null;
     for (const e of want) if (!LT.spots.some(s => s.want === e)) { const s = LT.spots.find(s => !s.want); if (s) s.want = e; }
   }
@@ -69,8 +81,10 @@ function updateLights(dt, t, focusX, focusZ) {
     const l = LT.env[i], e = LT.envSrc[i];
     if (e && LT.envK > .01) { l.position.set(e.x, e.y, e.z); l.color.setHex(e.c); l.distance = e.d; l.intensity = e.I * LT.envK * (e.flick ? .82 + .18 * n1(t * 1.7 + i * 5, i + 11) : 1); } else l.intensity = 0;
   }
+  let em = LT.emitters;
+  if (LT.towers.length < LT.emitters.length) { em = LT.emitters.filter(e => e && e.alive); if (em.length > LT.towers.length) em.sort((a, b) => dist2(a.x, a.z, focusX, focusZ) - dist2(b.x, b.z, focusX, focusZ)); }
   for (let i = 0; i < LT.towers.length; i++) {
-    const l = LT.towers[i], e = LT.emitters[i];
+    const l = LT.towers[i], e = em[i];
     if (e && e.alive) {
       e.fl = .86 + .1 * n1(t * 7 + e.seed, e.seed) + .05 * n1(t * 19 + e.seed, e.seed + 1);
       l.position.set(e.x, e.y, e.z); l.color.setRGB(e.r, e.g, e.b); l.distance = e.range;
@@ -83,7 +97,7 @@ function updateTorchLights(dt, cands, focusX, focusZ) {
   cands.sort((a, b) => b._ls - a._ls);
   const top = cands.slice(0, 9);
   for (const s of LT.torches) if (s.owner && (!s.owner.alive || !top.includes(s.owner))) s.releasing = true;
-  for (let i = 0; i < Math.min(5, top.length); i++) {
+  for (let i = 0; i < Math.min(LT.torches.length, top.length); i++) {
     const c = top[i]; if (LT.torches.some(s => s.owner === c)) continue;
     const s = LT.torches.find(s => !s.owner); if (s) { s.owner = c; s.releasing = false; s.cur = 0; }
   }

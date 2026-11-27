@@ -138,16 +138,25 @@ function frame(now) {
     if (ms > 22.5) { _slow++; _fast = 0; } else { _slow = 0; _fast = ms < 18.6 ? _fast + 1 : 0; }
     _hold -= _acc;
     if (!HASH.noscale) {
-      if (_slow >= 3 && R.quality <= .55 && !R.lite) { R.lite = 1; _slow = 0; LT.moon.shadow.mapSize.set(1024, 1024); if (LT.moon.shadow.map) { LT.moon.shadow.map.dispose(); LT.moon.shadow.map = null; } }
-      if (_slow >= 2 && R.quality > .55) { R.quality = Math.max(.55, R.quality - .15); resizeRenderer(); _slow = 0; _hold = _back; _back = Math.min(480, _back * 2); }
+      // Too slow: lower the resolution to .55, then switch to the lite lights and smaller shadows, then lower the resolution to .4.
+      if (_slow >= 3 && R.quality <= .56 && !R.lite) { setGraphicsLite(true); _slow = 0; }
+      if (_slow >= 2 && R.quality > (R.lite ? .41 : .56)) { R.quality = Math.max(R.lite ? .4 : .55, R.quality - .15); resizeRenderer(); _slow = 0; _hold = _back; _back = Math.min(480, _back * 2); }
       else if (_fast >= 3 && R.quality < 1 && _hold <= 0) { R.quality = Math.min(1, R.quality + .15); resizeRenderer(); _fast = 0; }
     }
     _acc = 0; _frames = 0;
   }
 }
 
+// The cheap graphics: the lite lights, smaller moon shadows and no tilt-shift blur. Used when frames stay slow, or chosen in the settings.
+function setGraphicsLite(on) {
+  R.lite = on ? 1 : 0; setLightTier(on ? 'lite' : (HASH.tier || 'full'));
+  const sm = window.matchMedia && matchMedia('(pointer: coarse)').matches ? .75 : 1, ms = on ? 1024 : 2048 * sm;
+  LT.moon.shadow.mapSize.set(ms, ms); if (LT.moon.shadow.map) { LT.moon.shadow.map.dispose(); LT.moon.shadow.map = null; }
+}
 function boot() {
   if (window.matchMedia && matchMedia('(pointer: coarse)').matches && !HASH.noscale) R.quality = .85;
+  try { if (JSON.parse(localStorage.getItem('cinderwatch.opts') || '{}').gfx === 'fast') { R.lite = 1; R.tier = 'lite'; R.quality = .55; } } catch (e) {}
+  if (HASH.q) R.quality = clamp(+HASH.q, .3, 1); // for testing a fixed render resolution
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) FX.shakeK = .25;
   initRenderer(); initMaterials(); resizeRenderer(); initLights(); initFX(); initWeather(); initKits(); UI.init();
   KIT.marker = new PartBatch(S => {
@@ -174,7 +183,24 @@ function boot() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveStats(); AU.setPaused(document.hidden); UI.dropTouches(); if (!document.hidden) { _last = performance.now(); UI.keepAwake(); } });
   window.addEventListener('blur', () => UI.dropTouches());
   for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, () => setTimeout(resizeRenderer, 60));
-  window.__cw = { G, R, CAM, UI, LT, FX, AI, PX, MON, STATS: () => STATS, LAND: () => LAND, step, setPhase, spawnMonster, hitMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl, pi) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t, false, l === 2 ? (pi || 0) : undefined); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
+  window.__cw = { G, R, CAM, UI, LT, FX, AI, PX, MON, STATS: () => STATS, LAND: () => LAND, step,
+    // Frame profile for tools/perf.js: milliseconds per frame for the simulation, preparing the 3D render, the HUD, and waiting for the GPU to finish.
+    perf(n = 60, dt = 1 / 60) {
+      const gl = R.renderer.getContext(), px = new Uint8Array(4), T = [0, 0, 0, 0], now = () => performance.now();
+      for (let i = 0; i < n; i++) {
+        const t0 = now(); R.frameDt = dt; step(dt); const t1 = now(); applyCamera(); renderFrame(); const t2 = now(); UI.draw(); const t3 = now();
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t4 = now(); T[0] += t1 - t0; T[1] += t2 - t1; T[2] += t3 - t2; T[3] += t4 - t3;
+      }
+      const inf = R.renderer.info.render; let lights = 0; R.scene.traverse(o => { if (o.isLight && o.intensity > 0) lights++; });
+      // GPU time of each pass: wait for the GPU after every pass (slower overall, but it shows where the time goes),
+      // then the same with the shadow maps left as they are, which shows what redrawing them costs
+      const f4 = new Float32Array(4), sync = () => { const rt = R.renderer.getRenderTarget(); if (rt && rt.texture.type === THREE.HalfFloatType) gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.FLOAT, f4); else gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
+      const passes = () => { const P = {}; let last = 0; R.probe = name => { sync(); const t = now(); P[name] = (P[name] || 0) + (t - last) / n; last = t; };
+        for (let i = 0; i < n; i++) { step(dt); applyCamera(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); last = now(); renderFrame(); }
+        R.probe = null; return P; };
+      const P = passes(); R.noShadowUpdate = true; P.sceneNoShadow = passes().scene; R.noShadowUpdate = false;
+      return { pass: P, sim: T[0] / n, render: T[1] / n, hud: T[2] / n, gpu: T[3] / n, calls: inf.calls, tris: inf.triangles, lights, iw: R.iw, ih: R.ih, dw: R.dw, dh: R.dh, mons: G.mons.length, towers: G.towers.length, lite: R.lite, q: R.quality };
+    }, setPhase, spawnMonster, hitMonster, MAT, tick(dt, render) { R.frameDt = dt; step(dt); R.fade = 1; applyCamera(); if (render) renderFrame(); UI.draw(); }, bench(n = 40) { const gl = R.renderer.getContext(), px = new Uint8Array(4); applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { applyCamera(); renderFrame(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(2); }, build(i, kind, lvl, pi) { const pad = G.B.pads[i]; if (pad.tower) return; G.gold += 999; const t = buildTower(pad, kind, false); for (let k = 0; k < 90; k++) step(1 / 30); for (let l = 0; l < (lvl || 0); l++) { G.gold += 999; upgradeTower(t, false, l === 2 ? (pi || 0) : undefined); for (let k = 0; k < 90; k++) step(1 / 30); } return t.kind + t.lvl; } };
   if (HASH.k) G.k = +HASH.k;
   if (HASH.ff) { const n = Math.round(+HASH.ff * 30); for (let i = 0; i < n; i++) step(1 / 30); CAM.sx = CAM.fx; CAM.sz = CAM.fz; R.fade = 1; }
   if (HASH.phase) setPhase(HASH.phase);
