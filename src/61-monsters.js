@@ -25,12 +25,12 @@ const MON = {
   hag: { name: 'Rust hag', tip: 'Rusts nearby towers and cures poison.', hp: 220, spd: .78, rad: .32, mass: 1.6, bounty: 24, lives: 1, hitH: .8, top: 1.75, dmg: 8, atkT: 1.2, eye: [3.6, 1.6, .3], scale: 1.05, rust: [3.6, .2, 2.6], lamp: [14, 0xff8a40], death: 'bones', cat: 'armor', tint: [1.15, .72, .5] },
   warden: { name: 'Shield warden', tip: 'Its dome stops arrows, bolts and shells. Lightning gets through.', hp: 420, spd: .8, rad: .38, mass: 4, bounty: 28, lives: 2, hitH: .95, top: 1.95, dmg: 18, atkT: 1.3, eye: [.6, 2.2, 3.6], scale: 1.25, dome: [1.7, 150, 10], death: 'bones', blade: true, cat: 'armor', tint: [.7, .8, 1.0] },
   drake: { name: 'Ember drake', tip: 'An armored flyer that burns footmen. Poison does nothing.', hp: 520, spd: 1.15, rad: .5, mass: 6, bounty: 30, lives: 2, hitH: 0, top: .9, dmg: 0, atkT: 1, eye: [3.6, 1.8, .3], scale: 1.6, fly: true, armor: .6, noPoison: true, breath: [7, 3.6, 1.3, 32], death: 'bat', cat: 'air', alt: [3.2, 4.0], flap: 5, lamp: [12, 0xff6a20] },
-  giant: { name: 'Bone Giant', tip: 'Slow and enormous. Hit it with everything.', hp: 1250, spd: .88, rad: .92, mass: 40, bounty: 200, lives: 5, hitH: 2.2, top: 4.0, dmg: 46, atkT: 1.7, eye: [5, .9, .2], scale: 2.7, boss: true, death: 'bones', blade: true, cat: 'armor' },
-  ogre: { name: 'Ogre', tip: 'Smashes footmen aside.', hp: 1400, spd: .8, rad: 1.0, mass: 46, bounty: 200, lives: 5, hitH: 1.9, top: 3.4, dmg: 52, atkT: 1.8, eye: [4.5, 2.2, .3], scale: 2.6, boss: true, death: 'flesh', blade: true, cat: 'armor' },
-  jotun: { name: 'Frost Jotun', tip: 'Its stomp freezes nearby towers.', hp: 1150, spd: .8, rad: 1.0, mass: 46, bounty: 200, lives: 5, hitH: 1.9, top: 3.6, dmg: 52, atkT: 1.8, eye: [.8, 2.4, 4], scale: 2.75, boss: true, stomp: { every: 10, r: 5.2, stun: 1.8 }, death: 'flesh', blade: true, cat: 'armor', tint: [1.0, 1.25, 3.4] },
-  queen: { name: 'Brood Queen', tip: 'Keeps hatching spiders.', hp: 1150, spd: .85, rad: 1.1, mass: 40, bounty: 200, lives: 5, hitH: 1.0, top: 2.0, dmg: 40, atkT: 1.5, eye: [3.8, .3, .9], scale: 4.2, boss: true, summon: { type: 'spider', n: 2, every: 8, max: 99, hp: 1 }, death: 'bug', cat: 'armor', tint: [.85, .55, 1.0] },
-  colossus: { name: 'Magma Colossus', tip: 'Speeds up when it is nearly dead.', hp: 1250, spd: .7, rad: 1.05, mass: 60, bounty: 200, lives: 5, hitH: 2.2, top: 4.3, dmg: 60, atkT: 2.0, eye: [4, 1.6, .3], scale: 3.0, boss: true, armor: .85, slowRes: .3, enrage: [.3, 1.25], death: 'rock', cat: 'armor', tint: [1.5, .5, .26] },
-  king: { name: 'The Buried King', tip: 'Summons mummies to walk with him.', hp: 1250, spd: .86, rad: .92, mass: 40, bounty: 200, lives: 5, hitH: 2.2, top: 4.2, dmg: 46, atkT: 1.7, eye: [.6, 3.0, 2.6], scale: 2.7, boss: true, summon: { type: 'mummy', n: 1, every: 9, max: 99, hp: .7 }, death: 'bones', blade: true, cat: 'armor', tint: [1.2, 1.0, .55] },
+  giant: { name: 'Bone Giant', tip: 'Slow and enormous. Hit it with everything.', hp: 1250, spd: .88, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.0, dmg: 46, atkT: 1.7, eye: [5, .9, .2], scale: 2.7, boss: true, death: 'bones', blade: true, cat: 'armor' },
+  ogre: { name: 'Ogre', tip: 'Smashes footmen aside.', hp: 1400, spd: .8, rad: 1.0, mass: 46, bounty: 200, lives: 10, hitH: 1.9, top: 3.4, dmg: 52, atkT: 1.8, eye: [4.5, 2.2, .3], scale: 2.6, boss: true, death: 'flesh', blade: true, cat: 'armor' },
+  jotun: { name: 'Frost Jotun', tip: 'Its stomp freezes nearby towers.', hp: 1150, spd: .8, rad: 1.0, mass: 46, bounty: 200, lives: 10, hitH: 1.9, top: 3.6, dmg: 52, atkT: 1.8, eye: [.8, 2.4, 4], scale: 2.75, boss: true, stomp: { every: 10, r: 5.2, stun: 1.8 }, death: 'flesh', blade: true, cat: 'armor', tint: [1.0, 1.25, 3.4] },
+  queen: { name: 'Brood Queen', tip: 'Keeps hatching spiders.', hp: 1150, spd: .85, rad: 1.1, mass: 40, bounty: 200, lives: 10, hitH: 1.0, top: 2.0, dmg: 40, atkT: 1.5, eye: [3.8, .3, .9], scale: 4.2, boss: true, summon: { type: 'spider', n: 2, every: 8, max: 99, hp: 1 }, death: 'bug', cat: 'armor', tint: [.85, .55, 1.0] },
+  colossus: { name: 'Magma Colossus', tip: 'Speeds up when it is nearly dead.', hp: 1250, spd: .7, rad: 1.05, mass: 60, bounty: 200, lives: 10, hitH: 2.2, top: 4.3, dmg: 60, atkT: 2.0, eye: [4, 1.6, .3], scale: 3.0, boss: true, armor: .85, slowRes: .3, enrage: [.3, 1.25], death: 'rock', cat: 'armor', tint: [1.5, .5, .26] },
+  king: { name: 'The Buried King', tip: 'Summons mummies to walk with him.', hp: 1250, spd: .86, rad: .92, mass: 40, bounty: 200, lives: 10, hitH: 2.2, top: 4.2, dmg: 46, atkT: 1.7, eye: [.6, 3.0, 2.6], scale: 2.7, boss: true, summon: { type: 'mummy', n: 1, every: 9, max: 99, hp: .7 }, death: 'bones', blade: true, cat: 'armor', tint: [1.2, 1.0, .55] },
 };
 
 function spawnMonster(type, o = {}) {
@@ -95,7 +95,7 @@ function burnMonster(m, dmg, tower, kind) {
 function poisonMonster(m, dps, t, tower) {
   if (m.def.noPoison) return; if (dps >= (m.poisonD || 0) || m.poisonT < .5) { m.poisonD = dps; m.poisonBy = tower; } m.poisonT = Math.max(m.poisonT || 0, t); }
 function dropCoins(x, y, z, bounty, n) {
-  G.gold += bounty; const each = bounty / n;
+  G.gold += bounty; stat('gold', bounty); const each = bounty / n;
   for (let i = 0; i < n; i++) {
     _tm.compose(_tv.set(x + rr(-.15, .15), y + .3, z + rr(-.15, .15)), _tq.set(rr(-1, 1), rr(-1, 1), rr(-1, 1), 1).normalize(), _ts.set(1, 1, 1));
     const d = addDebris(KIT.coin, _tm, null, rr(-1.6, 1.6), rr(3.6, 6.2), rr(-1.6, 1.6), rr(8, 16), 3, { coin: rr(.5, .8), bounce: .5 });
@@ -110,7 +110,7 @@ function blastAround(m, ex) {
 function killMonster(m, kind, dx, dz, tower) {
   const B = G.B, def = m.def, t = m.type, dth = def.death; if (tower) tower.kills++;
   if (def.boss) { m.dying = 1.9; m.hp = 0; m.foe = null; G.slowmo = 1.4; sfx('roar', m.x, m.z, 1, 1); return; }
-  G.slain++; G.waveKills++;
+  G.slain++; G.waveKills++; stat('kills', 1);
   const ix = (dx || 0) * 2.2, iz = (dz || 0) * 2.2, up = kind === 'blast' ? 1.7 : 1, sc = m.scale;
   if (dth === 'bones') { shatter(e => rigMonster(e), m, [ix, 1.2 * up, iz], { spread: kind === 'blast' ? 2.6 : 1.5, up }); sfx('boneRattle', m.x, m.z, .8, rnd()); fxDust(m.x, m.y + .1, m.z, 3, .6, { a: .35 }); }
   else if (dth === 'fur') { shatter(e => rigMonster(e), m, [ix, 2.2 * up, iz], { spread: 1.2, life: .6 }); sfx('ratSqueal', m.x, m.z, .55, rnd()); fxDust(m.x, m.y + .1, m.z, 2, .4, { a: .3 }); }
@@ -138,7 +138,7 @@ function killMonster(m, kind, dx, dz, tower) {
   if (def.explode) blastAround(m, def.explode);
 }
 function finishBoss(m) {
-  G.slain++; G.waveKills++;
+  G.slain++; G.waveKills++; stat('kills', 1);
   shatter(e => rigMonster(e), m, [0, 2.5, 0], { spread: 3.4, up: 1.5, life: 1.5, hold: .25 });
   fxDust(m.x, m.y + .2, m.z, 26, 2.4, { speed: 4.5, life: 1.6 }); fxExplosion(m.x, m.y + 1, m.z, .9); FX.shake = 1.2;
   FX.decals.add(G.B.heightAt, m.x, m.z, 2.6, .02, .017, .015, .8, 60);
@@ -449,7 +449,7 @@ function updateBat(m, dt) {
 }
 function leak(m) {
   const B = G.B, n = m.def.lives;
-  G.lives = Math.max(0, G.lives - n); G.leaks++; G.waveLeaks++;
+  const l0 = G.lives; G.lives = Math.max(0, G.lives - n); stat('lives', l0 - G.lives); G.leaks++; G.waveLeaks++;
   if (m.def.steal) { const st = Math.round(G.gold * m.def.steal); if (st > 0) { G.gold -= st; UI.goldShown = Math.min(UI.goldShown, G.gold); UI.deny = 1; UI.banner('A thief took ' + st + ' gold', 2.2, false); } } G.leakTypes[m.type] = (G.leakTypes[m.type] || 0) + n;
   LT.beaconGutter = 1; UI.hurt = 1;
   if (m.fly) { fxSparks(m.x, m.y, m.z, 14, 5, 3, 1.4, .4); fxSmoke(m.x, m.y, m.z, 0, 1, 0, 1.2, .5, .8, .2, .2, .2, .6); }

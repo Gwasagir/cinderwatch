@@ -4,6 +4,18 @@ Object.assign(G, {
   queue: [], waveT: 0, nextIn: 0, spawning: false, bossWave: false, bossAlive: false, k: 0, phaseT: 0, banner: null, started: false, timeScale: 1, trickle: 0, clearT: 0, paused: false, speed: 1, best: 0, seen: {},
 });
 
+// Records kept across runs (best wave cleared, enemies slain, gold earned, lives lost) and the same for the current run.
+// A page opened at a later battlefield or wave (level=, k=, board=, ff=, manual=) is a test: its first run is not added to the records.
+const STATS = (() => {
+  const zero = () => ({ cleared: 0, kills: 0, gold: 0, lives: 0 });
+  const S = { run: zero(), all: zero(), zero, test: !!(HASH.level || HASH.k || HASH.board || HASH.ff || HASH.manual), dirty: false };
+  try { const o = JSON.parse(localStorage.getItem('cinderwatch.stats') || 'null'); if (o) { for (const k in S.all) S.all[k] = Math.max(0, +o[k] || 0); } else S.all.cleared = Math.max(0, (+localStorage.getItem('cinderwatch.best') || 0) - 1); } catch (e) {}
+  return S;
+})();
+function stat(k, n) { if (!(n > 0)) return; STATS.run[k] += n; if (!STATS.test) { STATS.all[k] += n; STATS.dirty = true; } }
+function statWave(w) { if (w > STATS.run.cleared) STATS.run.cleared = w; if (!STATS.test && w > STATS.all.cleared) { STATS.all.cleared = w; STATS.dirty = true; } }
+function saveStats() { if (!STATS.dirty) return; STATS.dirty = false; try { localStorage.setItem('cinderwatch.stats', JSON.stringify(STATS.all)); } catch (e) {} }
+function resetStats() { STATS.all = STATS.zero(); STATS.run = STATS.zero(); STATS.dirty = true; saveStats(); }
 function waveNumber() { return G.level * 5 + (G.phase === 'rise' ? 1 : Math.max(1, G.k)); }
 const ROSTER = {
   skel: [4, 3, 6, .5, 1, 5], rat: [1.7, 5, 9, .2, 2, 3], bat: [4.2, 3, 5, .35, 2, 1.3], ghoul: [5.5, 2, 4, .4, 2, 2],
@@ -41,7 +53,7 @@ function buildWave(k, level) {
   return q;
 }
 function startWave() {
-  G.k = G.k % 5 + 1; G.queue = buildWave(G.k, G.level); if (waveNumber() > G.best) { G.best = waveNumber(); try { localStorage.setItem('cinderwatch.best', '' + G.best); } catch (e) {} } G.waveT = 0; G.spawning = true; G.bossWave = G.k === 5; G.waveKills = 0; G.waveLeaks = 0; G.bossDown = false; G.trickle = 6; G.trickleN = 0;
+  if (G.k > 0) statWave(waveNumber()); G.k = G.k % 5 + 1; G.queue = buildWave(G.k, G.level); if (waveNumber() > G.best) { G.best = waveNumber(); try { localStorage.setItem('cinderwatch.best', '' + G.best); } catch (e) {} } G.waveT = 0; G.spawning = true; G.bossWave = G.k === 5; G.waveKills = 0; G.waveLeaks = 0; G.bossDown = false; G.trickle = 6; G.trickleN = 0;
   sfx(G.bossWave ? 'hornBoss' : 'horn', G.B.cave.x, G.B.cave.z, 1.1);
   UI.banner(G.bossWave ? 'Wave ' + waveNumber() + ' · ' + MON[bossType()].name : 'Wave ' + waveNumber(), G.bossWave ? 3.6 : 2.2, G.bossWave);
 }
@@ -50,7 +62,7 @@ function endWave() {
   if (l === 0) G.press *= 1.17; else if (l >= 6) G.press *= .8; else if (l >= 3) G.press *= .9;
   if (G.lives <= 6) G.press *= .9;
   G.press = clamp(G.press, .6, 2.2 + .05 * clamp(G.level - 4, 0, 6));
-  G.gold += 24 + 9 * G.k + 10 * G.level;
+  const bonus = 24 + 9 * G.k + 10 * G.level; G.gold += bonus; stat('gold', bonus);
 }
 function updateWaves(dt) {
   if (G.phase !== 'play') return;
@@ -77,7 +89,7 @@ function updateWaves(dt) {
   }
   if (G.lives <= 0 && G.phase === 'play') setPhase('defeat');
 }
-function callWaveEarly() { if (G.phase === 'play' && !G.spawning && !G.bossWave && G.nextIn > .4) { G.gold += Math.round(G.nextIn * 3); G.nextIn = .05; return true; } return false; }
+function callWaveEarly() { if (G.phase === 'play' && !G.spawning && !G.bossWave && G.nextIn > .4) { const bonus = Math.round(G.nextIn * 3); G.gold += bonus; stat('gold', bonus); G.nextIn = .05; return true; } return false; }
 
 function padCoverage(pad, range, air) {
   const B = G.B; let c = 0; const r2 = range * range;
@@ -160,8 +172,8 @@ function aiThink(dt) {
 
 function setPhase(p) {
   G.phase = p; G.phaseT = 0;
-  if (p === 'clear') { G.advance = true; UI.banner('The pass holds', 3.2, false); UI.closeMenu(); }
-  if (p === 'defeat') { UI.banner('The beacon is out', 4.2, true); UI.closeMenu(); sfx('beaconOut', G.B.beacon.x, G.B.beacon.z, 1.2); fxEmbers(G.B.beacon.x, G.B.beacon.y, G.B.beacon.z, 60, .8); for (let i = 0; i < 14; i++) fxSmoke(G.B.beacon.x + rr(-.4, .4), G.B.beacon.y + rr(0, 1), G.B.beacon.z + rr(-.4, .4), rr(-.3, .3), rr(.8, 2), rr(-.3, .3), rr(2, 4), 1, 2, .2, .2, .22, .6, { drag: .5, rise: .2 }); }
+  if (p === 'clear') { statWave(waveNumber()); saveStats(); G.advance = true; UI.banner('The pass holds', 3.2, false); UI.closeMenu(); }
+  if (p === 'defeat') { saveStats(); UI.banner('The beacon is out', 4.2, true); UI.closeMenu(); sfx('beaconOut', G.B.beacon.x, G.B.beacon.z, 1.2); fxEmbers(G.B.beacon.x, G.B.beacon.y, G.B.beacon.z, 60, .8); for (let i = 0; i < 14; i++) fxSmoke(G.B.beacon.x + rr(-.4, .4), G.B.beacon.y + rr(0, 1), G.B.beacon.z + rr(-.4, .4), rr(-.3, .3), rr(.8, 2), rr(-.3, .3), rr(2, 4), 1, 2, .2, .2, .22, .6, { drag: .5, rise: .2 }); }
   if (p === 'crumble') startCrumble();
   if (p === 'rise') startRise();
 }
@@ -216,7 +228,7 @@ function updatePhase(dt) {
   if (G.phase === 'clear') { if (t > 2.6) setPhase('crumble'); }
   else if (G.phase === 'defeat') {
     for (const tw of G.towers) { tw.em.on = damp(tw.em.on, 0, 1.5 + tw.idx * .15, dt); if (tw.flame) tw.flame.on = tw.em.on; if (tw.flame2) tw.flame2.on = tw.em.on; }
-    if (t > 4.4) { G.level = 0; G.press = Math.max(.8, G.press * .85); G.run++; setPhase('crumble'); }
+    if (t > 4.4) { G.level = 0; G.press = Math.max(.8, G.press * .85); G.run++; STATS.run = STATS.zero(); STATS.test = false; setPhase('crumble'); }
   } else if (G.phase === 'crumble') {
     let done = true;
     for (const p of B.pieces) {

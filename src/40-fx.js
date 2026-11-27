@@ -392,7 +392,7 @@ function updateFX(dt, t) {
   }
   FX.decals.update(dt);
   FX.shake = Math.max(0, FX.shake - dt * 2.6);
-  const sh = FX.shake * FX.shake * FX.shakeK; FX.shakeX = n1(t * 31, 7) * sh * .22; FX.shakeY = n1(t * 37, 9) * sh * .22;
+  const sh = FX.noShake ? 0 : FX.shake * FX.shake * FX.shakeK; FX.shakeX = n1(t * 31, 7) * sh * .22; FX.shakeY = n1(t * 37, 9) * sh * .22;
 }
 function endFX() { FX.add.end(); FX.alpha.end(); FX.segs.end(); }
 function clearFX() { FX.parts.length = 0; FX.smokes.length = 0; FX.timed.length = 0; FX.bolts.length = 0; FX.decals.clear(); }

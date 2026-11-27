@@ -4,7 +4,7 @@ const UI = (() => {
     ctx: null, s: 3, insetTop: 0, goldShown: 0, hurt: 0, coins: [], msg: null, hover: null, menu: null, armed: null, idle: 99, mx: -1, my: -1, inside: false,
     btns: [], hotBtn: null, press: null, gp: { sel: -1, t: 0, prev: [] , active: false }, goldBump: 0, deny: 0, hintT: 0, titleT: 0, rangeMesh: null, padMesh: null, soundRect: null, cmdRect: null, manual: false, moved: 99, focus: 0, slainBump: 0, lastSlain: 0,
     touch: false, ptrs: new Map(), gest: null, lastTap: { t: -9, x: 0, y: 0 }, waveRect: null, followRect: null, menuRect: null, wake: null, panning: false,
-    hud: [], tips: [], tip: null, keys: new Set(), sndArmed: false, vvT: 0, vvN: 0,
+    hud: [], tips: [], tip: null, keys: new Set(), sndArmed: false, vvT: 0, vvN: 0, panel: null, panelRect: null, pbtns: [], saveT: 0, opts: { blur: true, shake: true },
   };
   const COLR = { bg: 'rgba(9,11,17,0.86)', bg2: 'rgba(24,27,38,0.94)', bd: '#5d4c35', bdHi: '#e8b04a', tx: '#efe4cd', dim: '#a79e8a', amber: '#e8b04a', ember: '#ff8a3c', cold: '#8fc7ff', red: '#e5553c', dark: '#0b0d14', ok: '#9fd08a' };
   const _pv = new THREE.Vector3(), _o = new THREE.Vector3(), _d = new THREE.Vector3();
@@ -80,7 +80,8 @@ const UI = (() => {
     }, { passive: false });
     document.addEventListener('touchend', e => { audioGesture(); stop(e); if (!e.touches.length && U.ptrs.size) setTimeout(() => { if (U.ptrs.size) U.dropTouches(); }, 80); }, { passive: false });
     if (window.visualViewport) for (const ev of ['resize', 'scroll']) window.visualViewport.addEventListener(ev, fixPageZoom);
-    try { if (localStorage.getItem('cinderwatch.muted') === '1') AU.muted = true; G.best = +localStorage.getItem('cinderwatch.best') || 0; } catch (e) {}
+    try { if (localStorage.getItem('cinderwatch.muted') === '1') AU.muted = true; G.best = +localStorage.getItem('cinderwatch.best') || 0; Object.assign(U.opts, JSON.parse(localStorage.getItem('cinderwatch.opts') || '{}')); } catch (e) {}
+    applyOpts(false);
     window.addEventListener('keyup', e => { U.keys.delete(e.code); });
     window.addEventListener('blur', () => U.keys.clear());
     window.addEventListener('contextmenu', e => e.preventDefault());
@@ -88,6 +89,7 @@ const UI = (() => {
       if (PAN[e.code] && !e.ctrlKey && !e.metaKey && !e.altKey) { U.keys.add(e.code); e.preventDefault(); }
       if (e.repeat) return; audioGesture(); U.keepAwake(); U.touch = false;
       const k = e.key;
+      if (U.panel) { if (k === 'Escape' || k === 'o' || k === 'O') closePanel(); else if (k === 'm' || k === 'M') setMute(!AU.muted); if (k === 'Tab') e.preventDefault(); return; }
       const fk = U.menu && U.menu.tower && U.menu.tower.lvl === 2 ? U.menu.tower : null;
       if (fk && (k === '1' || k === '2')) { touchInput(); doUpgrade(fk, +k - 1); e.preventDefault(); }
       else if (k >= '1' && k <= '4') { pickKind(TOWER_KINDS[+k - 1]); e.preventDefault(); }
@@ -96,6 +98,7 @@ const UI = (() => {
       else if (k === 'u' || k === 'U') { const t = (U.menu && U.menu.tower) || (U.hover && U.hover.tower); if (t) { touchInput(); doUpgrade(t); } }
       else if (k === 'x' || k === 'X' || k === 'Delete' || k === 'Backspace') { const t = U.menu && U.menu.tower; if (t) { touchInput(); if (U.menu.sellArm) doSell(t); else { U.menu.sellArm = true; sfx('uiHover', t.x, t.z, .8); } } }
       else if (k === 'p' || k === 'P') { togglePause(); }
+      else if (k === 'o' || k === 'O') { openPanel(); }
       else if (k === 'Tab') { cycleSpeed(); e.preventDefault(); }
       else if (k === '0') { camReset(); }
       else if (k === 'm' || k === 'M') { setMute(!AU.muted); }
@@ -118,6 +121,10 @@ const UI = (() => {
     const c = 'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
     m.setAttribute('content', c + ',shrink-to-fit=no'); setTimeout(() => { m.setAttribute('content', c); try { window.scrollTo(0, 0); } catch (e) {} resizeRenderer(); }, 40);
   }
+  function applyOpts(save) { R.nodof = !U.opts.blur; FX.noShake = !U.opts.shake; if (save) try { localStorage.setItem('cinderwatch.opts', JSON.stringify(U.opts)); } catch (e) {} }
+  function openPanel() { if (U.panel) { closePanel(); return; } U.closeMenu(); U.panel = { wasPaused: G.paused, resetArm: false }; G.paused = true; sfx('uiClick', CAM.x, CAM.z, .6); }
+  function closePanel() { if (!U.panel) return; G.paused = U.panel.wasPaused; U.panel = null; U.panelRect = null; U.pbtns.length = 0; saveStats(); sfx('uiClick', CAM.x, CAM.z, .5); }
+  U.closePanel = closePanel;
   function setMute(b) { AU.setMuted(b); try { localStorage.setItem('cinderwatch.muted', b ? '1' : '0'); } catch (e) {} }
   function fullscreenOK() { const d = document; return !!(d.fullscreenEnabled || d.webkitFullscreenEnabled) && !(window.navigator.standalone); }
   function isFull() { const d = document; return !!(d.fullscreenElement || d.webkitFullscreenElement); }
@@ -130,8 +137,8 @@ const UI = (() => {
     if (!r) return false; const m = min * (R.dpr || 1), mw = Math.max(0, m - r.w) / 2, mh = Math.max(0, m - r.h) / 2;
     return x >= r.x - mw && x <= r.x + r.w + mw && y >= r.y - mh && y <= r.y + r.h + mh;
   }
-  function btnAt(x, y) { const m = U.touch ? 44 : 0; for (const b of U.btns) if (inRect(b, x, y, m)) return b; for (const b of U.hud) if (inRect(b, x, y, m)) return b; return null; }
-  function hudAt(x, y) { return inRect(U.menuRect, x, y, 0); }
+  function btnAt(x, y) { const m = U.touch ? 44 : 0; if (U.panel) { for (const b of U.pbtns) if (inRect(b, x, y, m)) return b; return null; } for (const b of U.btns) if (inRect(b, x, y, m)) return b; for (const b of U.hud) if (inRect(b, x, y, m)) return b; return null; }
+  function hudAt(x, y) { return !!U.panel || inRect(U.menuRect, x, y, 0); }
   function callWave() { touchInput(); if (callWaveEarly()) { sfx('uiClick', CAM.x, CAM.z, .8); buzz(10); } else sfx('uiDeny', CAM.x, CAM.z, .5); }
   function audioGesture() { if (!AU.ready) AU.unlock(); }
   function touchInput() { U.idle = 0; U.manual = true; }
@@ -174,6 +181,7 @@ const UI = (() => {
   function onTap(x, y, held) {
     const now = performance.now();
     const b = held && inRect(held, x, y, U.touch ? 44 : 8) ? held : btnAt(x, y); if (b) { if (!b.hud) touchInput(); b.fn(); return; }
+    if (U.panel) { if (!inRect(U.panelRect, x, y, 0)) closePanel(); return; }
     if (inRect(U.menuRect, x, y, 0)) return;
     const h = pickPad(x, y);
     if (h) {
@@ -195,6 +203,7 @@ const UI = (() => {
     const pads = navigator.getGamepads ? navigator.getGamepads() : []; let gp = null; for (const p of pads) if (p && p.connected) { gp = p; break; }
     if (!gp || !G.B || G.phase !== 'play') return;
     const st = U.gp, b = i => !!(gp.buttons[i] && gp.buttons[i].pressed), was = i => !!st.prev[i], hit = i => b(i) && !was(i);
+    if (U.panel) { if (hit(0) || hit(1)) closePanel(); for (let i = 0; i < 16; i++) st.prev[i] = b(i); return; }
     let ax = (Math.abs(gp.axes[0]) > .5 ? Math.sign(gp.axes[0]) : 0) + (b(15) ? 1 : 0) - (b(14) ? 1 : 0), ay = (Math.abs(gp.axes[1]) > .5 ? Math.sign(gp.axes[1]) : 0) + (b(13) ? 1 : 0) - (b(12) ? 1 : 0);
     st.t -= dt;
     if ((ax || ay) && st.t <= 0) {
@@ -228,9 +237,10 @@ const UI = (() => {
     if (U.tip) { U.tip.t += dt; if (U.tip.t > 5.2) U.tip = null; } else if (U.tips.length && U.titleT > 7.5) U.tip = { type: U.tips.shift(), t: 0 };
     if (window.visualViewport && Math.abs(window.visualViewport.scale - 1) > .02) fixPageZoom();
     pollGamepad(dt);
+    if ((U.saveT += dt) > 5) { U.saveT = 0; saveStats(); }
     if (U.menu) { U.menu.t += dt; if ((U.menu.tower && !U.menu.tower.alive) || G.phase !== 'play') U.menu = null; else if (U.menu.pad.tower !== U.menu.tower) U.menu.tower = U.menu.pad.tower; }
     if (G.phase !== 'play') { U.armed = null; U.hover = null; }
-    else U.hover = (U.inside && !U.touch && !U.hotBtn && !U.panning) ? pickPad(U.mx, U.my) : null;
+    else U.hover = (U.inside && !U.touch && !U.hotBtn && !U.panning && !U.panel) ? pickPad(U.mx, U.my) : null;
     if (U.goldShown > G.gold) U.goldShown = G.gold;
     if (!U.coins.length && U.goldShown < G.gold) U.goldShown = Math.min(G.gold, U.goldShown + Math.max(1, (G.gold - U.goldShown) * 6 * dt));
     const tgt = U.menu ? U.menu : (U.gp.active && U.gp.sel >= 0 && G.phase === 'play' ? { pad: G.B.pads[U.gp.sel], tower: G.B.pads[U.gp.sel].tower } : U.hover);
@@ -299,7 +309,7 @@ const UI = (() => {
     const label = (t, col) => (x, y) => { const k = Math.max(s, Math.floor(zb / 15)); PX.text(c, t, x + zb / 2, y + Math.round((zb - PX.LINE * k) / 2) + k, k, col, { align: 'c' }); };
     const bars = (x, y) => { const u = zb / 18; c.fillStyle = COLR.tx; if (G.paused) { for (let i = 0; i < 4; i++) c.fillRect(Math.round(x + (6.5 + i * 1.5) * u), Math.round(y + (5 + i) * u), Math.ceil(1.5 * u), Math.round((8 - 2 * i) * u)); } else { c.fillRect(Math.round(x + 6 * u), Math.round(y + 5 * u), Math.round(2.2 * u), Math.round(8 * u)); c.fillRect(Math.round(x + 9.8 * u), Math.round(y + 5 * u), Math.round(2.2 * u), Math.round(8 * u)); } };
     const corners = (x, y) => { const u = Math.round(zb / 9), q = Math.round(zb / 5), f = isFull(); c.fillStyle = COLR.tx; for (const [ax, ay] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const cx = x + (ax ? zb - q - u : q), cy = y + (ay ? zb - q - u : q), ix = f ? (ax ? -1 : 1) : (ax ? 1 : -1), iy = f ? (ay ? -1 : 1) : (ay ? 1 : -1); c.fillRect(cx, cy, u, u); c.fillRect(cx - ix * u, cy, u, u); c.fillRect(cx, cy - iy * u, u, u); } };
-    const play = G.phase === 'play' || G.phase === 'defeat', nR = (fullscreenOK() && tch ? 3 : 2), rightW = nR * zb + (nR - 1) * g3;
+    const play = G.phase === 'play' || G.phase === 'defeat', fsB = fullscreenOK() && tch, nR = (fsB ? 3 : 2) + 1, rightW = nR * zb + (nR - 1) * g3;
     let xl = 5 * s + iL;
     sq('pause', xl, zb, togglePause, G.paused ? 'Resume (P)' : 'Pause (P)', bars, G.paused); xl += zb + g3;
     sq('speed', xl, zb, cycleSpeed, 'Speed (Tab)', label(G.speed + 'x', G.speed > 1 ? COLR.amber : COLR.tx), G.speed > 1); xl += zb + g3;
@@ -308,9 +318,10 @@ const UI = (() => {
       U.soundRect = sq('sound', xl, wide ? wl : zb, soundTap, AU.ready ? (AU.muted ? 'Sound is off (M)' : 'Sound is on (M)') : 'Sound', (x, y) => { if (wide) { PX.icon(c, icn, x + pad, y + Math.round((zb - ih2 * s) / 2), s, .85); text(lbl, x + pad + iw2 * s + 3 * s, y + Math.round((zb - LH) / 2) + s, COLR.tx); } else PX.icon(c, icn, x + Math.round((zb - iw2 * k) / 2), y + Math.round((zb - ih2 * k) / 2), k, AU.ready ? 1 : .8); }, !AU.ready);
       xl += (wide ? wl : zb) + g3; }
     let xr = Wr - 5 * s - zb; const cur = camZoomNow();
-    if (nR === 3) { sq('full', xr, zb, toggleFull, 'Full screen', corners, false); xr -= zb + g3; }
+    if (fsB) { sq('full', xr, zb, toggleFull, 'Full screen', corners, false); xr -= zb + g3; }
     sq('zin', xr, zb, () => camZoomBy(1.5), 'Zoom in (+)', glyph('+', cur < 2.99 ? COLR.tx : '#5a5448'), false); xr -= zb + g3;
-    sq('zout', xr, zb, () => camZoomBy(1 / 1.5), 'Zoom out (-)', glyph('-', cur > camZoomMin() + .01 ? COLR.tx : '#5a5448'), false);
+    sq('zout', xr, zb, () => camZoomBy(1 / 1.5), 'Zoom out (-)', glyph('-', cur > camZoomMin() + .01 ? COLR.tx : '#5a5448'), false); xr -= zb + g3;
+    sq('set', xr, zb, openPanel, 'Settings and records (O)', (x, y) => { const k = Math.max(s, Math.floor(zb / 14)), [gw, gh] = PX.iconSize('gear'); PX.icon(c, 'gear', x + Math.round((zb - gw * k) / 2), y + Math.round((zb - gh * k) / 2), k); }, !!U.panel);
     let yUp = yB - g3;
     if (CAM.man && play) {
       const lbl = 'Follow the fight', w = tw(lbl) + pad * 2, fits = xr - g3 - w >= xl, xf2 = fits ? xr - g3 - w : Wr - w - 5 * s, yf = fits ? yB + Math.round((zb - hB) / 2) : yB - g3 - hB, hotF = over(xf2, yf, w, hB);
@@ -320,7 +331,7 @@ const UI = (() => {
     if (tipB && !tch) { const w = tw(tipB.tip) + pad * 2, x = clamp(Math.round(tipB.x - w / 2), 4 * s + iL, Wr - w - 4 * s); plate(x, yB - g3 - hB, w, hB, { bd: COLR.bdHi }); text(tipB.tip, x + pad, yB - g3 - hB + pad - s, COLR.tx); yUp = Math.min(yUp, yB - g3 - hB - g3); }
     const wrap = (str, maxW) => { const out = []; let cur2 = ''; for (const wd of str.split(' ')) { const t = cur2 ? cur2 + ' ' + wd : wd; if (cur2 && tw(t) > maxW) { out.push(cur2); cur2 = wd; } else cur2 = t; } if (cur2) out.push(cur2); return out; };
     const boxW = Wr - iL - 10 * s;
-    if (G.paused) { const k = s + 1, t1 = 'Paused', w = PX.measure(t1) * k + pad * 4, h = PX.LINE * k + pad * 2; plate(Math.round(W / 2 - w / 2), yUp - h, w, h, { bd: COLR.bdHi }); PX.text(c, t1, W / 2, yUp - h + pad, k, COLR.amber, { align: 'c' }); yUp -= h + g3; }
+    if (G.paused && !U.panel) { const k = s + 1, t1 = 'Paused', w = PX.measure(t1) * k + pad * 4, h = PX.LINE * k + pad * 2; plate(Math.round(W / 2 - w / 2), yUp - h, w, h, { bd: COLR.bdHi }); PX.text(c, t1, W / 2, yUp - h + pad, k, COLR.amber, { align: 'c' }); yUp -= h + g3; }
     if (U.tip && !U.menu) {
       const d = MON[U.tip.type], a = sat(Math.min(U.tip.t * 4, (5.2 - U.tip.t) * 2)), head = (d.boss ? 'Boss: ' : 'New: ') + d.name, lines = wrap(d.tip, Math.min(boxW - pad * 2, 46 * 6 * s));
       let w = tw(head); for (const l of lines) w = Math.max(w, tw(l)); w += pad * 2; const h = LH * (lines.length + 1) + pad * 2 - s, x = Math.round((iL + Wr - w) / 2), y = yUp - h;
@@ -432,7 +443,59 @@ const UI = (() => {
         c.globalAlpha = a; plate(Math.round(W / 2 - w / 2), yy, w, h); PX.text(c, t1, W / 2, yy + pad, sc, '#ffd9a8', { align: 'c' }); t2.forEach((l, k) => text(l, W / 2, yy + pad + PX.LINE * sc + s + k * LH, k === 0 && t2.length > 1 ? COLR.tx : COLR.dim, { align: 'c' })); c.globalAlpha = 1;
       }
     }
+    drawPanel(over);
     if (HASH.fps) { text(R.fpsText || '', 6 * s + iL, Hb - 30 * s, COLR.ok, { outline: COLR.dark }); }
+  }
+  // The settings panel: a few options, the records of this run and of all runs, and the credits.
+  const fmt = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  function drawPanel(over) {
+    U.panelRect = null; U.pbtns.length = 0; if (!U.panel) return;
+    const P = U.panel, c = U.ctx, W = R.dw, H = R.dh, [iL, iT, iR, iB] = R.safe, tch = U.touch, dpr = R.dpr || 1, A = STATS.all, N = STATS.run;
+    const opts = [
+      [AU.ready && !AU.muted ? 'Sound: on' : 'Sound: off', soundTap, AU.ready && !AU.muted],
+      ['Speed: ' + G.speed + 'x', () => { G.speed = G.speed % 3 + 1; sfx('uiClick', CAM.x, CAM.z, .6); }, G.speed > 1],
+      [U.opts.blur ? 'Blur: on' : 'Blur: off', () => { U.opts.blur = !U.opts.blur; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.blur],
+      [U.opts.shake ? 'Shake: on' : 'Shake: off', () => { U.opts.shake = !U.opts.shake; applyOpts(true); sfx('uiClick', CAM.x, CAM.z, .6); }, U.opts.shake],
+    ];
+    const recs = [['Waves cleared', N.cleared, A.cleared], ['Enemies slain', N.kills, A.kills], ['Gold earned', N.gold, A.gold], ['Lives lost', N.lives, A.lives]];
+    const credits = ['Cinderwatch by kevintngo', 'Additions by Niko Keurulainen', 'Made with three.js · MIT license', 'All art and sound made in code'];
+    const note = STATS.test ? 'Started at a later wave: not recorded' : null;
+    const rl = P.resetArm ? (tch ? 'Tap again to reset' : 'Click again to reset') : 'Reset records';
+    const M = str => PX.measure(str);
+    // the layout in font pixels, drawn at the largest scale k that fits the screen
+    const bwU = Math.max(...opts.map(o => M(o[0])), M('Click again to reset') / 1.6) + 14, gridU = bwU * 2 + 3;
+    const labU = Math.max(...recs.map(q => M(q[0]))), numU = Math.max(M('This run'), M('All time'), ...recs.map(q => Math.max(M(fmt(q[1])), M(fmt(q[2]))))), recU = labU + 2 * (numU + 8);
+    const credU = Math.max(...credits.map(M), note ? M(note) : 0), botU = Math.max(M(rl), M('Close')) * 2 + 30;
+    const innerU = Math.max(gridU, recU, credU, botU, M('Settings') * 2), LHU = PX.LINE;
+    const bhU = 14, hU = 6 + LHU * 2 + 4 + (bhU * 2 + 3) + 8 + LHU + 2 + LHU * 4 + (note ? LHU : 0) + 8 + LHU + 2 + LHU * 4 + 8 + bhU + 6;
+    let k = U.s; while (k > 1 && ((innerU + 12) * k > W - iL - iR - 6 * k || hU * k > H - iT - iB - 6 * k)) k--;
+    const LH = LHU * k, mp = 6 * k, bh = Math.max(bhU * k, tch ? Math.round(36 * dpr) : 0), extra = (bh - bhU * k) * 3;
+    const w = (innerU + 12) * k, h = hU * k + extra, x0 = Math.round((iL + W - iR - w) / 2), y0 = Math.round(Math.max(iT + 3 * k, (iT + H - iB - h) / 2));
+    const T = (str, x, y, col, o) => PX.text(c, str, x, y, k, col || COLR.tx, o);
+    c.fillStyle = 'rgba(3,4,8,0.55)'; c.fillRect(0, 0, W, H);
+    plate(x0, y0, w, h, { bd: COLR.bdHi }); U.panelRect = { x: x0, y: y0, w, h };
+    let phot = null;
+    const btn = (id, x, y, bw, label, fn, on, col) => {
+      const hot = over(x, y, bw, bh), down = U.press === id; U.pbtns.push({ id, fn, x, y, w: bw, h: bh, hud: true }); if (hot) { phot = id; U.hudHot = true; }
+      plate(x, y + (down ? k : 0), bw, bh, { bg: hot || down ? COLR.bg2 : 'rgba(16,18,27,0.96)', bd: hot || down ? COLR.bdHi : on ? '#8a6a3a' : COLR.bd });
+      T(label, x + bw / 2, y + Math.round((bh - LH) / 2) + (down ? k : 0), col || (on ? COLR.tx : COLR.dim), { align: 'c' });
+    };
+    const xi = x0 + mp, wi = w - mp * 2; let y = y0 + mp;
+    PX.text(c, 'Settings', xi, y - k, k * 2, COLR.amber); y += LH * 2 + 4 * k;
+    const bw = Math.floor((wi - 3 * k) / 2);
+    opts.forEach((o, i) => btn('opt' + i, xi + (i % 2) * (bw + 3 * k), y + Math.floor(i / 2) * (bh + 3 * k), bw, o[0], o[1], o[2]));
+    y += bh * 2 + 3 * k + 8 * k;
+    const cx2 = xi + wi, cx1 = cx2 - (numU + 8) * k;
+    T('Records', xi, y, COLR.amber); T('This run', cx1, y, COLR.dim, { align: 'r' }); T('All time', cx2, y, COLR.dim, { align: 'r' }); y += LH + 2 * k;
+    for (const q of recs) { T(q[0], xi, y, COLR.tx); T(fmt(q[1]), cx1, y, COLR.tx, { align: 'r' }); T(fmt(q[2]), cx2, y, COLR.amber, { align: 'r' }); y += LH; }
+    if (note) { T(note, xi, y, COLR.dim); y += LH; }
+    y += 8 * k; T('Credits', xi, y, COLR.amber); y += LH + 2 * k;
+    credits.forEach((l, i) => { T(l, xi, y, i < 2 ? COLR.tx : COLR.dim); y += LH; });
+    y += 8 * k;
+    btn('reset', xi, y, bw, rl, () => { if (P.resetArm) { resetStats(); P.resetArm = false; sfx('uiDeny', CAM.x, CAM.z, .6); } else { P.resetArm = true; sfx('uiHover', CAM.x, CAM.z, .8); } }, P.resetArm, P.resetArm ? COLR.ember : COLR.dim);
+    btn('close', xi + bw + 3 * k, y, bw, 'Close', closePanel, true, COLR.tx);
+    if (phot !== U.phot && phot) sfx('uiHover', CAM.x, CAM.z, .5);
+    U.phot = phot; if (phot) U.hotBtn = { id: phot };
   }
   U.init = initUI; U.update = update; U.draw = draw;
   return U;

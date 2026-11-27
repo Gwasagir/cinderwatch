@@ -29,6 +29,7 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
 - **A miniature look.** The scene is drawn at about half resolution, then given an ordered dither, a depth-aware tilt-shift blur, a vignette and film grain.
 - **No asset files.** Every model, texture and sound is generated in code.
 - **Small comforts.** The first time each monster appears, a line says what it does. Tower menus show what the next level brings. The wave plate shows the gold for calling a wave early. Your best wave and your mute setting are remembered.
+- **Settings and records.** The gear button next to the zoom buttons (or `O`) pauses the game and opens a panel with sound, speed, blur and screen shake, your records for this run and for all runs (best wave cleared, enemies slain, gold earned, lives lost) and the credits. A page opened with `level=`, `k=` or `ff=` is a test, so its first run is not added to the records.
 
 ![Frostfall, Mirefen, Emberscar and Duskmesa](media/biomes.jpg)
 
@@ -49,6 +50,7 @@ The game needs no input. Your first command puts you in charge, and the AI comma
 | `Space` | Call the next wave early |
 | `C`, or click the commander plate | Hand command back to the AI, or take it |
 | `M` | Mute (remembered for next time) |
+| `O`, or the gear button | Settings, records and credits; `Esc` closes them |
 | `P` | Pause; you can still look around and build |
 | `Tab` | Game speed: 1x, 2x, 3x |
 | Mouse wheel or trackpad pinch | Zoom toward the pointer |
@@ -76,7 +78,7 @@ The game plays in portrait and in landscape, and follows the screen when it turn
 | Pinch, or the + and - buttons | Zoom, out to the whole battlefield |
 | Double-tap the ground | Zoom in there; again to zoom back out |
 | Follow the fight | Hand the view back to the camera |
-| The buttons along the bottom | Pause, game speed, sound, zoom and, where the browser allows it, full screen |
+| The buttons along the bottom | Pause, game speed, sound, settings, zoom and, where the browser allows it, full screen |
 
 The layout keeps clear of notches and home indicators, buttons are sized for fingers, the screen is asked to stay awake while the game is open, and sound stops when the page is in the background. Added to the home screen, it opens full screen.
 

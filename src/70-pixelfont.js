@@ -403,6 +403,17 @@ const PX = (() => {
       'ss.ss',
       's...s',
     ],
+    gear: [
+      '....B....',
+      '.B.BBB.B.',
+      '..BBBBB..',
+      '.BBb.bBB.',
+      'BBB...BBB',
+      '.BBb.bbB.',
+      '..BBBbb..',
+      '.b.bbb.b.',
+      '....b....',
+    ],
   };
 
   const iconMeta = {};
