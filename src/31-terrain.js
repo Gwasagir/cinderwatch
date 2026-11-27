@@ -41,9 +41,10 @@ void main(){
 }
 
 function buildBoard(seed, index) {
+  const bio = biomeFor(index), RL = bio.relief, shape = roadShapeFor(bio, index);
   let lay = null, ls = seed;
-  while (!lay) { lay = genLayout(ls); ls += 101; }
-  const bio = biomeFor(index), RL = bio.relief; applyBiomePalette(bio);
+  while (!lay) { lay = genLayout(ls, shape); ls += 101; }
+  applyBiomePalette(bio);
   const rng = makeRng(seed * 9176 + 11); soupRng = makeRng(seed * 131 + 5);
   const sd = (seed * 53) % 997;
   const P = lay.pts, n = P.length, L = lay.L, kx = lay.kx, zc = lay.cave.z;

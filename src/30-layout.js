@@ -54,9 +54,48 @@ function polyMinDist(poly, x, z, i0 = 0, i1 = poly.length - 1) {
   return [best, bi];
 }
 
-function tryRoad(rng) {
-  const zc = rng.range(-6.5, 9), kx = rng.range(0.5, 10.5);
-  const way = [[-17.6, zc], [-12.0, zc]];
+// Road shapes. 'classic' is a random walk from the cave to the keep; the others lay out their waypoints from a few
+// random numbers. Every shape then goes through the same smoothing and the same checks, with its own length range.
+const ROAD_SHAPES = {
+  classic: { L: [58, 92] },
+  switchback: { L: [84, 120], way: wayZigzag, wideStream: true }, // three long lanes stacked across the board
+  horseshoe: { L: [54, 96], way: wayHorseshoe }, // out to the front and back again in one big U, often with a wide bulb; shorter than classic
+};
+const arcPts = (cx, cz, r, degs) => degs.map(a => [cx + r * Math.cos(a * PI / 180), cz + r * Math.sin(a * PI / 180)]);
+// Lanes far enough apart (7.4 or more) that a stream can rise between the first two and run out past the turn.
+function wayZigzag(rng) {
+  const sp = rng.range(7.4, 8.1), r = sp / 2, z0 = rng.range(11.8, 13.4), xR = rng.range(9.4, 14.8 - r), xL = rng.range(-12 + r + .4, -6.8), kx = rng.range(1.5, 9.5);
+  const way = [[-17.6, z0], [-12, z0]]; let z = z0;
+  for (let l = 0; l < 3; l++) {
+    const right = l % 2 === 0, last = l === 2, xs = way[way.length - 1][0], xe = last ? kx - 2.4 : right ? xR : xL;
+    for (const u of [.35, .7]) way.push([lerp(xs, xe, u), z + rng.range(-.25, .25)]);
+    way.push([xe, z]);
+    if (last) break;
+    const zn = z - sp, sg = right ? 1 : -1; // a half circle to the next lane
+    for (const p of arcPts(xe, (z + zn) / 2, r, [55, 0, -55])) way.push([xe + (p[0] - xe) * sg, p[1]]);
+    way.push([xe, zn]); z = zn;
+  }
+  if (z > -3.6) way.push([kx, z - 2.4], [kx, -6.2], [kx, -11.4]); else way.push([kx, z - 2.4], [kx, -11.4]);
+  return { way, zc: z0, kx };
+}
+function wayHorseshoe(rng) {
+  const zc = rng.range(-6.2, -.5), xa = rng.range(-8.5, -4.5), gap = rng.range(9, 12.5), kx = xa + gap;
+  if (kx < 1 || kx > 10.5) return null;
+  const bulge = rng.chance(.6) ? rng.range(1.5, 3) : 0, r = gap / 2 + bulge, cx = (xa + kx) / 2, zf = rng.range(12, 14.2), zm = zf - r;
+  if (zm - zc < 4) return null;
+  const way = [[-17.6, zc], [-12, zc], [xa - 3.2, zc], [xa, zc + 3.2], [xa + rng.range(-.5, .5), (zc + 3.2 + zm - bulge) / 2]];
+  const degs = bulge ? [205, 165, 125, 90, 55, 15, -25] : [180, 145, 110, 70, 35, 0];
+  if (!bulge) way.push([xa, zm]);
+  for (const p of arcPts(cx, zm, r, degs)) way.push(p);
+  way.push([kx + rng.range(-.5, .5), (zm - bulge - 6.2) / 2], [kx, -6.2], [kx, -11.4]);
+  return { way, zc, kx };
+}
+
+function tryRoad(rng, shape = 'classic') {
+  const SH = ROAD_SHAPES[shape] || ROAD_SHAPES.classic;
+  let way, zc, kx;
+  if (SH.way) { const w = SH.way(rng); if (!w) return null; ({ way, zc, kx } = w); }
+  else { zc = rng.range(-6.5, 9); kx = rng.range(0.5, 10.5); way = [[-17.6, zc], [-12.0, zc]];
   const endA = [kx, -6.2], endB = [kx, -11.4];
   let cur = way[1], dir = 0;
   const nMid = rng.int(4, 7);
@@ -80,12 +119,12 @@ function tryRoad(rng) {
     }
     if (!ok) return null;
   }
-  way.push(endA, endB);
+  way.push(endA, endB); }
   let poly = relax(catmull(way, PATH_STEP), 10);
   poly = resample(poly, PATH_STEP);
   poly[poly.length - 1] = [kx, -11.4];
   const n = poly.length, L = (n - 1) * PATH_STEP;
-  if (L < 58 || L > 92) return null;
+  if (L < SH.L[0] || L > SH.L[1]) return null;
   const gap = Math.round(10 / PATH_STEP);
   for (let i = 0; i < n; i++) {
     const [x, z] = poly[i], s = i * PATH_STEP;
@@ -99,16 +138,16 @@ function tryRoad(rng) {
       if (Math.abs(angDiff(a, b)) > 0.62) return null;
     }
   }
-  return { poly, L, zc, kx, way };
+  return { poly, L, zc, kx, way, wide: !!SH.wideStream };
 }
 
 function tryStream(rng, road) {
   const { poly, L, kx } = road;
   for (let t = 0; t < 60; t++) {
-    const sx = rng.range(-10, 12), sz = rng.range(-12.5, 2);
+    const sx = rng.range(-10, 12), sz = rng.range(-12.5, road.wide ? 13 : 2);
     if (Math.abs(sx - kx) < 7 && sz < -7) continue;
     if (polyMinDist(poly, sx, sz)[0] < 3.6) continue;
-    const front = rng.chance(0.6);
+    const front = rng.chance(road.wide ? .3 : .6);
     const ex = front ? rng.range(-13, 13) : BH + 0.6, ez = front ? BH + 0.6 : rng.range(-7, 13);
     const mx = (sx + ex) / 2 + rng.range(-5, 5), mz = (sz + ez) / 2 + rng.range(-5, 5);
     const raw = [];
@@ -172,11 +211,11 @@ function choosePads(rng, road, stream) {
   return pads;
 }
 
-function genLayout(seed) {
+function genLayout(seed, shape = 'classic') {
   const rng = makeRng(seed * 7919 + 13);
-  let best = null;
+  let best = null, found = 0;
   for (let attempt = 0; attempt < 2500; attempt++) {
-    const road = tryRoad(rng); if (!road) continue;
+    const road = tryRoad(rng, shape); if (!road) continue;
     const stream = tryStream(rng, road); if (!stream) continue;
     const pads = choosePads(rng, road, stream); if (!pads) continue;
     let minx = 99, maxx = -99, minz = 99, maxz = -99;
@@ -186,11 +225,12 @@ function genLayout(seed) {
     const score = Math.min(road.L, 84) * 0.55 + turn * 3.2 + pads.length * 2 + (maxx - Math.max(minx, -12)) * 0.3 + (maxz - minz) * 0.3 + rng() * 5;
     if (!best || score > best.score) best = { road, stream, pads, score, turn };
     if (attempt > 700 && best) break;
+    if (shape !== 'classic' && ++found >= 12) break; // the new shapes succeed often, so the best of a dozen is enough
   }
   if (!best) return null;
   const { road, stream, pads } = best;
   return {
-    seed, pts: road.poly, L: road.L, cave: { x: -14.6, z: road.zc }, gate: { x: road.kx, z: -11.4 }, kx: road.kx,
+    seed, shape, pts: road.poly, L: road.L, cave: { x: -14.6, z: road.zc }, gate: { x: road.kx, z: -11.4 }, kx: road.kx,
     stream: stream.pts, cross: stream.cross, streamFront: stream.front, pads, mirrored: false,
   };
 }
