@@ -47,7 +47,7 @@ function buildBoard(seed, index) {
   applyBiomePalette(bio);
   const rng = makeRng(seed * 9176 + 11); soupRng = makeRng(seed * 131 + 5);
   const sd = (seed * 53) % 997;
-  const P = lay.pts, n = P.length, L = lay.L, kx = lay.kx, zc = lay.cave.z;
+  const P = lay.pts, n = P.length, L = lay.L, kx = lay.kx, zc = lay.cave.z, castle = lay.castle;
   const px = new Float32Array(n), pz = new Float32Array(n), py = new Float32Array(n), tx = new Float32Array(n), tz = new Float32Array(n);
   for (let i = 0; i < n; i++) { px[i] = P[i][0]; pz[i] = P[i][1]; }
   for (let i = 0; i < n; i++) { const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1); const dx = px[b] - px[a], dz = pz[b] - pz[a], l = Math.hypot(dx, dz) || 1; tx[i] = dx / l; tz[i] = dz / l; }
@@ -93,6 +93,7 @@ function buildBoard(seed, index) {
     const r = rng.range(1.2, 2.3), x = rng.range(-BH + 3.4 + r, BH - 3.4 - r), z = rng.range(-BH + 3.4 + r, BH - 3.4 - r);
     if (dfAt(dRoad, x, z) < ROAD_HALF + 2.6 + r || dfAt(dStr, x, z) < 3.9 + r) continue;
     if (x < -12 + r || z < -12 + r || (Math.abs(x - kx) < 6.5 + r && z < -8.5 + r)) continue;
+    if (castle && Math.hypot(x - castle.x, z - castle.z) < CASTLE_R + 3 + r) continue;
     if (pads.some(p => Math.hypot(x - p.x, z - p.z) < 3.1 + r) || ponds.some(q => Math.hypot(x - q.x, z - q.z) < r + q.r + 3.2)) continue;
     let y = 1e9; for (let k = 0; k < 24; k++) { const a = k / 12 * TAU, d = r + (k < 12 ? 1.3 : 2.1); y = Math.min(y, hBase(x + Math.cos(a) * d, z + Math.sin(a) * d)); }
     ponds.push({ x, z, r, y: Math.min(y, hBase(x, z)) - .22 });
@@ -114,6 +115,7 @@ function buildBoard(seed, index) {
     for (const q of ponds) { const d = pondD(q, x, z); if (d < q.r + 1.5) h = lerp(h, q.y - .45, smooth(q.r + 1.5, q.r * .4, d)); }
     const dkx = Math.max(0, Math.abs(x - kx) - 5.2), dkz = Math.max(0, z + 11.7), dk = Math.hypot(dkx, dkz);
     if (dk < 1.8) h = lerp(h, keepY, smooth(1.8, .2, dk));
+    if (castle) { const dc = Math.hypot(x - castle.x, z - castle.z) - CASTLE_R - .9; if (dc < 1.8) h = lerp(h, keepY, smooth(1.8, .2, dc)); }
     const dcl = x + BH + (fbm(z * .23 + 1.7, x * .11, sd + 9, 2) - .5) * 2.6;
     let c = smooth(5.0, 1.3, dcl) * (3.4 + 2.6 * fbm(x * .21, z * .21, sd + 11, 2) + 1.4 * smooth(4, -15, z)) * RL[2];
     const dbr = z + BH + (fbm(x * .23 + 5.1, z * .11, sd + 13, 2) - .5) * 2.4;
@@ -316,7 +318,7 @@ function buildBoard(seed, index) {
   }
 
   const B = {
-    seed, index, lay, L, n, px, pz, py, tx, tz, pads, kx, zc, keepY, heightAt, hAt, chunks, structs, fires, glows, chunkAt, rng, sd, bio, ponds, env: [],
+    seed, index, lay, L, n, px, pz, py, tx, tz, pads, kx, zc, keepY, heightAt, hAt, chunks, structs, fires, glows, chunkAt, rng, sd, bio, ponds, env: [], castle: castle ? Object.assign({}, castle) : null,
     dRoadAt: (x, z) => dfAt(dRoad, x, z), dStrAt: (x, z) => dfAt(dStr, x, z), cross: lay.cross, ci0, wlc, swl, SP, fallAt, mirrored: (index % 2) === 1,
     put(T, x, z, o = {}) { const y = o.y === undefined ? heightAt(x, z) + (o.dy || 0) : o.y; chunkAt(x, z).soup.merge(T, { p: [x, y, z], ry: o.ry || 0, r: o.r, s: o.s, tint: o.tint, ao: o.ao === undefined ? [0, .55, .6] : o.ao }); },
   };
@@ -384,7 +386,7 @@ function finalizeBoard(B) {
   if (mir) {
     const sa = (a, b) => { for (let i = 0; i < a.length; i++) { const t = a[i]; a[i] = b[i]; b[i] = t; } };
     sa(B.px, B.pz); sa(B.tx, B.tz);
-    for (const p of B.pads) sw(p); for (const f of B.fires) sw(f); for (const g of B.glows) sw(g); for (const q of B.ponds) sw(q); for (const e of B.env) sw(e); for (const c of B.crystals || []) sw(c); if (B.lighthouse) sw(B.lighthouse);
+    for (const p of B.pads) sw(p); for (const f of B.fires) sw(f); for (const g of B.glows) sw(g); for (const q of B.ponds) sw(q); for (const e of B.env) sw(e); for (const c of B.crystals || []) sw(c); if (B.lighthouse) sw(B.lighthouse); if (B.castle) sw(B.castle);
     sw(B.beacon); sw(B.gate); sw(B.cave); if (B.fallAt) { sw(B.fallAt); const t = B.fallAt.ox; B.fallAt.ox = B.fallAt.oz; B.fallAt.oz = t; }
     const h0 = B.heightAt; B.heightAt = (x, z) => h0(z, x);
     const d0 = B.dRoadAt; B.dRoadAt = (x, z) => d0(z, x);

@@ -237,7 +237,61 @@ function buildPads(B) {
   }
 }
 
+// The beacon tower: a round stone tower with an iron fire basket on top (the keep's, and the ring road castle's).
+function beaconTower(TT, bx, bz, bh, rng, mas, mc) {
+  const st = COL.stone, sdk = COL.stoneD, sl = COL.stoneL;
+  TT.cyl(1.9, 1.3, bx, .65, bz, sdk, { n: 8, l: L_MASON, rt: .84 });
+  TT.cyl(1.52, bh, bx, bh / 2, bz, st, { n: 8, l: L_MASON, rt: .9, jit: .03 });
+  for (let c = 0; c < 6; c++) TT.cyl(1.54 - c * .027, .2, bx, 1.7 + c * 1.0, bz, mc(), { n: 8, l: L_MASON });
+  TT.cyl(1.42, .55, bx, bh - .15, bz, sl, { n: 8, l: L_MASON, rt: 1.26 });
+  TT.cyl(1.82, .22, bx, bh + .22, bz, st, { n: 8, l: L_MASON });
+  for (let k = 0; k < 8; k++) { const a = (k + .5) / 8 * TAU; if (k === 1) continue; mas(TT, .6, .5, .32, bx + Math.cos(a) * 1.6, bh + .58, bz + Math.sin(a) * 1.6, null, { r: [0, -a + HPI, 0] }); }
+  for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .4; TT.box(.12, .9, .12, bx + Math.cos(a) * 1.45, bh * (.4 + (k & 1) * .22), bz + Math.sin(a) * 1.45, COL.black, { jit: 0, r: [0, -a, 0] }); }
+  for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + .2; TT.seg([bx + Math.cos(a) * 1.4, bh - .55, bz + Math.sin(a) * 1.4], [bx + Math.cos(a) * 2.2, bh - .4, bz + Math.sin(a) * 2.2], .07, .06, COL.woodD, { l: L_WOOD, n: 4 }); }
+  TT.cyl(.6, .55, bx, bh + .6, bz, sdk, { n: 8, l: L_MASON });
+  TT.cyl(.72, .4, bx, bh + 1.06, bz, COL.iron, { n: 8, l: L_METAL, rt: 1.4, rough: .7 });
+  for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .5; TT.seg([bx + Math.cos(a) * .72, bh + .35, bz + Math.sin(a) * .72], [bx + Math.cos(a) * .96, bh + 1.22, bz + Math.sin(a) * .96], .04, .04, COL.iron, { l: L_METAL, n: 4 }); }
+  TT.cyl(.9, .1, bx, bh + 1.24, bz, COL.ember, { n: 8, emis: .5, jit: 0 });
+  for (let k = 0; k < 4; k++) { const a = k * 1.3; TT.seg([bx + Math.cos(a) * .7, bh + 1.28, bz + Math.sin(a) * .7], [bx - Math.cos(a) * .6, bh + 1.48, bz - Math.sin(a) * .6], .1, .09, mulC(COL.bark, .7), { l: L_WOOD, n: 5, emis: .05 }); }
+  clothPanel(TT, { x0: bx - .45, x1: bx + .45, yTop: 5.2, len: 2.3, z: bz + 1.5, col: COL.clothR, col2: mulC(COL.gold, .6), rng, sway: .45 });
+}
+// The ring road's goal: a small round castle in the middle of the board, its gate facing the road and the beacon tower inside.
+function buildCastle(B) {
+  const rng = B.rng, c = B.castle, ky = B.keepY, ga = c.a, R = CASTLE_R, TG = new Soup(), TT = new Soup();
+  const st = COL.stone, sdk = COL.stoneD, sl = COL.stoneL, mc = () => mixC(sdk, sl, rng() * .8 + .1);
+  const mas = (S, w, h, d, x, y, z, col, o = {}) => S.box(w, h, d, x, y, z, col || mc(), Object.assign({ l: L_MASON }, o));
+  const at = (rad, a) => [Math.cos(a) * rad, Math.sin(a) * rad];
+  TG.cyl(R + 1.0, .8, 0, -.3, 0, sdk, { n: 16, l: L_MASON, rt: .9 }); TG.cyl(R - .1, .1, 0, .06, 0, mulC(COL.road, .9), { n: 16, l: L_COBBLE });
+  for (let k = 0; k < 18; k++) { // the curtain wall, open at the gate
+    const a = k / 18 * TAU; if (Math.abs(angDiff(a, ga)) < .42) continue;
+    const [x, z] = at(R, a), h = rng.range(1.7, 2.05); mas(TG, 1.15, h, .5, x, h / 2, z, k & 1 ? st : null, { r: [0, -a + HPI, 0] });
+    if (k % 2 === 0) mas(TG, .42, .4, .54, x, h + .2, z, null, { r: [0, -a + HPI, 0] });
+  }
+  for (let k = 0; k < 4; k++) { // round towers on the wall
+    const a = ga + PI / 4 + k * HPI, [x, z] = at(R, a), h = rng.range(2.8, 3.4);
+    TG.cyl(.66, h, x, h / 2, z, st, { n: 8, l: L_MASON, rt: .92 }); TG.cyl(.8, .26, x, h + .1, z, sl, { n: 8, l: L_MASON });
+    for (let m = 0; m < 6; m++) { const b = m / 6 * TAU; mas(TG, .3, .36, .26, x + Math.cos(b) * .68, h + .4, z + Math.sin(b) * .68, null, { r: [0, -b + HPI, 0] }); }
+    TG.box(.1, .5, .14, x + Math.cos(a) * .66, h * .6, z + Math.sin(a) * .66, COL.black, { jit: 0, r: [0, -a, 0] });
+  }
+  for (const s of [-1, 1]) { // the gatehouse: two towers, a lintel, a portcullis and torches
+    const a = ga + s * .46, [x, z] = at(R + .05, a);
+    TG.cyl(.62, 3.0, x, 1.5, z, st, { n: 8, l: L_MASON, rt: .9 }); TG.cyl(.74, .24, x, 3.05, z, sl, { n: 8, l: L_MASON });
+    const [fx, fz] = at(R + .75, ga + s * .3); TG.seg([fx * .97, 1.9, fz * .97], [fx, 2.1, fz], .035, .03, COL.iron, { l: L_METAL, n: 4 });
+    B.fires.push({ x: c.x + fx, y: ky + 2.3, z: c.z + fz, size: .42, type: 'sconce' });
+  }
+  { const [x, z] = at(R + .05, ga), ry = -ga + HPI;
+    mas(TG, 2.1, .7, .8, x, 2.45, z, sl, { r: [0, ry, 0] });
+    TG.box(1.3, 2.1, .2, x, 1.05, z, COL.black, { jit: 0, r: [0, ry, 0] });
+    for (const o of [-.45, -.15, .15, .45]) { const ox = Math.cos(ga + HPI) * o, oz = Math.sin(ga + HPI) * o; TG.box(.06, .8, .06, x + ox + Math.cos(ga) * .3, 1.75, z + oz + Math.sin(ga) * .3, COL.iron, { l: L_METAL }); } }
+  for (let k = 0; k < 3; k++) { const [x, z] = at(R * .62, ga + PI * .75 + k * .5); PROP.barrel(TG, x, .1, z, .9, rng); }
+  const bh = 6.4; beaconTower(TT, 0, 0, bh, rng, mas, mc);
+  B.structs.push({ soup: new Soup().merge(TG, { p: [c.x, ky, c.z], ao: [0, .9, .7] }), cx: c.x, cy: ky, cz: c.z, kind: 'keep' });
+  B.structs.push({ soup: new Soup().merge(TT, { p: [c.x, ky, c.z], ao: [0, 1.4, .65] }), cx: c.x, cy: ky, cz: c.z, kind: 'beaconTower' });
+  B.beacon = { x: c.x, y: ky + bh + 1.45, z: c.z };
+  B.gate = { x: c.x + Math.cos(ga) * R, y: ky, z: c.z + Math.sin(ga) * R };
+}
 function buildKeep(B) {
+  if (B.castle) return buildCastle(B);
   const rng = B.rng, kx = B.kx, ky = B.keepY, oz = -12.35;
   const TG = new Soup(), TT = new Soup();
   const st = COL.stone, sdk = COL.stoneD, sl = COL.stoneL;
@@ -278,20 +332,7 @@ function buildKeep(B) {
   TG.cyl(1.5, 2.4, 2.4, 1.2, -4.2, sdk, { n: 8, l: L_MASON, rt: .92 });
   for (let k = 0; k < 8; k++) { const a = (k + .5) / 8 * TAU, h = rng.range(.2, 1.3); if (rng() < .3) continue; mas(TG, .9, h, .4, 2.4 + Math.cos(a) * 1.2, 2.4 + h / 2, -4.2 + Math.sin(a) * 1.2, null, { r: [0, -a + HPI, 0] }); }
   const bx = -2.6, bz = -.95, bh = 7.3;
-  TT.cyl(1.9, 1.3, bx, .65, bz, sdk, { n: 8, l: L_MASON, rt: .84 });
-  TT.cyl(1.52, bh, bx, bh / 2, bz, st, { n: 8, l: L_MASON, rt: .9, jit: .03 });
-  for (let c = 0; c < 6; c++) TT.cyl(1.54 - c * .027, .2, bx, 1.7 + c * 1.0, bz, mc(), { n: 8, l: L_MASON });
-  TT.cyl(1.42, .55, bx, bh - .15, bz, sl, { n: 8, l: L_MASON, rt: 1.26 });
-  TT.cyl(1.82, .22, bx, bh + .22, bz, st, { n: 8, l: L_MASON });
-  for (let k = 0; k < 8; k++) { const a = (k + .5) / 8 * TAU; if (k === 1) continue; mas(TT, .6, .5, .32, bx + Math.cos(a) * 1.6, bh + .58, bz + Math.sin(a) * 1.6, null, { r: [0, -a + HPI, 0] }); }
-  for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .4; TT.box(.12, .9, .12, bx + Math.cos(a) * 1.45, bh * (.4 + (k & 1) * .22), bz + Math.sin(a) * 1.45, COL.black, { jit: 0, r: [0, -a, 0] }); }
-  for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + .2; TT.seg([bx + Math.cos(a) * 1.4, bh - .55, bz + Math.sin(a) * 1.4], [bx + Math.cos(a) * 2.2, bh - .4, bz + Math.sin(a) * 2.2], .07, .06, COL.woodD, { l: L_WOOD, n: 4 }); }
-  TT.cyl(.6, .55, bx, bh + .6, bz, sdk, { n: 8, l: L_MASON });
-  TT.cyl(.72, .4, bx, bh + 1.06, bz, COL.iron, { n: 8, l: L_METAL, rt: 1.4, rough: .7 });
-  for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .5; TT.seg([bx + Math.cos(a) * .72, bh + .35, bz + Math.sin(a) * .72], [bx + Math.cos(a) * .96, bh + 1.22, bz + Math.sin(a) * .96], .04, .04, COL.iron, { l: L_METAL, n: 4 }); }
-  TT.cyl(.9, .1, bx, bh + 1.24, bz, COL.ember, { n: 8, emis: .5, jit: 0 });
-  for (let k = 0; k < 4; k++) { const a = k * 1.3; TT.seg([bx + Math.cos(a) * .7, bh + 1.28, bz + Math.sin(a) * .7], [bx - Math.cos(a) * .6, bh + 1.48, bz - Math.sin(a) * .6], .1, .09, mulC(COL.bark, .7), { l: L_WOOD, n: 5, emis: .05 }); }
-  clothPanel(TT, { x0: bx - .45, x1: bx + .45, yTop: 5.2, len: 2.3, z: bz + 1.5, col: COL.clothR, col2: mulC(COL.gold, .6), rng, sway: .45 });
+  beaconTower(TT, bx, bz, bh, rng, mas, mc);
   B.structs.push({ soup: new Soup().merge(TG, { p: [kx, ky, oz], ao: [0, .9, .7] }), cx: kx, cy: ky, cz: oz - 2.5, kind: 'keep' });
   B.structs.push({ soup: new Soup().merge(TT, { p: [kx, ky, oz], ao: [0, 1.4, .65] }), cx: kx + bx, cy: ky, cz: oz + bz, kind: 'beaconTower' });
   B.beacon = { x: kx + bx, y: ky + bh + 1.45, z: oz + bz };
@@ -325,6 +366,7 @@ function scatterProps(B) {
     if (B.dStrAt(x, z) < 1.5 + r) return false;
     for (const p of B.pads) if (dist2(x, z, p.x, p.z) < (2.15 + r) * (2.15 + r)) return false;
     if (Math.abs(x - B.kx) < 5.7 + r && z < -11.2 + r) return false;
+    if (B.castle && Math.hypot(x - B.castle.x, z - B.castle.z) < CASTLE_R + 1.4 + r) return false;
     if (x < -12.4 && Math.abs(z - B.zc) < 3.4 + r) return false;
     for (const q of B.ponds) if (dist2(x, z, q.x, q.z) < (q.r * 1.25 + .9 + r) * (q.r * 1.25 + .9 + r)) return false;
     for (const q of placed) if (dist2(x, z, q[0], q[1]) < (q[2] + r) * (q[2] + r)) return false;
@@ -398,6 +440,7 @@ function scatterProps(B) {
     const x = rng.range(-BH + .8, BH - .8), z = rng.range(-BH + .8, BH - .8);
     if (B.dRoadAt(x, z) < ROAD_HALF + .35 || waterD(x, z) < 1.1 || slope(x, z) > .5) continue;
     if (Math.abs(x - B.kx) < 5.4 && z < -11.6) continue;
+    if (B.castle && Math.hypot(x - B.castle.x, z - B.castle.z) < CASTLE_R + 1.2) continue;
     const T = new Soup(); PROP.tuft(T, rng); B.put(T, x, z, { ao: null, s: rng.range(.8, 1.5) });
   }
   for (let k = 0; k < 60; k++) {

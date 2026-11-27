@@ -54,13 +54,16 @@ function polyMinDist(poly, x, z, i0 = 0, i1 = poly.length - 1) {
   return [best, bi];
 }
 
-// Road shapes. 'classic' is a random walk from the cave to the keep; the others lay out their waypoints from a few
+// Road shapes. hp scales the monsters' health on that shape, so a long road (more time under fire) is not simply easier.
+// 'classic' is a random walk from the cave to the keep; the others lay out their waypoints from a few
 // random numbers. Every shape then goes through the same smoothing and the same checks, with its own length range.
 const ROAD_SHAPES = {
   classic: { L: [58, 92] },
-  switchback: { L: [84, 120], way: wayZigzag, wideStream: true }, // three long lanes stacked across the board
-  horseshoe: { L: [54, 96], way: wayHorseshoe }, // out to the front and back again in one big U, often with a wide bulb; shorter than classic
+  switchback: { L: [84, 120], way: wayZigzag, wideStream: true, hp: 1.22 }, // three long lanes stacked across the board
+  horseshoe: { L: [54, 96], way: wayHorseshoe, hp: .9 }, // out to the front and back again in one big U, often with a wide bulb; shorter than classic
+  ring: { L: [60, 96], way: wayRing, wideStream: true, hp: 1.05 }, // once round a castle in the middle of the board, then in through its gate
 };
+const CASTLE_R = 3.1; // radius of the ring road's castle wall
 const arcPts = (cx, cz, r, degs) => degs.map(a => [cx + r * Math.cos(a * PI / 180), cz + r * Math.sin(a * PI / 180)]);
 // Lanes far enough apart (7.4 or more) that a stream can rise between the first two and run out past the turn.
 function wayZigzag(rng) {
@@ -91,10 +94,24 @@ function wayHorseshoe(rng) {
   return { way, zc, kx };
 }
 
+// The ring: the road comes straight from the cave and joins a circle round the castle along its back (or front) edge,
+// goes 255-290 degrees round, then curves in to the castle gate. The inward stretch stays 6 units from the rest of the ring.
+function wayRing(rng) {
+  const R = rng.range(9, 10.4), cx = rng.range(-1, 3), dir = rng.sign(), cz = dir > 0 ? rng.range(R - 9, 3.5) : rng.range(-1, 13.8 - R), sweep = rng.range(255, 290);
+  if (dir > 0 ? cz < R - 9 : cz > 13.8 - R) return null;
+  const P = (rad, deg) => [cx + rad * Math.cos(deg * PI / 180), cz + rad * Math.sin(deg * PI / 180)];
+  const a0 = dir > 0 ? 270 : 90, zc = cz + (dir > 0 ? -R : R); // joins at the back (z = cz - R) going clockwise, or at the front going the other way
+  const way = [[-17.6, zc], [-12, zc], [lerp(-12, cx, .5), zc]];
+  for (let a = 0; a <= sweep; a += 22) way.push(P(R + (a > 10 ? rng.range(-.35, .35) : 0), a0 + dir * a));
+  const ae = a0 + dir * sweep;
+  way.push(P(R, ae), P(R * .88, ae + dir * 12), P(R * .66, ae + dir * 19), P(CASTLE_R + 2.4, ae + dir * 22), P(CASTLE_R + .2, ae + dir * 22));
+  return { way, zc, kx: 999, castle: { x: cx, z: cz, a: (ae + dir * 22) * PI / 180 } };
+}
+
 function tryRoad(rng, shape = 'classic') {
   const SH = ROAD_SHAPES[shape] || ROAD_SHAPES.classic;
-  let way, zc, kx;
-  if (SH.way) { const w = SH.way(rng); if (!w) return null; ({ way, zc, kx } = w); }
+  let way, zc, kx, castle = null;
+  if (SH.way) { const w = SH.way(rng); if (!w) return null; ({ way, zc, kx } = w); castle = w.castle || null; }
   else { zc = rng.range(-6.5, 9); kx = rng.range(0.5, 10.5); way = [[-17.6, zc], [-12.0, zc]];
   const endA = [kx, -6.2], endB = [kx, -11.4];
   let cur = way[1], dir = 0;
@@ -122,7 +139,7 @@ function tryRoad(rng, shape = 'classic') {
   way.push(endA, endB); }
   let poly = relax(catmull(way, PATH_STEP), 10);
   poly = resample(poly, PATH_STEP);
-  poly[poly.length - 1] = [kx, -11.4];
+  poly[poly.length - 1] = way[way.length - 1].slice();
   const n = poly.length, L = (n - 1) * PATH_STEP;
   if (L < SH.L[0] || L > SH.L[1]) return null;
   const gap = Math.round(10 / PATH_STEP);
@@ -130,6 +147,7 @@ function tryRoad(rng, shape = 'classic') {
     const [x, z] = poly[i], s = i * PATH_STEP;
     if (x > 15.3 || z > 15.3 || z < -11.6 || x + z > 26) return null;
     if (s > 7 && x < -12.2) return null;
+    if (castle && s < L - 3.2 && Math.hypot(x - castle.x, z - castle.z) < CASTLE_R + 2.2) return null;
     if (s < L - 5.5 && Math.abs(x - kx) < 5.6 && z < -8.6) return null;
     if (s > 7 && s < L - 6 && (z < -9.2)) return null;
     for (let j = i + gap; j < n; j += 2) if (Math.hypot(poly[j][0] - x, poly[j][1] - z) < 6.0) return null;
@@ -138,7 +156,7 @@ function tryRoad(rng, shape = 'classic') {
       if (Math.abs(angDiff(a, b)) > 0.62) return null;
     }
   }
-  return { poly, L, zc, kx, way, wide: !!SH.wideStream };
+  return { poly, L, zc, kx, way, wide: !!SH.wideStream, castle };
 }
 
 function tryStream(rng, road) {
@@ -173,6 +191,7 @@ function tryStream(rng, road) {
       if (Math.hypot(x - cross.x, z - cross.z) > 3.4 && polyMinDist(poly, x, z)[0] < 3.3) bad = true;
       if (Math.abs(x - kx) < 6.2 && z < -9) bad = true;
       if (x < -12.8) bad = true;
+      if (road.castle && Math.hypot(x - road.castle.x, z - road.castle.z) < CASTLE_R + 2.4) bad = true;
     }
     if (bad) continue;
     return { pts: sp, cross, src: [sx, sz], front };
@@ -190,6 +209,7 @@ function choosePads(rng, road, stream) {
       const x = poly[i][0] + nx * off * side, z = poly[i][1] + nz * off * side;
       if (Math.abs(x) > BH - 2.4 || Math.abs(z) > BH - 2.4 || x < -11.2) continue;
       if (Math.abs(x - kx) < 6.4 && z < -9.6) continue;
+      if (road.castle && Math.hypot(x - road.castle.x, z - road.castle.z) < CASTLE_R + 2.7) continue;
       if (z < -12.6 || x + z < -21) continue;
       if (polyMinDist(poly, x, z)[0] < off - 0.25) continue;
       if (stream && polyMinDist(stream.pts, x, z)[0] < 2.9) continue;
@@ -230,7 +250,7 @@ function genLayout(seed, shape = 'classic') {
   if (!best) return null;
   const { road, stream, pads } = best;
   return {
-    seed, shape, pts: road.poly, L: road.L, cave: { x: -14.6, z: road.zc }, gate: { x: road.kx, z: -11.4 }, kx: road.kx,
+    seed, shape, pts: road.poly, L: road.L, cave: { x: -14.6, z: road.zc }, gate: road.castle ? { x: road.poly[road.poly.length - 1][0], z: road.poly[road.poly.length - 1][1] } : { x: road.kx, z: -11.4 }, kx: road.kx, castle: road.castle,
     stream: stream.pts, cross: stream.cross, streamFront: stream.front, pads, mirrored: false,
   };
 }

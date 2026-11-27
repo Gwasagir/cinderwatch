@@ -39,3 +39,13 @@ Each land has its own look and light, a twist that changes how it plays, the mon
 - **Favors:** gargoyles, wisps, bats and drakes.
 - **Boss:** the Storm Roc, the first flying boss: only towers that reach the air can hit it.
 - **Note:** mountains, so it overlaps a little with Frostfall.
+
+## Road shapes
+
+The first campaign's roads are random walks from the cave on the left edge to the keep on the back edge (`classic` in `src/30-layout.js`). New lands use shapes laid out from a few random numbers, then checked by the same rules (no crossing, at least 6 units between stretches of road, no sharp bends) with their own length range:
+
+- **switchback:** three long lanes stacked across the board, 7.4 to 8.1 apart, so a pad between two lanes covers both. Long (about 84 to 95).
+- **horseshoe:** out toward the front and back again in one big U, often with a wide bulb. Medium (about 55 to 70).
+- **ring:** joins a circle round a small castle in the middle of the board, goes most of the way round, then turns in at the castle gate. The castle replaces the keep: a round wall with four towers, a gatehouse and the beacon tower in the middle. About 64 to 80.
+
+Each land lists its shapes (`roads` in `src/29-biome.js`) and takes the next one on each visit. Ideas for later: a fork where monsters split between two roads (needs new pathing), and a short, straight gauntlet (needs its own balance).

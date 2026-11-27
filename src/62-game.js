@@ -40,16 +40,17 @@ function waveMenu(k, level) {
 }
 function bossType() { const b = G.B.bio.boss; return b[Math.floor(G.level / BIOME.list.length) % b.length]; }
 // Difficulty of each campaign, so a new campaign can be tuned without changing the first one's balance.
-// hp and budget scale the regular waves (monster health, how many come), boss scales the boss's health, gold the starting gold.
-const CAMPAIGN_TUNE = { main: { hp: 1, budget: 1, boss: 1, gold: 1 }, deep: { hp: 1, budget: 1, boss: .85, gold: 1 } };
+// hp and budget scale the regular waves (monster health, how many come), boss scales the boss's health (bossEarly once more on
+// the first two battlefields), gold the starting gold.
+const CAMPAIGN_TUNE = { main: { hp: 1, budget: 1, boss: 1, gold: 1 }, deep: { hp: 1, budget: 1, boss: .85, bossEarly: .85, gold: 1 } };
 function tune() { return CAMPAIGN_TUNE[BIOME.campaign] || CAMPAIGN_TUNE.main; }
 function buildWave(k, level) {
-  const q = [], boss = k === 5, lv = 1 + .25 * level, T = tune();
+  const q = [], boss = k === 5, lv = 1 + .25 * level, T = tune(), shp = (ROAD_SHAPES[G.B.lay.shape] || {}).hp || 1;
   let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1) * T.budget, heavy = 0, air = budget * .42;
-  const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press) * T.hp;
+  const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press) * T.hp * shp;
   const menu = waveMenu(k, level), tot = menu.reduce((a, b) => a + b[1], 0);
   let t = .6;
-  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) * T.boss });
+  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) * T.boss * (level < 2 ? T.bossEarly || 1 : 1) });
   while (budget > 0) {
     let r = rnd() * tot, type = 'skel'; for (const [ty, w] of menu) { r -= w; if (r <= 0) { type = ty; break; } }
     let R = ROSTER[type];

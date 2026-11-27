@@ -67,7 +67,7 @@ const BIOMES = [
   },
   // The second campaign (campaign: 'deep'). Its lands never join the first campaign's cycle.
   {
-    key: 'salt', name: 'Saltreach', campaign: 'deep', roads: ['horseshoe', 'switchback'],
+    key: 'salt', name: 'Saltreach', campaign: 'deep', roads: ['switchback', 'ring', 'horseshoe'],
     col: { stone: 0x4e5a5a, stoneD: 0x2c3434, stoneL: 0x74827e, earth: 0x2e2e2c, earthD: 0x1c1d1c, grass: 0x4a5442, grassD: 0x323a30, moss: 0x3a5446, road: 0x6c6c66, roadD: 0x48484a, mud: 0x1e2224, bark: 0x6a6258, tuftA: 0x5a6448, tuftB: 0x8a8a60, leaf: 0x243a30, leafL: 0x3a5644 },
     strata: [0x3a4242, 0x252a2c, 0x56605c, 0x2e3434, 0x6a6a5e, 0x343c3a, 0x7a7e72, 0x2a3030],
     hemi: [0x58a0a0, 0x141e1e, 1.1], moon: [0xbfe6e2, 1.4], fill: [0x2f7f7a, .32], moonPos: [12, 44, -34],
@@ -81,7 +81,7 @@ const BIOMES = [
     trees: [['driftwood', 9, 2.0, 3.4]], stumps: 3, rocks: 72, tufts: 260, webs: 0,
   },
   {
-    key: 'glim', name: 'Glimmerdeep', campaign: 'deep', roads: ['switchback', 'horseshoe'],
+    key: 'glim', name: 'Glimmerdeep', campaign: 'deep', roads: ['ring', 'horseshoe', 'switchback'],
     col: { stone: 0x464256, stoneD: 0x26232f, stoneL: 0x66607a, earth: 0x2c2a34, earthD: 0x1a1920, grass: 0x2c3a40, grassD: 0x1e282c, moss: 0x2c4a4c, road: 0x5c5a68, roadD: 0x3c3a46, mud: 0x1a1920, bark: 0x2a2630, tuftA: 0x2a4a54, tuftB: 0x4a6a78, leaf: 0x2a3a4a, leafL: 0x3a5a6a },
     strata: [0x3a3648, 0x201e28, 0x4e4462, 0x2a2834, 0x5a4e6e, 0x302c3c, 0x6a6080, 0x24222c],
     hemi: [0x6a58a8, 0x120e18, .82], moon: [0xa898e0, .95], fill: [0x6a40b0, .26], moonPos: [6, 50, -14],

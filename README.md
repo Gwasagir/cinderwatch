@@ -29,6 +29,7 @@ A handful of firelit towers hold the great beacon of a ruined keep against endle
 - **A second campaign, in progress.** *The Drowned Deep* takes turns between two new lands, played with `#campaign=deep` for now (later the campaigns unlock one after another). Neither land appears in the first campaign, so its balance is untouched.
   - **Saltreach**, a drowned coast at night: black sand, shipwrecks, sea walls, rain and a lighthouse whose beam sweeps the field. The tide comes and goes; at high tide about a third of the road floods and everything wading through it, footmen too, slows down. Its boss is the Drowned Admiral, who calls drowned sailors to his side and is not slowed by the tide.
   - **Glimmerdeep**, a crystal cavern with no sky. When chain lightning hits a monster near one of the big crystals beside the road, the crystal discharges at up to three monsters around it, so spires built near crystals pay off. Its boss is the Crystal Wyrm, which burrows under the road, out of reach, and comes up closer to the fire.
+  - **Road shapes of their own.** The first campaign's roads wind from the cave to the keep at random. In the second campaign each visit to a land brings the next of three shapes: a **switchback** of three long lanes stacked across the board, where a tower between two lanes covers both; a **horseshoe** that runs out to the front and back in one big U, often with a wide bulb, with pads inside reaching both legs; and a **ring road** that circles a small castle in the middle of the board before turning in at its gate, the beacon burning on its central tower.
   - More land ideas are in [docs/lands.md](docs/lands.md).
 - **A miniature look.** The scene is drawn at about half resolution, then given an ordered dither, a depth-aware tilt-shift blur, a vignette and film grain.
 - **No asset files.** Every model, texture and sound is generated in code.
@@ -175,6 +176,7 @@ URL flags, for example `index.html#seed=4&fps=1`:
 | --- | --- |
 | `seed=N` | Fix the battlefield and the run (starts in Ashen Pass) |
 | `campaign=deep` | Play the second campaign (Saltreach and Glimmerdeep) |
+| `road=NAME` | Force a road shape: `classic`, `switchback`, `horseshoe` or `ring` |
 | `biome=NAME` | Start in `ashen`, `frost`, `fen`, `ember` or `dunes`, or `salt` or `glim` (which also picks their campaign) |
 | `level=N`, `k=N` | Start at a later battlefield or wave |
 | `ff=S` | Fast-forward S seconds before the first frame |

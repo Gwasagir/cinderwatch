@@ -805,7 +805,7 @@ const BIOMES = [
   },
   // The second campaign (campaign: 'deep'). Its lands never join the first campaign's cycle.
   {
-    key: 'salt', name: 'Saltreach', campaign: 'deep', roads: ['horseshoe', 'switchback'],
+    key: 'salt', name: 'Saltreach', campaign: 'deep', roads: ['switchback', 'ring', 'horseshoe'],
     col: { stone: 0x4e5a5a, stoneD: 0x2c3434, stoneL: 0x74827e, earth: 0x2e2e2c, earthD: 0x1c1d1c, grass: 0x4a5442, grassD: 0x323a30, moss: 0x3a5446, road: 0x6c6c66, roadD: 0x48484a, mud: 0x1e2224, bark: 0x6a6258, tuftA: 0x5a6448, tuftB: 0x8a8a60, leaf: 0x243a30, leafL: 0x3a5644 },
     strata: [0x3a4242, 0x252a2c, 0x56605c, 0x2e3434, 0x6a6a5e, 0x343c3a, 0x7a7e72, 0x2a3030],
     hemi: [0x58a0a0, 0x141e1e, 1.1], moon: [0xbfe6e2, 1.4], fill: [0x2f7f7a, .32], moonPos: [12, 44, -34],
@@ -819,7 +819,7 @@ const BIOMES = [
     trees: [['driftwood', 9, 2.0, 3.4]], stumps: 3, rocks: 72, tufts: 260, webs: 0,
   },
   {
-    key: 'glim', name: 'Glimmerdeep', campaign: 'deep', roads: ['switchback', 'horseshoe'],
+    key: 'glim', name: 'Glimmerdeep', campaign: 'deep', roads: ['ring', 'horseshoe', 'switchback'],
     col: { stone: 0x464256, stoneD: 0x26232f, stoneL: 0x66607a, earth: 0x2c2a34, earthD: 0x1a1920, grass: 0x2c3a40, grassD: 0x1e282c, moss: 0x2c4a4c, road: 0x5c5a68, roadD: 0x3c3a46, mud: 0x1a1920, bark: 0x2a2630, tuftA: 0x2a4a54, tuftB: 0x4a6a78, leaf: 0x2a3a4a, leafL: 0x3a5a6a },
     strata: [0x3a3648, 0x201e28, 0x4e4462, 0x2a2834, 0x5a4e6e, 0x302c3c, 0x6a6080, 0x24222c],
     hemi: [0x6a58a8, 0x120e18, .82], moon: [0xa898e0, .95], fill: [0x6a40b0, .26], moonPos: [6, 50, -14],
@@ -932,13 +932,16 @@ function polyMinDist(poly, x, z, i0 = 0, i1 = poly.length - 1) {
   return [best, bi];
 }
 
-// Road shapes. 'classic' is a random walk from the cave to the keep; the others lay out their waypoints from a few
+// Road shapes. hp scales the monsters' health on that shape, so a long road (more time under fire) is not simply easier.
+// 'classic' is a random walk from the cave to the keep; the others lay out their waypoints from a few
 // random numbers. Every shape then goes through the same smoothing and the same checks, with its own length range.
 const ROAD_SHAPES = {
   classic: { L: [58, 92] },
-  switchback: { L: [84, 120], way: wayZigzag, wideStream: true }, // three long lanes stacked across the board
-  horseshoe: { L: [54, 96], way: wayHorseshoe }, // out to the front and back again in one big U, often with a wide bulb; shorter than classic
+  switchback: { L: [84, 120], way: wayZigzag, wideStream: true, hp: 1.22 }, // three long lanes stacked across the board
+  horseshoe: { L: [54, 96], way: wayHorseshoe, hp: .9 }, // out to the front and back again in one big U, often with a wide bulb; shorter than classic
+  ring: { L: [60, 96], way: wayRing, wideStream: true, hp: 1.05 }, // once round a castle in the middle of the board, then in through its gate
 };
+const CASTLE_R = 3.1; // radius of the ring road's castle wall
 const arcPts = (cx, cz, r, degs) => degs.map(a => [cx + r * Math.cos(a * PI / 180), cz + r * Math.sin(a * PI / 180)]);
 // Lanes far enough apart (7.4 or more) that a stream can rise between the first two and run out past the turn.
 function wayZigzag(rng) {
@@ -969,10 +972,24 @@ function wayHorseshoe(rng) {
   return { way, zc, kx };
 }
 
+// The ring: the road comes straight from the cave and joins a circle round the castle along its back (or front) edge,
+// goes 255-290 degrees round, then curves in to the castle gate. The inward stretch stays 6 units from the rest of the ring.
+function wayRing(rng) {
+  const R = rng.range(9, 10.4), cx = rng.range(-1, 3), dir = rng.sign(), cz = dir > 0 ? rng.range(R - 9, 3.5) : rng.range(-1, 13.8 - R), sweep = rng.range(255, 290);
+  if (dir > 0 ? cz < R - 9 : cz > 13.8 - R) return null;
+  const P = (rad, deg) => [cx + rad * Math.cos(deg * PI / 180), cz + rad * Math.sin(deg * PI / 180)];
+  const a0 = dir > 0 ? 270 : 90, zc = cz + (dir > 0 ? -R : R); // joins at the back (z = cz - R) going clockwise, or at the front going the other way
+  const way = [[-17.6, zc], [-12, zc], [lerp(-12, cx, .5), zc]];
+  for (let a = 0; a <= sweep; a += 22) way.push(P(R + (a > 10 ? rng.range(-.35, .35) : 0), a0 + dir * a));
+  const ae = a0 + dir * sweep;
+  way.push(P(R, ae), P(R * .88, ae + dir * 12), P(R * .66, ae + dir * 19), P(CASTLE_R + 2.4, ae + dir * 22), P(CASTLE_R + .2, ae + dir * 22));
+  return { way, zc, kx: 999, castle: { x: cx, z: cz, a: (ae + dir * 22) * PI / 180 } };
+}
+
 function tryRoad(rng, shape = 'classic') {
   const SH = ROAD_SHAPES[shape] || ROAD_SHAPES.classic;
-  let way, zc, kx;
-  if (SH.way) { const w = SH.way(rng); if (!w) return null; ({ way, zc, kx } = w); }
+  let way, zc, kx, castle = null;
+  if (SH.way) { const w = SH.way(rng); if (!w) return null; ({ way, zc, kx } = w); castle = w.castle || null; }
   else { zc = rng.range(-6.5, 9); kx = rng.range(0.5, 10.5); way = [[-17.6, zc], [-12.0, zc]];
   const endA = [kx, -6.2], endB = [kx, -11.4];
   let cur = way[1], dir = 0;
@@ -1000,7 +1017,7 @@ function tryRoad(rng, shape = 'classic') {
   way.push(endA, endB); }
   let poly = relax(catmull(way, PATH_STEP), 10);
   poly = resample(poly, PATH_STEP);
-  poly[poly.length - 1] = [kx, -11.4];
+  poly[poly.length - 1] = way[way.length - 1].slice();
   const n = poly.length, L = (n - 1) * PATH_STEP;
   if (L < SH.L[0] || L > SH.L[1]) return null;
   const gap = Math.round(10 / PATH_STEP);
@@ -1008,6 +1025,7 @@ function tryRoad(rng, shape = 'classic') {
     const [x, z] = poly[i], s = i * PATH_STEP;
     if (x > 15.3 || z > 15.3 || z < -11.6 || x + z > 26) return null;
     if (s > 7 && x < -12.2) return null;
+    if (castle && s < L - 3.2 && Math.hypot(x - castle.x, z - castle.z) < CASTLE_R + 2.2) return null;
     if (s < L - 5.5 && Math.abs(x - kx) < 5.6 && z < -8.6) return null;
     if (s > 7 && s < L - 6 && (z < -9.2)) return null;
     for (let j = i + gap; j < n; j += 2) if (Math.hypot(poly[j][0] - x, poly[j][1] - z) < 6.0) return null;
@@ -1016,7 +1034,7 @@ function tryRoad(rng, shape = 'classic') {
       if (Math.abs(angDiff(a, b)) > 0.62) return null;
     }
   }
-  return { poly, L, zc, kx, way, wide: !!SH.wideStream };
+  return { poly, L, zc, kx, way, wide: !!SH.wideStream, castle };
 }
 
 function tryStream(rng, road) {
@@ -1051,6 +1069,7 @@ function tryStream(rng, road) {
       if (Math.hypot(x - cross.x, z - cross.z) > 3.4 && polyMinDist(poly, x, z)[0] < 3.3) bad = true;
       if (Math.abs(x - kx) < 6.2 && z < -9) bad = true;
       if (x < -12.8) bad = true;
+      if (road.castle && Math.hypot(x - road.castle.x, z - road.castle.z) < CASTLE_R + 2.4) bad = true;
     }
     if (bad) continue;
     return { pts: sp, cross, src: [sx, sz], front };
@@ -1068,6 +1087,7 @@ function choosePads(rng, road, stream) {
       const x = poly[i][0] + nx * off * side, z = poly[i][1] + nz * off * side;
       if (Math.abs(x) > BH - 2.4 || Math.abs(z) > BH - 2.4 || x < -11.2) continue;
       if (Math.abs(x - kx) < 6.4 && z < -9.6) continue;
+      if (road.castle && Math.hypot(x - road.castle.x, z - road.castle.z) < CASTLE_R + 2.7) continue;
       if (z < -12.6 || x + z < -21) continue;
       if (polyMinDist(poly, x, z)[0] < off - 0.25) continue;
       if (stream && polyMinDist(stream.pts, x, z)[0] < 2.9) continue;
@@ -1108,7 +1128,7 @@ function genLayout(seed, shape = 'classic') {
   if (!best) return null;
   const { road, stream, pads } = best;
   return {
-    seed, shape, pts: road.poly, L: road.L, cave: { x: -14.6, z: road.zc }, gate: { x: road.kx, z: -11.4 }, kx: road.kx,
+    seed, shape, pts: road.poly, L: road.L, cave: { x: -14.6, z: road.zc }, gate: road.castle ? { x: road.poly[road.poly.length - 1][0], z: road.poly[road.poly.length - 1][1] } : { x: road.kx, z: -11.4 }, kx: road.kx, castle: road.castle,
     stream: stream.pts, cross: stream.cross, streamFront: stream.front, pads, mirrored: false,
   };
 }
@@ -1162,7 +1182,7 @@ function buildBoard(seed, index) {
   applyBiomePalette(bio);
   const rng = makeRng(seed * 9176 + 11); soupRng = makeRng(seed * 131 + 5);
   const sd = (seed * 53) % 997;
-  const P = lay.pts, n = P.length, L = lay.L, kx = lay.kx, zc = lay.cave.z;
+  const P = lay.pts, n = P.length, L = lay.L, kx = lay.kx, zc = lay.cave.z, castle = lay.castle;
   const px = new Float32Array(n), pz = new Float32Array(n), py = new Float32Array(n), tx = new Float32Array(n), tz = new Float32Array(n);
   for (let i = 0; i < n; i++) { px[i] = P[i][0]; pz[i] = P[i][1]; }
   for (let i = 0; i < n; i++) { const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1); const dx = px[b] - px[a], dz = pz[b] - pz[a], l = Math.hypot(dx, dz) || 1; tx[i] = dx / l; tz[i] = dz / l; }
@@ -1208,6 +1228,7 @@ function buildBoard(seed, index) {
     const r = rng.range(1.2, 2.3), x = rng.range(-BH + 3.4 + r, BH - 3.4 - r), z = rng.range(-BH + 3.4 + r, BH - 3.4 - r);
     if (dfAt(dRoad, x, z) < ROAD_HALF + 2.6 + r || dfAt(dStr, x, z) < 3.9 + r) continue;
     if (x < -12 + r || z < -12 + r || (Math.abs(x - kx) < 6.5 + r && z < -8.5 + r)) continue;
+    if (castle && Math.hypot(x - castle.x, z - castle.z) < CASTLE_R + 3 + r) continue;
     if (pads.some(p => Math.hypot(x - p.x, z - p.z) < 3.1 + r) || ponds.some(q => Math.hypot(x - q.x, z - q.z) < r + q.r + 3.2)) continue;
     let y = 1e9; for (let k = 0; k < 24; k++) { const a = k / 12 * TAU, d = r + (k < 12 ? 1.3 : 2.1); y = Math.min(y, hBase(x + Math.cos(a) * d, z + Math.sin(a) * d)); }
     ponds.push({ x, z, r, y: Math.min(y, hBase(x, z)) - .22 });
@@ -1229,6 +1250,7 @@ function buildBoard(seed, index) {
     for (const q of ponds) { const d = pondD(q, x, z); if (d < q.r + 1.5) h = lerp(h, q.y - .45, smooth(q.r + 1.5, q.r * .4, d)); }
     const dkx = Math.max(0, Math.abs(x - kx) - 5.2), dkz = Math.max(0, z + 11.7), dk = Math.hypot(dkx, dkz);
     if (dk < 1.8) h = lerp(h, keepY, smooth(1.8, .2, dk));
+    if (castle) { const dc = Math.hypot(x - castle.x, z - castle.z) - CASTLE_R - .9; if (dc < 1.8) h = lerp(h, keepY, smooth(1.8, .2, dc)); }
     const dcl = x + BH + (fbm(z * .23 + 1.7, x * .11, sd + 9, 2) - .5) * 2.6;
     let c = smooth(5.0, 1.3, dcl) * (3.4 + 2.6 * fbm(x * .21, z * .21, sd + 11, 2) + 1.4 * smooth(4, -15, z)) * RL[2];
     const dbr = z + BH + (fbm(x * .23 + 5.1, z * .11, sd + 13, 2) - .5) * 2.4;
@@ -1431,7 +1453,7 @@ function buildBoard(seed, index) {
   }
 
   const B = {
-    seed, index, lay, L, n, px, pz, py, tx, tz, pads, kx, zc, keepY, heightAt, hAt, chunks, structs, fires, glows, chunkAt, rng, sd, bio, ponds, env: [],
+    seed, index, lay, L, n, px, pz, py, tx, tz, pads, kx, zc, keepY, heightAt, hAt, chunks, structs, fires, glows, chunkAt, rng, sd, bio, ponds, env: [], castle: castle ? Object.assign({}, castle) : null,
     dRoadAt: (x, z) => dfAt(dRoad, x, z), dStrAt: (x, z) => dfAt(dStr, x, z), cross: lay.cross, ci0, wlc, swl, SP, fallAt, mirrored: (index % 2) === 1,
     put(T, x, z, o = {}) { const y = o.y === undefined ? heightAt(x, z) + (o.dy || 0) : o.y; chunkAt(x, z).soup.merge(T, { p: [x, y, z], ry: o.ry || 0, r: o.r, s: o.s, tint: o.tint, ao: o.ao === undefined ? [0, .55, .6] : o.ao }); },
   };
@@ -1499,7 +1521,7 @@ function finalizeBoard(B) {
   if (mir) {
     const sa = (a, b) => { for (let i = 0; i < a.length; i++) { const t = a[i]; a[i] = b[i]; b[i] = t; } };
     sa(B.px, B.pz); sa(B.tx, B.tz);
-    for (const p of B.pads) sw(p); for (const f of B.fires) sw(f); for (const g of B.glows) sw(g); for (const q of B.ponds) sw(q); for (const e of B.env) sw(e); for (const c of B.crystals || []) sw(c); if (B.lighthouse) sw(B.lighthouse);
+    for (const p of B.pads) sw(p); for (const f of B.fires) sw(f); for (const g of B.glows) sw(g); for (const q of B.ponds) sw(q); for (const e of B.env) sw(e); for (const c of B.crystals || []) sw(c); if (B.lighthouse) sw(B.lighthouse); if (B.castle) sw(B.castle);
     sw(B.beacon); sw(B.gate); sw(B.cave); if (B.fallAt) { sw(B.fallAt); const t = B.fallAt.ox; B.fallAt.ox = B.fallAt.oz; B.fallAt.oz = t; }
     const h0 = B.heightAt; B.heightAt = (x, z) => h0(z, x);
     const d0 = B.dRoadAt; B.dRoadAt = (x, z) => d0(z, x);
@@ -1769,7 +1791,61 @@ function buildPads(B) {
   }
 }
 
+// The beacon tower: a round stone tower with an iron fire basket on top (the keep's, and the ring road castle's).
+function beaconTower(TT, bx, bz, bh, rng, mas, mc) {
+  const st = COL.stone, sdk = COL.stoneD, sl = COL.stoneL;
+  TT.cyl(1.9, 1.3, bx, .65, bz, sdk, { n: 8, l: L_MASON, rt: .84 });
+  TT.cyl(1.52, bh, bx, bh / 2, bz, st, { n: 8, l: L_MASON, rt: .9, jit: .03 });
+  for (let c = 0; c < 6; c++) TT.cyl(1.54 - c * .027, .2, bx, 1.7 + c * 1.0, bz, mc(), { n: 8, l: L_MASON });
+  TT.cyl(1.42, .55, bx, bh - .15, bz, sl, { n: 8, l: L_MASON, rt: 1.26 });
+  TT.cyl(1.82, .22, bx, bh + .22, bz, st, { n: 8, l: L_MASON });
+  for (let k = 0; k < 8; k++) { const a = (k + .5) / 8 * TAU; if (k === 1) continue; mas(TT, .6, .5, .32, bx + Math.cos(a) * 1.6, bh + .58, bz + Math.sin(a) * 1.6, null, { r: [0, -a + HPI, 0] }); }
+  for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .4; TT.box(.12, .9, .12, bx + Math.cos(a) * 1.45, bh * (.4 + (k & 1) * .22), bz + Math.sin(a) * 1.45, COL.black, { jit: 0, r: [0, -a, 0] }); }
+  for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + .2; TT.seg([bx + Math.cos(a) * 1.4, bh - .55, bz + Math.sin(a) * 1.4], [bx + Math.cos(a) * 2.2, bh - .4, bz + Math.sin(a) * 2.2], .07, .06, COL.woodD, { l: L_WOOD, n: 4 }); }
+  TT.cyl(.6, .55, bx, bh + .6, bz, sdk, { n: 8, l: L_MASON });
+  TT.cyl(.72, .4, bx, bh + 1.06, bz, COL.iron, { n: 8, l: L_METAL, rt: 1.4, rough: .7 });
+  for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .5; TT.seg([bx + Math.cos(a) * .72, bh + .35, bz + Math.sin(a) * .72], [bx + Math.cos(a) * .96, bh + 1.22, bz + Math.sin(a) * .96], .04, .04, COL.iron, { l: L_METAL, n: 4 }); }
+  TT.cyl(.9, .1, bx, bh + 1.24, bz, COL.ember, { n: 8, emis: .5, jit: 0 });
+  for (let k = 0; k < 4; k++) { const a = k * 1.3; TT.seg([bx + Math.cos(a) * .7, bh + 1.28, bz + Math.sin(a) * .7], [bx - Math.cos(a) * .6, bh + 1.48, bz - Math.sin(a) * .6], .1, .09, mulC(COL.bark, .7), { l: L_WOOD, n: 5, emis: .05 }); }
+  clothPanel(TT, { x0: bx - .45, x1: bx + .45, yTop: 5.2, len: 2.3, z: bz + 1.5, col: COL.clothR, col2: mulC(COL.gold, .6), rng, sway: .45 });
+}
+// The ring road's goal: a small round castle in the middle of the board, its gate facing the road and the beacon tower inside.
+function buildCastle(B) {
+  const rng = B.rng, c = B.castle, ky = B.keepY, ga = c.a, R = CASTLE_R, TG = new Soup(), TT = new Soup();
+  const st = COL.stone, sdk = COL.stoneD, sl = COL.stoneL, mc = () => mixC(sdk, sl, rng() * .8 + .1);
+  const mas = (S, w, h, d, x, y, z, col, o = {}) => S.box(w, h, d, x, y, z, col || mc(), Object.assign({ l: L_MASON }, o));
+  const at = (rad, a) => [Math.cos(a) * rad, Math.sin(a) * rad];
+  TG.cyl(R + 1.0, .8, 0, -.3, 0, sdk, { n: 16, l: L_MASON, rt: .9 }); TG.cyl(R - .1, .1, 0, .06, 0, mulC(COL.road, .9), { n: 16, l: L_COBBLE });
+  for (let k = 0; k < 18; k++) { // the curtain wall, open at the gate
+    const a = k / 18 * TAU; if (Math.abs(angDiff(a, ga)) < .42) continue;
+    const [x, z] = at(R, a), h = rng.range(1.7, 2.05); mas(TG, 1.15, h, .5, x, h / 2, z, k & 1 ? st : null, { r: [0, -a + HPI, 0] });
+    if (k % 2 === 0) mas(TG, .42, .4, .54, x, h + .2, z, null, { r: [0, -a + HPI, 0] });
+  }
+  for (let k = 0; k < 4; k++) { // round towers on the wall
+    const a = ga + PI / 4 + k * HPI, [x, z] = at(R, a), h = rng.range(2.8, 3.4);
+    TG.cyl(.66, h, x, h / 2, z, st, { n: 8, l: L_MASON, rt: .92 }); TG.cyl(.8, .26, x, h + .1, z, sl, { n: 8, l: L_MASON });
+    for (let m = 0; m < 6; m++) { const b = m / 6 * TAU; mas(TG, .3, .36, .26, x + Math.cos(b) * .68, h + .4, z + Math.sin(b) * .68, null, { r: [0, -b + HPI, 0] }); }
+    TG.box(.1, .5, .14, x + Math.cos(a) * .66, h * .6, z + Math.sin(a) * .66, COL.black, { jit: 0, r: [0, -a, 0] });
+  }
+  for (const s of [-1, 1]) { // the gatehouse: two towers, a lintel, a portcullis and torches
+    const a = ga + s * .46, [x, z] = at(R + .05, a);
+    TG.cyl(.62, 3.0, x, 1.5, z, st, { n: 8, l: L_MASON, rt: .9 }); TG.cyl(.74, .24, x, 3.05, z, sl, { n: 8, l: L_MASON });
+    const [fx, fz] = at(R + .75, ga + s * .3); TG.seg([fx * .97, 1.9, fz * .97], [fx, 2.1, fz], .035, .03, COL.iron, { l: L_METAL, n: 4 });
+    B.fires.push({ x: c.x + fx, y: ky + 2.3, z: c.z + fz, size: .42, type: 'sconce' });
+  }
+  { const [x, z] = at(R + .05, ga), ry = -ga + HPI;
+    mas(TG, 2.1, .7, .8, x, 2.45, z, sl, { r: [0, ry, 0] });
+    TG.box(1.3, 2.1, .2, x, 1.05, z, COL.black, { jit: 0, r: [0, ry, 0] });
+    for (const o of [-.45, -.15, .15, .45]) { const ox = Math.cos(ga + HPI) * o, oz = Math.sin(ga + HPI) * o; TG.box(.06, .8, .06, x + ox + Math.cos(ga) * .3, 1.75, z + oz + Math.sin(ga) * .3, COL.iron, { l: L_METAL }); } }
+  for (let k = 0; k < 3; k++) { const [x, z] = at(R * .62, ga + PI * .75 + k * .5); PROP.barrel(TG, x, .1, z, .9, rng); }
+  const bh = 6.4; beaconTower(TT, 0, 0, bh, rng, mas, mc);
+  B.structs.push({ soup: new Soup().merge(TG, { p: [c.x, ky, c.z], ao: [0, .9, .7] }), cx: c.x, cy: ky, cz: c.z, kind: 'keep' });
+  B.structs.push({ soup: new Soup().merge(TT, { p: [c.x, ky, c.z], ao: [0, 1.4, .65] }), cx: c.x, cy: ky, cz: c.z, kind: 'beaconTower' });
+  B.beacon = { x: c.x, y: ky + bh + 1.45, z: c.z };
+  B.gate = { x: c.x + Math.cos(ga) * R, y: ky, z: c.z + Math.sin(ga) * R };
+}
 function buildKeep(B) {
+  if (B.castle) return buildCastle(B);
   const rng = B.rng, kx = B.kx, ky = B.keepY, oz = -12.35;
   const TG = new Soup(), TT = new Soup();
   const st = COL.stone, sdk = COL.stoneD, sl = COL.stoneL;
@@ -1810,20 +1886,7 @@ function buildKeep(B) {
   TG.cyl(1.5, 2.4, 2.4, 1.2, -4.2, sdk, { n: 8, l: L_MASON, rt: .92 });
   for (let k = 0; k < 8; k++) { const a = (k + .5) / 8 * TAU, h = rng.range(.2, 1.3); if (rng() < .3) continue; mas(TG, .9, h, .4, 2.4 + Math.cos(a) * 1.2, 2.4 + h / 2, -4.2 + Math.sin(a) * 1.2, null, { r: [0, -a + HPI, 0] }); }
   const bx = -2.6, bz = -.95, bh = 7.3;
-  TT.cyl(1.9, 1.3, bx, .65, bz, sdk, { n: 8, l: L_MASON, rt: .84 });
-  TT.cyl(1.52, bh, bx, bh / 2, bz, st, { n: 8, l: L_MASON, rt: .9, jit: .03 });
-  for (let c = 0; c < 6; c++) TT.cyl(1.54 - c * .027, .2, bx, 1.7 + c * 1.0, bz, mc(), { n: 8, l: L_MASON });
-  TT.cyl(1.42, .55, bx, bh - .15, bz, sl, { n: 8, l: L_MASON, rt: 1.26 });
-  TT.cyl(1.82, .22, bx, bh + .22, bz, st, { n: 8, l: L_MASON });
-  for (let k = 0; k < 8; k++) { const a = (k + .5) / 8 * TAU; if (k === 1) continue; mas(TT, .6, .5, .32, bx + Math.cos(a) * 1.6, bh + .58, bz + Math.sin(a) * 1.6, null, { r: [0, -a + HPI, 0] }); }
-  for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .4; TT.box(.12, .9, .12, bx + Math.cos(a) * 1.45, bh * (.4 + (k & 1) * .22), bz + Math.sin(a) * 1.45, COL.black, { jit: 0, r: [0, -a, 0] }); }
-  for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + .2; TT.seg([bx + Math.cos(a) * 1.4, bh - .55, bz + Math.sin(a) * 1.4], [bx + Math.cos(a) * 2.2, bh - .4, bz + Math.sin(a) * 2.2], .07, .06, COL.woodD, { l: L_WOOD, n: 4 }); }
-  TT.cyl(.6, .55, bx, bh + .6, bz, sdk, { n: 8, l: L_MASON });
-  TT.cyl(.72, .4, bx, bh + 1.06, bz, COL.iron, { n: 8, l: L_METAL, rt: 1.4, rough: .7 });
-  for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .5; TT.seg([bx + Math.cos(a) * .72, bh + .35, bz + Math.sin(a) * .72], [bx + Math.cos(a) * .96, bh + 1.22, bz + Math.sin(a) * .96], .04, .04, COL.iron, { l: L_METAL, n: 4 }); }
-  TT.cyl(.9, .1, bx, bh + 1.24, bz, COL.ember, { n: 8, emis: .5, jit: 0 });
-  for (let k = 0; k < 4; k++) { const a = k * 1.3; TT.seg([bx + Math.cos(a) * .7, bh + 1.28, bz + Math.sin(a) * .7], [bx - Math.cos(a) * .6, bh + 1.48, bz - Math.sin(a) * .6], .1, .09, mulC(COL.bark, .7), { l: L_WOOD, n: 5, emis: .05 }); }
-  clothPanel(TT, { x0: bx - .45, x1: bx + .45, yTop: 5.2, len: 2.3, z: bz + 1.5, col: COL.clothR, col2: mulC(COL.gold, .6), rng, sway: .45 });
+  beaconTower(TT, bx, bz, bh, rng, mas, mc);
   B.structs.push({ soup: new Soup().merge(TG, { p: [kx, ky, oz], ao: [0, .9, .7] }), cx: kx, cy: ky, cz: oz - 2.5, kind: 'keep' });
   B.structs.push({ soup: new Soup().merge(TT, { p: [kx, ky, oz], ao: [0, 1.4, .65] }), cx: kx + bx, cy: ky, cz: oz + bz, kind: 'beaconTower' });
   B.beacon = { x: kx + bx, y: ky + bh + 1.45, z: oz + bz };
@@ -1857,6 +1920,7 @@ function scatterProps(B) {
     if (B.dStrAt(x, z) < 1.5 + r) return false;
     for (const p of B.pads) if (dist2(x, z, p.x, p.z) < (2.15 + r) * (2.15 + r)) return false;
     if (Math.abs(x - B.kx) < 5.7 + r && z < -11.2 + r) return false;
+    if (B.castle && Math.hypot(x - B.castle.x, z - B.castle.z) < CASTLE_R + 1.4 + r) return false;
     if (x < -12.4 && Math.abs(z - B.zc) < 3.4 + r) return false;
     for (const q of B.ponds) if (dist2(x, z, q.x, q.z) < (q.r * 1.25 + .9 + r) * (q.r * 1.25 + .9 + r)) return false;
     for (const q of placed) if (dist2(x, z, q[0], q[1]) < (q[2] + r) * (q[2] + r)) return false;
@@ -1930,6 +1994,7 @@ function scatterProps(B) {
     const x = rng.range(-BH + .8, BH - .8), z = rng.range(-BH + .8, BH - .8);
     if (B.dRoadAt(x, z) < ROAD_HALF + .35 || waterD(x, z) < 1.1 || slope(x, z) > .5) continue;
     if (Math.abs(x - B.kx) < 5.4 && z < -11.6) continue;
+    if (B.castle && Math.hypot(x - B.castle.x, z - B.castle.z) < CASTLE_R + 1.2) continue;
     const T = new Soup(); PROP.tuft(T, rng); B.put(T, x, z, { ao: null, s: rng.range(.8, 1.5) });
   }
   for (let k = 0; k < 60; k++) {
@@ -4376,16 +4441,17 @@ function waveMenu(k, level) {
 }
 function bossType() { const b = G.B.bio.boss; return b[Math.floor(G.level / BIOME.list.length) % b.length]; }
 // Difficulty of each campaign, so a new campaign can be tuned without changing the first one's balance.
-// hp and budget scale the regular waves (monster health, how many come), boss scales the boss's health, gold the starting gold.
-const CAMPAIGN_TUNE = { main: { hp: 1, budget: 1, boss: 1, gold: 1 }, deep: { hp: 1, budget: 1, boss: .85, gold: 1 } };
+// hp and budget scale the regular waves (monster health, how many come), boss scales the boss's health (bossEarly once more on
+// the first two battlefields), gold the starting gold.
+const CAMPAIGN_TUNE = { main: { hp: 1, budget: 1, boss: 1, gold: 1 }, deep: { hp: 1, budget: 1, boss: .85, bossEarly: .85, gold: 1 } };
 function tune() { return CAMPAIGN_TUNE[BIOME.campaign] || CAMPAIGN_TUNE.main; }
 function buildWave(k, level) {
-  const q = [], boss = k === 5, lv = 1 + .25 * level, T = tune();
+  const q = [], boss = k === 5, lv = 1 + .25 * level, T = tune(), shp = (ROAD_SHAPES[G.B.lay.shape] || {}).hp || 1;
   let budget = (34 + 25 * (k - 1)) * lv * G.press * (boss ? .7 : 1) * T.budget, heavy = 0, air = budget * .42;
-  const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press) * T.hp;
+  const hpMul = (1 + (.13 + .025 * clamp(level - 3, 0, 8)) * (k - 1)) * (1 + .27 * level + .03 * Math.max(0, level - 8) ** 2) * (.85 + .15 * G.press) * T.hp * shp;
   const menu = waveMenu(k, level), tot = menu.reduce((a, b) => a + b[1], 0);
   let t = .6;
-  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) * T.boss });
+  if (boss) q.push({ t: 2.2, type: bossType(), hpMul: (1 + .4 * level + .05 * clamp(level - 4, 0, 5) ** 2) * Math.pow(G.press, .4) * T.boss * (level < 2 ? T.bossEarly || 1 : 1) });
   while (budget > 0) {
     let r = rnd() * tot, type = 'skel'; for (const [ty, w] of menu) { r -= w; if (r <= 0) { type = ty; break; } }
     let R = ROSTER[type];
